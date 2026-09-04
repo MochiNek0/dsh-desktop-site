@@ -17,8 +17,20 @@
 
     // 本页在当前语言下的绝对地址；canonical / og:url / 结构化数据共用。
     const pageUrl = $derived(`${ORIGIN}${pathForLang(i18n.lang)}`);
-    // 截图分语言，og 卡片也要跟着换，否则英文页分享出去是中文界面。
-    const ogImage = $derived(
+    /*
+        og 卡片和站内截图是两张不同的图，别混用：
+
+        - og.png 是 1200x630 的专用分享图（Twitter 的 summary_large_image 按 2:1、
+          Facebook 按 1.91:1 裁，直接丢 1360x900 的截图进去会被切掉上下）。
+          它带了品名和一句话说明 —— 缩略图尺寸下截图本身几乎全是白底，读不出信息。
+        - preview.png 是真实截图，给结构化数据的 screenshot 字段用。
+
+        两者都分语言，否则英文页分享出去是中文界面。
+    */
+    const ogCard = $derived(
+        `${ORIGIN}${i18n.lang === "zh" ? "/og.png" : "/og-en.png"}`,
+    );
+    const screenshot = $derived(
         `${ORIGIN}${i18n.lang === "zh" ? "/preview.png" : "/preview-en.png"}`,
     );
 
@@ -202,7 +214,7 @@
                     license: "https://opensource.org/licenses/MIT",
                     url: pageUrl,
                     downloadUrl: `${REPO_URL}/releases/latest`,
-                    screenshot: ogImage,
+                    screenshot,
                     softwareHelp: `${REPO_URL}#readme`,
                     isBasedOn: UPSTREAM_URL,
                     codeRepository: REPO_URL,
@@ -245,8 +257,8 @@
     <meta name="robots" content="index, follow, max-image-preview:large" />
 
     <!--
-        og:image 的尺寸写死为 1360x900 —— 与 static/preview.png 一致。
         声明尺寸能让抓取方在下图之前就排好卡片版式，避免首次分享时无图。
+        1200x630 与 static/og.png 一致，改图时两处要一起改。
     -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="dsh desktop" />
@@ -258,14 +270,14 @@
     <meta property="og:title" content={t("site.title")} />
     <meta property="og:description" content={t("site.desc")} />
     <meta property="og:url" content={pageUrl} />
-    <meta property="og:image" content={ogImage} />
-    <meta property="og:image:width" content="1360" />
-    <meta property="og:image:height" content="900" />
+    <meta property="og:image" content={ogCard} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content={t("shot.alt")} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={t("site.title")} />
     <meta name="twitter:description" content={t("site.desc")} />
-    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image" content={ogCard} />
     <meta name="twitter:image:alt" content={t("shot.alt")} />
 
     {@html `<script type="application/ld+json">${appJsonLd}</script>`}

@@ -187,11 +187,6 @@ const zh: Dict = {
 	'foot.license': 'MIT 许可证',
 	'foot.readme': '使用文档',
 	'foot.rights': '基于 MIT 许可证开源',
-
-	// ── 404 ──
-	'nf.title': '页面不存在',
-	'nf.body': '你访问的地址没有对应的页面。',
-	'nf.home': '返回首页'
 };
 
 const en: Dict = {
@@ -358,10 +353,6 @@ const en: Dict = {
 	'foot.license': 'MIT License',
 	'foot.readme': 'Documentation',
 	'foot.rights': 'Open source under the MIT License',
-
-	'nf.title': 'Page not found',
-	'nf.body': 'There is no page at this address.',
-	'nf.home': 'Back to home'
 };
 
 const DICTS: Record<Lang, Dict> = { zh, en };
