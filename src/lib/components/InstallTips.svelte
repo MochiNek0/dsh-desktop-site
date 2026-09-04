@@ -3,7 +3,8 @@
         ── 安装提示 · 终端风格多卡片 ────────────────────────────────
 
         做成四张终端风格的卡片（桌面端 2×2），每张卡带一个深色命令区，
-        命令用打字机逐字敲出。入场用「淡出 + 上滑」交错，干净不晃眼。
+        命令用打字机逐字敲出。卡片入场用「淡出 + 上滑」交错，干净不晃眼；
+        命令区本身不做展开/淡入，只有里面的字符逐个敲出。
 
         动效全部走 GSAP（动态 import，不进首屏包），遵守 motion.ts 约束：
 
@@ -96,32 +97,49 @@
         for (const ch of text) {
             const s = document.createElement("span");
             s.textContent = ch;
-            s.className = "ts-char";
             frag.appendChild(s);
-            if (ch !== "\n") chars.push(s);
+            // 换行只是排版，不逐个显现 —— 也就不打 .ts-char 标记，
+            // 免得被按 .ts-char 取字符的地方算进去
+            if (ch !== "\n") {
+                s.className = "ts-char";
+                chars.push(s);
+            }
         }
         pre.appendChild(frag);
         return chars;
     }
 
+    /**
+     * 先把所有命令拆成字符并藏起来。
+     *
+     * 必须在 revealBatch 之前跑完：拆字放到卡片浮起之后（原来那样）的话，
+     * 完整命令会先原样露出小半秒，再被 textContent="" 抹掉重敲 —— 一闪一顿。
+     * 提前到这里，藏字和 revealBatch 把卡片设成 opacity:0 是同一帧，看不见。
+     *
+     * 仍然不违反约束 A：初始态由 JS 写入，gsap 没加载起来 = 命令原样可读。
+     */
+    function hideCodes(gsap: typeof import("gsap").gsap, grid: HTMLElement) {
+        grid.querySelectorAll<HTMLElement>("[data-code]").forEach((code) => {
+            const chars = typeElement(code);
+            if (chars?.length) gsap.set(chars, { autoAlpha: 0 });
+        });
+    }
+
     /** 敲出这张卡里的命令 */
     function typeCodes(gsap: typeof import("gsap").gsap, card: Element) {
-        card.querySelectorAll<HTMLElement>("[data-code]").forEach((pre) => {
-            const chars = typeElement(pre);
-            if (!chars || !chars.length) return;
-            gsap.set(chars, { autoAlpha: 0 });
-            gsap.to(chars, {
-                autoAlpha: 1,
-                duration: 0.02,
-                ease: "steps(1)",
-                stagger: 0.03,
-            });
+        const chars = card.querySelectorAll(".ts-char");
+        if (!chars.length) return;
+        gsap.to(chars, {
+            autoAlpha: 1,
+            duration: 0.02,
+            ease: "steps(1)",
+            stagger: 0.03,
         });
     }
 
     /*
-        入场：每张卡各自一个触发器（revealBatch），进了视口才动，三拍分开 ——
-        卡片浮起 → 命令区从上沿展开 → 逐字敲出。
+        入场：每张卡各自一个触发器（revealBatch），进了视口才动，两拍分开 ——
+        卡片浮起 → 落地后逐字敲出。命令区那层深色块不参与动画。
 
         原来是整个 grid 一个触发器 + onComplete 里给四段命令一起开敲：
         窄屏单列时 grid 比视口高得多，顶部一露头动画就整批开跑，
@@ -141,32 +159,16 @@
             ([{ gsap }, { revealBatch }]) => {
                 if (cancelled) return;
 
-                // 命令区先折起来（scaleY 不改变布局，卡片高度不会跳）
-                gsap.set(grid.querySelectorAll("[data-code]"), {
-                    scaleY: 0.82,
-                    opacity: 0,
-                    transformOrigin: "top center",
-                });
-
+                hideCodes(gsap, grid);
                 handle = revealBatch(
                     Array.from(grid.children) as HTMLElement[],
-                    (cards) =>
-                        cards.forEach((card) => {
-                            gsap.to(card.querySelectorAll("[data-code]"), {
-                                scaleY: 1,
-                                opacity: 1,
-                                duration: 0.45,
-                                ease: "power3.out",
-                                clearProps: "all",
-                                onComplete: () => typeCodes(gsap, card),
-                            });
-                        }),
+                    (cards) => cards.forEach((card) => typeCodes(gsap, card)),
                 );
 
-                // 中途被拆掉（卸载 / 开启 reduce-motion）时把折起的命令区和
-                // 还没显现的字符还原，否则命令区停在半截、剩下的字永久不可见
+                // 中途被拆掉（卸载 / 开启 reduce-motion）时把还没显现的字符
+                // 还原，否则剩下的字永久不可见
                 restore = () =>
-                    gsap.set(grid.querySelectorAll("[data-code], .ts-char"), {
+                    gsap.set(grid.querySelectorAll(".ts-char"), {
                         clearProps: "all",
                     });
             },
@@ -248,15 +250,8 @@
                         -->
                         <div class="relative">
                             <pre
-                                data-code
                                 class="h-full overflow-x-auto rounded-xl border border-line bg-ink-900 px-4 py-3 pr-12 font-mono text-[13px]/relaxed text-brand-200"
-                            ><code
-                                    >$ {tip.code}</code
-                                ><span
-                                    aria-hidden="true"
-                                    class="term-cursor ml-px inline-block h-[1.05em] w-[0.55em] translate-y-[0.15em] bg-brand-300"
-                                ></span
-                            ></pre>
+                            ><code data-code>$ {tip.code}</code></pre>
                             <!--
                                 复制按钮所在的那一档右侧留白来自 pre 的 pr-12，
                                 但那是**内容尾部**的 padding：命令一超宽、滚动位置在最左时，
@@ -308,23 +303,3 @@
         </div>
     </div>
 </section>
-
-<style>
-    /*
-        闪烁块状光标：纯装饰，不承载可读内容 —— 不受「禁止 CSS 藏内容」约束。
-        app.css 的 prefers-reduced-motion 会把 animation-duration 压到 ~0，
-        光标静态显示即可。
-    */
-    .term-cursor {
-        animation: tip-blink 1.1s steps(2, start) infinite;
-    }
-    @keyframes tip-blink {
-        0%,
-        100% {
-            opacity: 1;
-        }
-        50% {
-            opacity: 0;
-        }
-    }
-</style>
