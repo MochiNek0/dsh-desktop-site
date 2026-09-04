@@ -1,0 +1,38 @@
+{
+  // 纯静态站点：没有 Worker 脚本，只有 vite build 产出的静态资源，
+  // 所以不需要 "main"，也没有任何绑定。
+  //
+  // 这个文件存在的另一个作用是挡住 wrangler 的 auto-config：
+  // 仓库里没有 wrangler 配置时，Workers Builds 会自己猜项目类型，
+  // 并往 package.json 的 build 脚本里加一句 `wrangler types --check`，
+  // 而这个项目没有绑定、从来不会生成 worker-configuration.d.ts，
+  // --check 找不到文件就直接让构建失败。
+  //
+  // ⚠️ "name" 必须和 Cloudflare 面板里 Worker 的名字一致，否则会部署到另一个 Worker。
+  "name": "dsh-desktop-site",
+  "compatibility_date": "2026-08-03",
+
+  // 只从自定义域提供服务。
+  //
+  // 关掉 workers.dev 是个 SEO 决定：同一份内容同时挂在
+  // dsh-desktop-site.<sub>.workers.dev 和 dsh-desktop.cc.cd 上，
+  // 就是两个可被抓取的重复站点。canonical 能缓解但不保证，
+  // 而这个预览域名本来也没在任何地方对外给出。
+  "workers_dev": false,
+  "routes": [
+    {
+      // dsh-desktop.cc.cd 本身就是一个 Cloudflare zone（NS 已委派），
+      // 所以这里绑的是该 zone 的根，不是 cc.cd 的子域路由。
+      "pattern": "dsh-desktop.cc.cd",
+      "custom_domain": true
+    }
+  ],
+
+  "assets": {
+    "directory": "./build",
+    // 真实存在的路径（/）已预渲染；
+    // 真正不存在的地址应该返回 404，而不是拿首页顶包。
+    // adapter-static 的 fallback 就是 404.html。
+    "not_found_handling": "404-page"
+  }
+}

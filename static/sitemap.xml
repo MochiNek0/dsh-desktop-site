@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+	<url>
+		<loc>https://dsh-desktop.cc.cd/</loc>
+		<!-- 内容有实质变动时手动更新这个日期；写成构建日期会让它永远"刚更新过"，
+		     搜索引擎发现日期不可信之后就会整体忽略 lastmod。 -->
+		<lastmod>2026-09-04</lastmod>
+		<changefreq>weekly</changefreq>
+		<priority>1.0</priority>
+	</url>
+</urlset>

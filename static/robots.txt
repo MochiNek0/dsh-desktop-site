@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dsh-desktop.cc.cd/sitemap.xml

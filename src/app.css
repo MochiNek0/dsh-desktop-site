@@ -1,0 +1,393 @@
+@import "tailwindcss";
+
+/*
+  Inter 可变字体（自托管，随构建产物走）。
+
+  不用 Google Fonts CDN：静态站部署在 CDN 上，外域字体会多一次
+  DNS + TLS 往返，正好卡在首屏关键路径上。
+
+  关于体积：这个包会产出 7 个 woff2（拉丁/西里尔/希腊/越南等），共 ~213KB，
+  但每个 @font-face 都带 unicode-range —— 浏览器只会下载页面真正用到的子集。
+  中文和英文用户都只拉 latin 那一个（~47KB），其余永不请求。
+  汉字由系统字体（PingFang / 微软雅黑）承担，Inter 本身没有汉字字形。
+*/
+@import "@fontsource-variable/inter";
+
+/*
+  设计语言：整站取色自站点图标 favicon.svg —— 页面上不再出现图标之外的色相。
+
+  图标里一共只有这几个颜色：
+    #6C8CFF  淡蓝紫（主色，图标里的高光与点缀）
+    #FFB6D5  粉（唯一的暖色，做强调与渐变收尾）
+    #E6E3FF  极浅薰衣草（图标底座）
+    #D9D9D9  浅灰（阴影面）
+    #333333  深灰（主体线条与文字）
+    #000000 / #ffffff
+
+  三条派生规则：
+    1. 中性色不用纯灰，统一往 #E6E3FF 的紫向偏一丝 —— 白卡片放上去才不显脏；
+       只有 line-strong 保留图标里原样的 #D9D9D9。
+    2. 图标里的 #6C8CFF / #FFB6D5 都太亮，浅底上当正文色对比度不够，
+       所以两条色阶都往下压出 600/700 档给文字和链接，原色只留给大色块和装饰。
+    3. 文字灰阶（slate-*）整条重定义成 #333333 → #D9D9D9 之间的等差灰，
+       Tailwind 默认那套偏蓝的 slate 会和主色打架。
+*/
+
+@theme {
+    /* 中性色阶：页面底色 → 卡片 → 分隔线（带一丝 #E6E3FF 的紫） */
+    --color-paper-50: #ffffff;
+    --color-paper-100: #f8f8fc;
+    --color-paper-200: #f2f1f9;
+    --color-paper-300: #e9e7f4;
+    --color-line: #e2e0ee;
+    --color-line-strong: #d9d9d9;
+
+    /* 主色：图标里的淡蓝紫 #6C8CFF 为 500，100 直接用图标底座色 */
+    --color-brand-50: #f1f4ff;
+    --color-brand-100: #e6e3ff;
+    --color-brand-200: #cbd5ff;
+    --color-brand-300: #a9baff;
+    --color-brand-400: #8aa1ff;
+    --color-brand-500: #6c8cff;
+    --color-brand-600: #3f62e8;
+    --color-brand-700: #2e49b4;
+    --color-brand-800: #24397f;
+
+    /* 强调粉：图标里的 #FFB6D5 为 200，往下压出可读的 600/700 */
+    --color-accent-50: #fff2f8;
+    --color-accent-100: #ffe3ef;
+    --color-accent-200: #ffb6d5;
+    --color-accent-400: #ff83b6;
+    --color-accent-500: #f2559a;
+    --color-accent-600: #d22f79;
+    --color-accent-700: #a82260;
+
+    /* 深色：按钮实底、窗口标题栏 —— 取图标的 #333333 与纯黑 */
+    --color-ink-800: #333333;
+    --color-ink-900: #1f1f22;
+    --color-ink-950: #000000;
+
+    /*
+	  正文灰阶：覆盖 Tailwind 默认的 slate，端点锚在图标的 #333333 与 #D9D9D9。
+	  全站的 text-slate-* 因此自动落进这套取色，组件侧不用改。
+	*/
+    --color-slate-300: #d9d9d9;
+    --color-slate-400: #a0a0a8;
+    --color-slate-500: #76767e;
+    --color-slate-600: #55555b;
+    --color-slate-700: #45454a;
+    --color-slate-800: #3a3a3e;
+    --color-slate-900: #333333;
+
+    /*
+	  注意族名：fontsource v5 注册的是 'Inter Variable'，
+	  不是 v3 时代的 'Inter var'。名字写错不会报错，只会静默 fallback
+	  到系统 UI 字体 —— 这正是之前页面「像模板」的直接原因。
+	*/
+    --font-sans:
+        "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system,
+        "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB",
+        "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    --font-mono:
+        ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+        "Liberation Mono", monospace;
+
+    /*
+	  ── 间距阶梯（4px 基准，8px 节奏）──────────────────────────
+	  只用这一套值，不再出现 mt-3 / mt-7 / mt-14 这种临时数字。
+	  阶梯本身是「越大越跳」的：小间距要 4px 精度，大间距要 16px 跨度，
+	  否则 40 和 44 这种相邻值在视觉上根本分不出层级，等于白给。
+
+	  语义分三档，写代码时按「这两个元素是什么关系」来选，而不是按像素挑：
+	    2xs~xs  同一行内的图标与文字、徽标内部        → 紧贴
+	    sm~md   同一块里的标题与正文、卡片内部堆叠    → 成组
+	    lg~xl   卡片之间、并列区块之间                → 分组
+	    2xl~4xl 标题组与内容、区块与区块              → 分节
+	*/
+    --spacing-2xs: 4px;
+    --spacing-xs: 8px;
+    --spacing-sm: 12px;
+    --spacing-md: 16px;
+    --spacing-lg: 20px;
+    --spacing-xl: 24px;
+    --spacing-2xl: 32px;
+    --spacing-3xl: 40px;
+    --spacing-4xl: 48px;
+    --spacing-5xl: 64px;
+    --spacing-6xl: 80px;
+    --spacing-7xl: 96px;
+    --spacing-8xl: 120px;
+
+    /*
+	  ── 高度体系 token ──────────────────────────────────────
+	  三档投影 + 顶边高光，具体用法见下方 card / card-hover / elev-*。
+	*/
+    --elev-1:
+        0 1px 2px -1px rgb(51 51 51 / 0.06), 0 1px 3px rgb(51 51 51 / 0.04);
+    --elev-2:
+        0 1px 2px -1px rgb(51 51 51 / 0.06),
+        0 4px 8px -2px rgb(51 51 51 / 0.06),
+        0 12px 20px -8px rgb(51 51 51 / 0.08);
+    --elev-3:
+        0 1px 2px -1px rgb(51 51 51 / 0.07),
+        0 8px 16px -4px rgb(51 51 51 / 0.08),
+        0 24px 40px -12px rgb(51 51 51 / 0.12);
+    --edge-light: inset 0 1px 0 rgb(255 255 255 / 0.9);
+
+    /* GSAP 与 CSS 共用的缓动：出场用 expo-out 的近似 */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html {
+    scroll-behavior: smooth;
+    /* 锚点跳转时给 sticky 顶栏留出空间 */
+    scroll-padding-top: 5rem;
+    background-color: var(--color-paper-100);
+    -webkit-tap-highlight-color: transparent;
+    /* 移动端横向溢出兜底：装饰光斑再宽也不撑出滚动条 */
+    overflow-x: hidden;
+}
+
+body {
+    @apply bg-paper-100 text-slate-600 antialiased;
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+
+    /*
+	  Inter 的字形变体 —— 「高级感」很大一部分就藏在这几行里：
+	    cv11  单层 a → 更接近 SF/Helvetica 的现代感
+	    ss01  紧凑标点
+	    ss03  更清晰的 6/9
+	    cv05  带尾巴的 l，和数字 1、大写 I 不再糊在一起
+	    tnum  等宽数字：版本号 / 文件体积 / 计数器不会跳动
+	*/
+    font-feature-settings: "cv11", "ss01", "ss03", "cv05";
+    font-variant-ligatures: contextual;
+    /* 可变字体的视觉尺寸轴：小字加粗一点、大字收细一点 */
+    font-optical-sizing: auto;
+}
+
+/*
+  标题：字号越大，字距越要收紧。
+  Tailwind 的 tracking-tight 是一刀切的 -0.025em，对 6xl 来说还不够，
+  对 2xl 又偏多 —— 所以按层级分别给。
+*/
+h1,
+h2,
+h3 {
+    font-feature-settings: "cv11", "ss01", "ss03", "cv05";
+    font-variant-numeric: lining-nums;
+}
+
+/* 数字表格化：版本号、体积、计数器等需要不跳动 */
+.nums-tabular {
+    font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* 键盘可达性：统一焦点环，且只在键盘导航时出现 */
+:focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 2px;
+    border-radius: 0.5rem;
+}
+
+::selection {
+    background-color: color-mix(
+        in oklab,
+        var(--color-brand-500) 30%,
+        transparent
+    );
+    color: var(--color-ink-900);
+}
+
+/* 尊重「减少动态效果」偏好 */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
+}
+
+/*
+  SplitText 行遮罩。
+  mask:'lines' 会给每行套一层 overflow:hidden 的父元素，
+  字才能从"行的下沿"升上来。这里补上 GSAP 不负责的排版细节：
+
+  - 行内下降部（g/y/p 的尾巴）会被 overflow 裁掉，所以给一点下内边距，
+    再用等量负 margin 抵消掉多出来的行高，视觉位置不变。
+*/
+.split-line {
+    padding-bottom: 0.12em;
+    margin-bottom: -0.12em;
+}
+
+/*
+  GSAP 接管前的兜底：
+  绝不用 opacity:0 预设入场元素 —— 预渲染的内容必须一到就可读，
+  JS 失败时也不能留白屏。初始态一律由 gsap.set() 在 onMount 写入。
+  这里只声明合成层提示，不改变任何可见状态。
+*/
+[data-shot] {
+    backface-visibility: hidden;
+}
+
+@utility text-gradient {
+    background-image: linear-gradient(
+        100deg,
+        var(--color-brand-700),
+        var(--color-brand-600) 35%,
+        var(--color-accent-600)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/*
+  ── 高度体系（elevation）────────────────────────────────────
+  之前只有一档投影，所有卡片都在同一个平面上 —— 这就是「卡片都是平的」
+  的根因：不是投影太浅，而是**没有层级差**。
+
+  真实的光照有三个组成部分，缺一个就假：
+    1. 接触阴影   很小、很暗、几乎不扩散 → 物体"贴"在表面上
+    2. 投射阴影   大、柔、淡           → 物体"浮"起来的高度
+    3. 顶边高光   1px 内阴影白线        → 上方光源打在边缘上
+
+  第 3 条是浅色界面最容易被忽略、但最能拉开质感的一层。
+  颜色用图标里的深灰（51 51 51）而不是纯黑：纯黑投影在带紫的底色上会发脏。
+*/
+@utility card {
+    @apply rounded-2xl border border-line bg-white;
+    box-shadow: var(--edge-light), var(--elev-1);
+}
+
+/* 可交互卡片：hover 抬升一整档高度 */
+@utility card-hover {
+    transition:
+        box-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+        border-color 0.28s ease,
+        transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+    &:hover {
+        border-color: var(--color-line-strong);
+        box-shadow: var(--edge-light), var(--elev-3);
+        transform: translateY(-4px);
+    }
+}
+
+/* 显式高度档位，供个别元素直接调用 */
+@utility elev-2 {
+    box-shadow: var(--edge-light), var(--elev-2);
+}
+@utility elev-3 {
+    box-shadow: var(--edge-light), var(--elev-3);
+}
+
+/*
+  版面骨架 —— 两个 utility 分工明确，不要混用：
+
+  1) `section-x`：**所有** padding 都挂在 section 上
+       上下  max-lg 64px / lg 80px
+       左右  max-lg 20px / lg 100px
+
+  2) `container-page`：只负责宽度，自身没有任何 padding
+       宽度 100%，最大宽度 max-lg 700px / lg 1240px
+
+  这里的最大宽度是**内容区宽度**（不含 padding）：
+  lg 下视口需 ≥ 1240 + 200 = 1440px 才能让内容真正跑满 1240px。
+*/
+@utility section-x {
+    padding: var(--spacing-6xl) var(--spacing-lg);
+    @variant lg {
+        padding: var(--spacing-8xl) 100px;
+    }
+}
+
+/*
+  ── 弹性盒版面原语 ──────────────────────────────────────────
+  垂直节奏一律由**父级 gap** 决定，子元素不再自己挂 mt-*。
+  好处很实际：条件渲染的块（比如 {#if tip.code}）不用再操心
+  "第一个元素要不要去掉上边距"，删掉一块也不会留下孤儿间距。
+
+  三档对应三种层级关系，配合上面的 token 使用：
+*/
+
+/* 区块内部：标题组 / 内容组 / 补充说明 之间的分节间距 */
+@utility stack-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3xl);
+    @variant sm {
+        gap: var(--spacing-4xl);
+    }
+}
+
+/* 紧贴：标题与其紧跟的一行说明 */
+@utility stack-tight {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+/*
+  标题组：h2 + 副标题。副标题是标题的延伸而非独立段落，
+  所以用 sm(12px) 而不是 md —— 再大就断开了。
+*/
+@utility stack-heading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    @variant sm {
+        gap: var(--spacing-md);
+    }
+}
+
+/* 按钮组：窄屏纵向堆叠、宽屏横向并排，间距不变 */
+@utility cluster-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    @variant sm {
+        flex-direction: row;
+    }
+}
+
+/*
+  顶栏/移动菜单专用：只要 section-x 的左右留白，垂直方向由 h-16 控制。
+  顶栏套 64/80px 的上下 padding 会把导航撑成一整屏。
+*/
+@utility gutter-x {
+    padding-inline: 20px;
+    @variant lg {
+        padding-inline: 100px;
+    }
+}
+
+/*
+  只负责宽度，自身不带 padding。
+
+  用 content-box：这样即使和 gutter-x 挂在同一个元素上（顶栏就是这么用的），
+  max-width 也只约束内容区，不会被左右 padding 反过来吃掉宽度。
+
+  注意不要写 width:100% —— content-box 下 100% 只约束内容区，左右 padding
+  会额外加在外面，导致总宽超过父容器（顶栏在 1024~1439px 视口下会横向溢出、
+  右侧按钮被裁掉）。块级元素默认的 width:auto 会先填满父容器、再在内部扣掉
+  padding，配合 max-width 才是正确的「宽度 ≤ 父容器」语义。
+*/
+@utility container-page {
+    @apply mx-auto;
+    box-sizing: content-box;
+    max-width: 700px;
+    @variant lg {
+        max-width: 1240px;
+    }
+}
