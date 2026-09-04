@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="%lang%">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -7,28 +7,7 @@
 		<link rel="icon" href="%sveltekit.assets%/favicon.svg" type="image/svg+xml" />
 		<link rel="apple-touch-icon" href="%sveltekit.assets%/icon-192.png" />
 
-		<!--
-			在 SvelteKit 接管前先把 <html lang> 调正，避免语言切换时的闪烁。
-			逻辑与 src/lib/i18n.ts 的 detectLang() 保持一致（中文为默认）。
-		-->
-		<script>
-			(function () {
-				try {
-					var saved = localStorage.getItem('dsh-site-lang');
-					var lang =
-						saved === 'zh' || saved === 'en'
-							? saved
-							: (navigator.language || '').toLowerCase().indexOf('zh') === 0
-								? 'zh'
-								: 'en';
-					document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
-				} catch (e) {
-					/* 隐私模式下 localStorage 不可用，保留默认 zh-CN */
-				}
-			})();
-		</script>
-
-		%sveltekit.head%
+%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>

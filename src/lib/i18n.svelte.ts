@@ -1,12 +1,15 @@
 /**
  * 极简 i18n：一份字典 + 一个 Svelte 5 runes store。
  *
- * 不引入 i18n 库的理由：本站只有一页 + 一个 404，文案是静态的，
- * 语言切换不需要路由（避免 /en/ 双份静态产物和 SEO 重复内容处理）。
- * 语言选择记在 localStorage，并同步到 <html lang>。
+ * 不引入 i18n 库的理由：本站只有一页 + 一个 404，文案是静态的。
+ *
+ * 语言由**路由**决定，不由 localStorage 决定：中文在 `/`，英文在 `/en/`。
+ * 之前是单 URL + 客户端切换，代价是英文文案根本进不了预渲染的 HTML ——
+ * 爬虫只看得到中文，这 126 条英文翻译对搜索引擎等于不存在。
+ *
+ * 所以这里只留一个「当前语言」的容器，由根 layout 从路由参数写入；
+ * 没有探测、没有持久化、没有重定向（那会让 `/` 分享出去后变成另一种语言）。
  */
-
-import { browser } from '$app/environment';
 
 export type Lang = 'zh' | 'en';
 
@@ -363,52 +366,9 @@ const en: Dict = {
 
 const DICTS: Record<Lang, Dict> = { zh, en };
 
-const STORAGE_KEY = 'dsh-site-lang';
-
-function detectLang(): Lang {
-	if (!browser) return 'zh';
-	try {
-		const saved = localStorage.getItem(STORAGE_KEY);
-		if (saved === 'zh' || saved === 'en') return saved;
-	} catch {
-		// localStorage 可能被隐私模式禁用，忽略即可
-	}
-	// 中文为主：只有明确不是中文的浏览器才切到英文
-	const nav = navigator.languages?.length ? navigator.languages : [navigator.language];
-	const first = (nav[0] || '').toLowerCase();
-	return first.startsWith('zh') || first === '' ? 'zh' : 'en';
-}
-
 class I18nStore {
+	/** 由根 layout 依据路由参数写入；预渲染阶段就必须是对的值。 */
 	lang = $state<Lang>('zh');
-
-	/** 在客户端启动时调用，读取用户偏好 */
-	init() {
-		this.lang = detectLang();
-		this.syncHtml();
-	}
-
-	set(next: Lang) {
-		this.lang = next;
-		if (browser) {
-			try {
-				localStorage.setItem(STORAGE_KEY, next);
-			} catch {
-				// 忽略写入失败
-			}
-			this.syncHtml();
-		}
-	}
-
-	toggle() {
-		this.set(this.lang === 'zh' ? 'en' : 'zh');
-	}
-
-	private syncHtml() {
-		if (browser) {
-			document.documentElement.lang = this.lang === 'zh' ? 'zh-CN' : 'en';
-		}
-	}
 
 	/** 取文案；缺失时回落到中文，再回落到 key 本身（方便发现漏翻） */
 	t = (key: string): string => {
@@ -417,3 +377,18 @@ class I18nStore {
 }
 
 export const i18n = new I18nStore();
+
+/** 路由参数 → 语言。`[[lang=lang]]` 只可能是 undefined（中文）或 'en'。 */
+export function langFromParam(param: string | undefined): Lang {
+	return param === 'en' ? 'en' : 'zh';
+}
+
+/** 语言 → 该语言首页的路径。用于语言切换链接和 hreflang。 */
+export function pathForLang(lang: Lang): string {
+	return lang === 'en' ? '/en/' : '/';
+}
+
+/** <html lang> 用的 BCP 47 标签。 */
+export function htmlLang(lang: Lang): string {
+	return lang === 'en' ? 'en' : 'zh-CN';
+}

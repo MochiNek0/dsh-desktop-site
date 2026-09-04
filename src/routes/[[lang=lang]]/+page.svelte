@@ -4,7 +4,7 @@
     import Icon from "$lib/components/Icon.svelte";
     import InstallTips from "$lib/components/InstallTips.svelte";
     import Logo from "$lib/components/Logo.svelte";
-    import { i18n } from "$lib/i18n.svelte";
+    import { htmlLang, i18n, pathForLang, LANGS } from "$lib/i18n.svelte";
     import type { MotionHandle, PageMotionHandle } from "$lib/motion";
     import { LATEST_VERSION, REPO_URL, UPSTREAM_URL } from "$lib/releases";
     import { onMount } from "svelte";
@@ -14,6 +14,13 @@
     // 站点根地址：canonical / og:url / 结构化数据里的绝对链接都从这里取。
     // 必须是绝对地址 —— 相对路径在被抓取或转发时会解析到错误的源。
     const ORIGIN = "https://dsh-desktop.cc.cd";
+
+    // 本页在当前语言下的绝对地址；canonical / og:url / 结构化数据共用。
+    const pageUrl = $derived(`${ORIGIN}${pathForLang(i18n.lang)}`);
+    // 截图分语言，og 卡片也要跟着换，否则英文页分享出去是中文界面。
+    const ogImage = $derived(
+        `${ORIGIN}${i18n.lang === "zh" ? "/preview.png" : "/preview-en.png"}`,
+    );
 
     let pageEl: HTMLElement;
     /**
@@ -157,8 +164,8 @@
         JSON.stringify({
             "@context": "https://schema.org",
             "@type": "FAQPage",
-            "@id": `${ORIGIN}/#faq`,
-            isPartOf: { "@id": `${ORIGIN}/#website` },
+            "@id": `${pageUrl}#faq`,
+            isPartOf: { "@id": `${pageUrl}#website` },
             mainEntity: faqs.map((f) => ({
                 "@type": "Question",
                 name: t(f.q),
@@ -178,28 +185,28 @@
             "@graph": [
                 {
                     "@type": "WebSite",
-                    "@id": `${ORIGIN}/#website`,
-                    url: `${ORIGIN}/`,
+                    "@id": `${pageUrl}#website`,
+                    url: pageUrl,
                     name: "dsh desktop",
                     description: t("site.desc"),
-                    inLanguage: i18n.lang === "zh" ? "zh-CN" : "en",
+                    inLanguage: htmlLang(i18n.lang),
                 },
                 {
                     "@type": "SoftwareApplication",
-                    "@id": `${ORIGIN}/#app`,
+                    "@id": `${pageUrl}#app`,
                     name: "dsh desktop",
                     description: t("site.desc"),
                     applicationCategory: "DeveloperApplication",
                     operatingSystem: "Windows, macOS, Linux",
                     softwareVersion: LATEST_VERSION,
                     license: "https://opensource.org/licenses/MIT",
-                    url: `${ORIGIN}/`,
+                    url: pageUrl,
                     downloadUrl: `${REPO_URL}/releases/latest`,
-                    screenshot: `${ORIGIN}/preview.png`,
+                    screenshot: ogImage,
                     softwareHelp: `${REPO_URL}#readme`,
                     isBasedOn: UPSTREAM_URL,
                     codeRepository: REPO_URL,
-                    isPartOf: { "@id": `${ORIGIN}/#website` },
+                    isPartOf: { "@id": `${pageUrl}#website` },
                     offers: {
                         "@type": "Offer",
                         price: "0",
@@ -214,7 +221,21 @@
 <svelte:head>
     <title>{t("site.title")}</title>
     <meta name="description" content={t("site.desc")} />
-    <link rel="canonical" href={`${ORIGIN}/`} />
+    <link rel="canonical" href={pageUrl} />
+
+    <!--
+        hreflang 必须是双向的：每个语言版本都要列出**全部**版本（含自己），
+        只在一边写会被 Google 当作无效标注整组丢掉。
+        x-default 指中文页 —— 它是根路径，也是语言不匹配时的兜底。
+    -->
+    {#each LANGS as l (l)}
+        <link
+            rel="alternate"
+            hreflang={htmlLang(l)}
+            href={`${ORIGIN}${pathForLang(l)}`}
+        />
+    {/each}
+    <link rel="alternate" hreflang="x-default" href={`${ORIGIN}/`} />
 
     <!--
         max-image-preview:large 让搜索结果可以放大展示预览图。
@@ -229,18 +250,22 @@
     -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="dsh desktop" />
-    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:locale" content={i18n.lang === "zh" ? "zh_CN" : "en_US"} />
+    <meta
+        property="og:locale:alternate"
+        content={i18n.lang === "zh" ? "en_US" : "zh_CN"}
+    />
     <meta property="og:title" content={t("site.title")} />
     <meta property="og:description" content={t("site.desc")} />
-    <meta property="og:url" content={`${ORIGIN}/`} />
-    <meta property="og:image" content={`${ORIGIN}/preview.png`} />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1360" />
     <meta property="og:image:height" content="900" />
     <meta property="og:image:alt" content={t("shot.alt")} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={t("site.title")} />
     <meta name="twitter:description" content={t("site.desc")} />
-    <meta name="twitter:image" content={`${ORIGIN}/preview.png`} />
+    <meta name="twitter:image" content={ogImage} />
     <meta name="twitter:image:alt" content={t("shot.alt")} />
 
     {@html `<script type="application/ld+json">${appJsonLd}</script>`}

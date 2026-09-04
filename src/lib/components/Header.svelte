@@ -1,10 +1,13 @@
 <script lang="ts">
-	import { i18n } from '$lib/i18n.svelte';
+	import { htmlLang, i18n, pathForLang } from '$lib/i18n.svelte';
 	import { REPO_URL } from '$lib/releases';
 	import Icon from './Icon.svelte';
 	import Logo from './Logo.svelte';
 
 	const t = $derived(i18n.t);
+
+	// 切换器上显示的是「将要切到的语言」，所以到处用的都是这一个。
+	const otherLang = $derived(i18n.lang === 'zh' ? 'en' : 'zh');
 
 	let scrolled = $state(false);
 	let mobileOpen = $state(false);
@@ -36,7 +39,7 @@
 	<div class="gutter-x container-page flex h-16 items-center justify-between gap-md">
 		<!-- 品牌：用应用自己的鲸鱼图标 -->
 		<a
-			href="/"
+			href={pathForLang(i18n.lang)}
 			class="flex shrink-0 items-center gap-sm rounded-lg"
 			onclick={close}
 			aria-label="dsh desktop"
@@ -61,16 +64,16 @@
 
 		<div class="flex items-center gap-2xs">
 			<!-- 语言切换：按钮上显示的是「将切换到的目标语言」 -->
-			<button
-				type="button"
-				onclick={() => i18n.toggle()}
+			<a
+				href={pathForLang(otherLang)}
+				hreflang={htmlLang(otherLang)}
 				class="flex min-h-11 items-center gap-2xs rounded-lg px-2.5 text-sm text-slate-600 transition-colors hover:bg-paper-200 hover:text-slate-900"
 				aria-label={t('nav.lang')}
 				title={t('nav.lang')}
 			>
 				<Icon name="globe" size={16} />
-				<span class="font-medium">{i18n.lang === 'zh' ? 'EN' : '中文'}</span>
-			</button>
+				<span class="font-medium">{otherLang === 'en' ? 'EN' : '中文'}</span>
+			</a>
 
 			<a
 				href={REPO_URL}
