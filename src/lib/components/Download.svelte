@@ -118,35 +118,67 @@
         activeFile = { ...activeFile, [group.id]: file };
     }
 
-    /**
-     * 格式 tab 的文字按自身宽度排（不强制等宽），所以黑色激活胶囊的
-     * 位置/宽度必须实测当前选中按钮的几何，不能再按 1/N 估算。
-     */
-    function measureTabs(node: HTMLElement, active: string) {
-        const pill = node.querySelector<HTMLElement>("[data-pill]");
-        const update = () => {
-            if (!pill) return;
+    /*
+        格式 tab 的文字按自身宽度排（不强制等宽），所以黑色激活胶囊的
+        位置/宽度必须实测当前选中按钮的几何，不能再按 1/N 估算。
+
+        三个平台各有一根 tab，每根自己 rAF 的话，同一帧里就成了
+        「读 → 写 → 读 → 写」：后面每次读几何都得先让浏览器把前面写进去的
+        样式重新排一遍版，也就是强制同步重排。所以所有 rail 共用一次 rAF ——
+        先把要量的全量完，再统一写回去，一帧里只失效一次布局。
+    */
+    const dirtyRails = new Set<HTMLElement>();
+    let railFrame = 0;
+
+    function flushRails() {
+        railFrame = 0;
+        const rails = [...dirtyRails];
+        dirtyRails.clear();
+
+        // 第一遍：只读
+        const writes = rails.flatMap((rail) => {
+            const pill = rail.querySelector<HTMLElement>("[data-pill]");
             const btn = Array.from(
-                node.querySelectorAll<HTMLButtonElement>(
+                rail.querySelectorAll<HTMLButtonElement>(
                     "button[role='radio']",
                 ),
             ).find((b) => b.getAttribute("aria-checked") === "true");
-            if (!btn) return;
+            if (!pill || !btn) return [];
             // 用 viewport 坐标差算精确位置：胶囊 absolute 定位，
             // 参照即当前 rail，所以 left = 按钮距 rail 左缘的像素差。
-            const railRect = node.getBoundingClientRect();
+            const railRect = rail.getBoundingClientRect();
             const btnRect = btn.getBoundingClientRect();
-            pill.style.left = `${btnRect.left - railRect.left}px`;
-            pill.style.width = `${btnRect.width}px`;
-        };
-        // 首帧后再量一次，等字体装载、布局稳定
-        requestAnimationFrame(update);
+            return [
+                {
+                    pill,
+                    left: btnRect.left - railRect.left,
+                    width: btnRect.width,
+                },
+            ];
+        });
+
+        // 第二遍：只写
+        for (const w of writes) {
+            w.pill.style.left = `${w.left}px`;
+            w.pill.style.width = `${w.width}px`;
+        }
+    }
+
+    function queueRail(rail: HTMLElement) {
+        dirtyRails.add(rail);
+        // rAF 里量：这时 DOM 已经排好版，读几何不会再触发额外的重排
+        railFrame ||= requestAnimationFrame(flushRails);
+    }
+
+    function measureTabs(node: HTMLElement, active: string) {
+        queueRail(node);
         return {
-            destroy() {
-                // pill 是节点内部元素，无需额外清理
-            },
             update(active: string) {
-                requestAnimationFrame(update);
+                queueRail(node);
+            },
+            destroy() {
+                // 卸载后别再去量它：脱离文档的节点量出来全是 0
+                dirtyRails.delete(node);
             },
         };
     }
@@ -255,7 +287,7 @@
 
                     {#key mirror.id}
                         <span
-                            class="min-w-0 max-w-full truncate text-[11px] text-slate-400 sm:ml-auto sm:max-w-5 sm:text-right"
+                            class="min-w-0 max-w-full truncate text-[11px] text-slate-400 sm:ml-auto sm:text-right"
                             in:fly={{
                                 y: 4,
                                 duration: swapMs,

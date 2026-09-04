@@ -210,8 +210,17 @@
                     代价：卡片必须**恰好三个直接子元素**，多一个就挤进第四行、
                     整行对齐作废 —— 命令区连同它的复制反馈只能算作一格。
                 -->
+                <!--
+                    grid-cols-1 不是多余的：只写 grid-rows-subgrid 的话列轨道是隐式的
+                    `auto`，会按 max-content 撑开 —— 窄屏上那条命令有 515px 宽，
+                    轨道就跟着变 515px，<pre> 填满轨道后内容没超出自己，
+                    overflow-x-auto 永远不触发，深色块直接冲出卡片右缘
+                    （实测 375px 下越界 224px，整页还多出 183px 横向滚动）。
+                    grid-cols-1 给的是 minmax(0, 1fr)，轨道下限归零，
+                    命令区这才回到卡片宽度里，超长命令改为块内横向滚动。
+                -->
                 <article
-                    class="card row-span-3 grid grid-rows-subgrid gap-md p-lg sm:p-xl"
+                    class="card row-span-3 grid grid-cols-1 grid-rows-subgrid gap-md p-lg sm:p-xl"
                 >
                     <!-- 头部：图标 + 标题 -->
                     <div class="flex items-center gap-sm">
@@ -248,6 +257,17 @@
                                     class="term-cursor ml-px inline-block h-[1.05em] w-[0.55em] translate-y-[0.15em] bg-brand-300"
                                 ></span
                             ></pre>
+                            <!--
+                                复制按钮所在的那一档右侧留白来自 pre 的 pr-12，
+                                但那是**内容尾部**的 padding：命令一超宽、滚动位置在最左时，
+                                这段留白被推到视口外，文字就直接压在按钮底下。
+                                所以再铺一层贴着块右缘的渐隐罩 —— 文字滑到按钮前先淡掉，
+                                滚到尽头时 pr-12 又保证最后几个字符不被挡。
+                            -->
+                            <span
+                                aria-hidden="true"
+                                class="pointer-events-none absolute inset-y-px right-px w-14 rounded-r-xl bg-linear-to-l from-ink-900 from-55% to-transparent"
+                            ></span>
                             <button
                                 type="button"
                                 onclick={() => copyCmd(tip.id, tip.code!)}

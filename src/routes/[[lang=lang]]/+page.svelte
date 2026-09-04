@@ -30,9 +30,22 @@
     const ogCard = $derived(
         `${ORIGIN}${i18n.lang === "zh" ? "/og.png" : "/og-en.png"}`,
     );
-    const screenshot = $derived(
-        `${ORIGIN}${i18n.lang === "zh" ? "/preview.png" : "/preview-en.png"}`,
-    );
+    /*
+        截图的路径基名。同一张图有 4 个衍生文件：
+        {base}.avif / {base}.webp（1360w）和 {base}-sm.*（680w）。
+        png 只留 1360 那一张，作为 <picture> 兜底和结构化数据的 screenshot。
+    */
+    const shotBase = $derived(i18n.lang === "zh" ? "/preview" : "/preview-en");
+    const screenshot = $derived(`${ORIGIN}${shotBase}.png`);
+    /*
+        截图的渲染宽度完全由 container-page + section-x 决定（见 app.css）：
+          lg 及以上  min(1240px, 100vw - 200px)
+          lg 以下    min(700px,  100vw - 40px)
+        这串 sizes 必须跟着那两个值走，写错的话浏览器会挑错档 ——
+        偏小是糊，偏大是白下载。
+    */
+    const SHOT_SIZES =
+        "(min-width: 1440px) 1240px, (min-width: 1024px) calc(100vw - 200px), (min-width: 740px) 700px, calc(100vw - 40px)";
 
     let pageEl: HTMLElement;
     /**
@@ -439,17 +452,37 @@
                     data-shot
                     class="overflow-hidden rounded-xl border border-line bg-white elev-3 sm:rounded-2xl"
                 >
-                    <img
-                        src={i18n.lang === "zh"
-                            ? "/preview.png"
-                            : "/preview-en.png"}
-                        alt={t("shot.alt")}
-                        width="1360"
-                        height="900"
-                        loading="eager"
-                        fetchpriority="high"
-                        class="block w-full"
-                    />
+                    <!--
+                        源图是 1360x900 的 PNG（79KB）。这是 LCP 元素，所以：
+                        - avif / webp 两级现代格式，PNG 只作兜底（现代浏览器不会去取它）
+                        - 680w 变体给窄屏：移动端渲染宽度约 372px，即使 DPR 2 也只要
+                          744 设备像素，直接下 1360w 是四倍多的无用像素
+
+                        不额外加 <link rel="preload">：这张图就在初始 HTML 里，
+                        预加载扫描器早就发现它了，加了只是把 sizes 抄第二遍，
+                        两处一旦漂移就会重复下载。
+                    -->
+                    <picture>
+                        <source
+                            type="image/avif"
+                            srcset="{shotBase}-sm.avif 680w, {shotBase}.avif 1360w"
+                            sizes={SHOT_SIZES}
+                        />
+                        <source
+                            type="image/webp"
+                            srcset="{shotBase}-sm.webp 680w, {shotBase}.webp 1360w"
+                            sizes={SHOT_SIZES}
+                        />
+                        <img
+                            src="{shotBase}.png"
+                            alt={t("shot.alt")}
+                            width="1360"
+                            height="900"
+                            loading="eager"
+                            fetchpriority="high"
+                            class="block w-full"
+                        />
+                    </picture>
                 </div>
             </div>
         </div>
