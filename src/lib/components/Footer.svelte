@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { i18n } from "$lib/i18n.svelte";
+    import { i18n, pathForLang } from "$lib/i18n.svelte";
     import { REPO_URL, UPSTREAM_URL } from "$lib/releases";
     import Icon from "./Icon.svelte";
     import Logo from "./Logo.svelte";
@@ -7,22 +7,33 @@
     const t = $derived(i18n.t);
     const year = new Date().getFullYear();
 
+    /*
+        站内锚点带上当前语言的首页路径，理由同 Header：
+        Footer 也在根 layout 里，会跟着渲染到 /404 上，
+        裸锚点在那一页指向不存在的区块（预渲染会直接报错）。
+    */
+    const home = $derived(pathForLang(i18n.lang));
+
     const cols = $derived([
         {
             title: t("foot.product"),
             links: [
                 {
                     label: t("nav.download"),
-                    href: "#download",
+                    href: `${home}#download`,
                     external: false,
                 },
                 {
                     label: t("nav.features"),
-                    href: "#features",
+                    href: `${home}#features`,
                     external: false,
                 },
-                { label: t("nav.plugins"), href: "#plugins", external: false },
-                { label: t("nav.faq"), href: "#faq", external: false },
+                {
+                    label: t("nav.plugins"),
+                    href: `${home}#plugins`,
+                    external: false,
+                },
+                { label: t("nav.faq"), href: `${home}#faq`, external: false },
             ],
         },
         {

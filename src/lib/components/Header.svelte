@@ -12,12 +12,23 @@
 	let scrolled = $state(false);
 	let mobileOpen = $state(false);
 
-	const links = [
-		{ href: '#features', key: 'nav.features' },
-		{ href: '#download', key: 'nav.download' },
-		{ href: '#plugins', key: 'nav.plugins' },
-		{ href: '#faq', key: 'nav.faq' }
-	];
+	/*
+		锚点带上当前语言的首页路径，而不是裸 '#features'。
+
+		裸锚点在 /404 上指向 /404#features —— 那一页没有这些区块，点了没反应
+		（预渲染时 SvelteKit 就会因为找不到对应 id 直接报错）。
+		带上首页路径后，从任何页面点导航都会回到对应语言的首页再滚过去。
+	*/
+	const links = $derived(
+		[
+			{ hash: '#features', key: 'nav.features' },
+			{ hash: '#download', key: 'nav.download' },
+			{ hash: '#plugins', key: 'nav.plugins' },
+			{ hash: '#faq', key: 'nav.faq' }
+		].map((l) => ({ ...l, href: `${pathForLang(i18n.lang)}${l.hash}` }))
+	);
+
+	const downloadHref = $derived(`${pathForLang(i18n.lang)}#download`);
 
 	function onScroll() {
 		scrolled = window.scrollY > 8;
@@ -52,7 +63,7 @@
 
 		<!-- 桌面导航 -->
 		<nav class="hidden items-center gap-2xs md:flex" aria-label="Main">
-			{#each links as link (link.href)}
+			{#each links as link (link.hash)}
 				<a
 					href={link.href}
 					class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-paper-200 hover:text-slate-900"
@@ -87,7 +98,7 @@
 			</a>
 
 			<a
-				href="#download"
+				href={downloadHref}
 				class="hidden items-center gap-2xs rounded-lg bg-ink-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-ink-800 sm:flex"
 			>
 				<Icon name="download" size={15} />
@@ -124,7 +135,7 @@
 			-->
 			<div class="flex flex-col gap-sm">
 				<div class="flex flex-col gap-2xs">
-					{#each links as link (link.href)}
+					{#each links as link (link.hash)}
 						<a
 							href={link.href}
 							onclick={close}
@@ -147,7 +158,7 @@
 				</div>
 
 				<a
-					href="#download"
+					href={downloadHref}
 					onclick={close}
 					class="flex min-h-11 items-center justify-center gap-xs rounded-xl bg-ink-900 px-4 font-semibold text-white transition-colors hover:bg-ink-800"
 				>

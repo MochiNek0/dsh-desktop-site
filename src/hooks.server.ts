@@ -10,7 +10,11 @@ import { htmlLang, langFromParam } from '$lib/i18n.svelte';
  * 对搜索引擎和读屏器来说，这是判断页面语言的首要依据。
  */
 export const handle: Handle = async ({ event, resolve }) => {
-	const lang = htmlLang(langFromParam(event.params.lang));
+	/*
+		/404 的文案是写死的英文（那一页拿不到语言参数，见 NotFound.svelte），
+		所以 <html lang> 也要跟着说 en —— 否则读屏器会用中文的读音规则念英文。
+	*/
+	const lang = event.route.id === '/404' ? 'en' : htmlLang(langFromParam(event.params.lang));
 
 	return resolve(event, {
 		transformPageChunk: ({ html }) => html.replace('%lang%', lang)
