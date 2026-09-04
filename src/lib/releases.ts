@@ -5,7 +5,7 @@
  * 这是一个版本无关的地址，GitHub 会 302 到当前最新 release 的同名资产。
  * 因此发新版本时**不需要改动本站代码** —— 只要资产文件名的格式不变。
  *
- * 但文件名里带版本号（dsh-desktop_0.1.9_x64-setup.exe），所以“最新版”地址
+ * 但文件名里带版本号（dsh-desktop_0.1.10_x64-setup.exe），所以“最新版”地址
  * 只能用于文件名固定的资产。带版本号的文件必须用精确 tag 地址。
  * 见 LATEST_VERSION 说明。
  */
@@ -17,7 +17,7 @@ export const REPO_URL = `https://github.com/${REPO}`;
  * 当前发布版本。发新版时只改这一处。
  * （Tauri 的资产文件名内嵌版本号，无法用版本无关地址覆盖。）
  */
-export const LATEST_VERSION = '0.1.9';
+export const LATEST_VERSION = '0.1.10';
 
 /** 上游 DeepSeek Harness 项目 */
 export const UPSTREAM_URL = 'https://github.com/deepseek-ai/deepseek-harness';
