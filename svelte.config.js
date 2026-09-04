@@ -11,6 +11,19 @@ const config = {
 			本站就挂在域名根下，没有 base path，绝对路径没有歧义也更好排查。
 		*/
 		paths: { relative: false },
+		/*
+			把路由用到的 CSS 直接内联进 <head>，消掉两个渲染阻塞请求。
+
+			本站只有 3 个预渲染页面，CSS 总量 ~38.7KB（未压缩），
+			而这两个 <link rel="stylesheet"> 在关键路径上要多花一趟往返 ——
+			首屏速度换掉「CSS 独立强缓存」这点收益是划算的：
+			绝大多数访客只看一个页面，跨页复用根本用不上。
+
+			阈值按**单个文件**比较，超过就静默退回外链。
+			当前 0.*.css 是 38589、3.*.css 是 160，留了点余量；
+			CSS 涨过这个数就要么调大，要么就是该瘦身了。
+		*/
+		inlineStyleThreshold: 45000,
 		adapter: adapter({
 			pages: 'build',
 			assets: 'build',
