@@ -139,8 +139,8 @@ async function main() {
 
 	writeFileSync(OUT, JSON.stringify(data, null, '\t') + '\n');
 
-	// 进制跟站上的 formatSize 保持一致（1000），否则日志和页面会对同一个文件报两个数
-	const mb = (b) => `${(b / 1e6).toFixed(2)} MB`;
+	// 进制跟站上的 formatSize 保持一致（1024），否则日志和页面会对同一个文件报两个数
+	const mb = (b) => `${(b / 1024 ** 2).toFixed(2)} MB`;
 	console.log(
 		`[sync-release] v${data.version}  下载量合计 ${totalDownloads.toLocaleString('en-US')}`
 	);

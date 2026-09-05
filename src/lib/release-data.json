@@ -1,38 +1,38 @@
 {
-	"version": "0.1.10",
-	"tag": "v0.1.10",
-	"totalDownloads": 365,
+	"version": "0.1.11",
+	"tag": "v0.1.11",
+	"totalDownloads": 389,
 	"assets": {
-		"dsh-desktop_0.1.10_amd64.AppImage": {
+		"dsh-desktop_0.1.11_amd64.AppImage": {
 			"size": 81701368,
-			"downloads": 3
+			"downloads": 1
 		},
-		"dsh-desktop_0.1.10_amd64.AppImage.sig": {
+		"dsh-desktop_0.1.11_amd64.AppImage.sig": {
 			"size": 424,
 			"downloads": 1
 		},
-		"dsh-desktop_0.1.10_amd64.deb": {
-			"size": 3970746,
+		"dsh-desktop_0.1.11_amd64.deb": {
+			"size": 3972064,
 			"downloads": 3
 		},
-		"dsh-desktop_0.1.10_amd64.deb.sig": {
+		"dsh-desktop_0.1.11_amd64.deb.sig": {
 			"size": 420,
 			"downloads": 1
 		},
-		"dsh-desktop_0.1.10_universal.dmg": {
-			"size": 6059196,
-			"downloads": 3
+		"dsh-desktop_0.1.11_universal.dmg": {
+			"size": 6062852,
+			"downloads": 1
 		},
-		"dsh-desktop_0.1.10_x64-setup.exe": {
-			"size": 2388173,
-			"downloads": 4
+		"dsh-desktop_0.1.11_x64-setup.exe": {
+			"size": 2391300,
+			"downloads": 1
 		},
-		"dsh-desktop_0.1.10_x64-setup.exe.sig": {
+		"dsh-desktop_0.1.11_x64-setup.exe.sig": {
 			"size": 424,
 			"downloads": 1
 		},
 		"dsh-desktop_universal.app.tar.gz": {
-			"size": 6121479,
+			"size": 6122977,
 			"downloads": 1
 		},
 		"dsh-desktop_universal.app.tar.gz.sig": {
@@ -44,5 +44,5 @@
 			"downloads": 5
 		}
 	},
-	"fetchedAt": "2026-09-05T11:55:50.763Z"
+	"fetchedAt": "2026-09-05T13:53:30.432Z"
 }

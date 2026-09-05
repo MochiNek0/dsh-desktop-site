@@ -213,17 +213,18 @@ export function assetSize(file: string): number | null {
 /**
  * 字节数 → 展示用体积。
  *
- * 用 1000 进制而不是 1024：本区块底部就链去 GitHub 的 release 页，
- * 用户最常拿来对照的就是那个数字，而 GitHub 用的是 1000 进制
- * （81,701,368 B 在 GitHub 上显示 81.7 MB，按 1024 算则是 77.9 MiB）。
+ * 用 1024 进制：本区块底部就链去 GitHub 的 release 页，用户最常拿来对照的
+ * 就是那个数字，而 GitHub 按 1024 算、标 MB
+ * （81,701,368 B 在 GitHub 上显示 77.9 MB，按 1000 算则是 81.7 MB）。
  * 两个官方页面对同一个文件给出两个数，比「和资源管理器不一致」更让人犯嘀咕。
+ * 单位也跟着 GitHub 写 MB / KB 而不是 MiB / KiB。
  *
  * 精度按量级给，统一保持约 3 位有效数字：
  * 小包多一位小数才分得出差别，80 MB 的包给到 0.01 MB 反而是噪声。
  */
 export function formatSize(bytes: number): string {
-	const mb = bytes / 1e6;
-	if (mb < 1) return `${Math.round(bytes / 1e3)} KB`;
+	const mb = bytes / 1024 ** 2;
+	if (mb < 1) return `${Math.round(bytes / 1024)} KB`;
 	return `${mb.toFixed(mb < 10 ? 2 : 1)} MB`;
 }
 
