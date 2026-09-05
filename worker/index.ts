@@ -42,6 +42,14 @@ const MIRROR_IDS = new Set(['ghproxy', 'ghproxycom', 'ghfast', 'llkk', 'direct']
 const FILE_RE = /^[A-Za-z0-9._-]{1,120}$/;
 /** 客户端每次会话生成的 16 位十六进制 */
 const SID_RE = /^[0-9a-f]{16}$/;
+/**
+ * 来源标记：?from= 的值，或 referrer 的主机名。
+ *
+ * 这里没法像 mirror 那样用固定白名单 —— 新平台随时会加，
+ * 改一次 Worker 才能记一个新来源不现实。所以退而求其次：
+ * 限定字符集并封顶长度，保证这个公开端点存不进任意字符串。
+ */
+const SRC_RE = /^[a-z0-9._-]{1,32}$/;
 
 const NO_CONTENT = { status: 204 } as const;
 
@@ -67,7 +75,7 @@ async function handleClick(request: Request, env: Env, ctx: ExecutionContext): P
 		return new Response(null, { status: 400 });
 	}
 
-	const { sid, file, mirror } = (body ?? {}) as Record<string, unknown>;
+	const { sid, file, mirror, src } = (body ?? {}) as Record<string, unknown>;
 	if (
 		typeof sid !== 'string' ||
 		!SID_RE.test(sid) ||
@@ -80,13 +88,20 @@ async function handleClick(request: Request, env: Env, ctx: ExecutionContext): P
 	}
 
 	/*
+		src 是可选的，而且**不合法就丢掉、不拒绝整条**：
+		来源只是运营信息，下载点击本身才是要保住的数据。
+		为一个畸形的 ?from= 把整次点击记成 400，就本末倒置了。
+	*/
+	const source = typeof src === 'string' && SRC_RE.test(src) ? src : null;
+
+	/*
 		waitUntil：写库不能挡住响应。用户这时候正要跳去下载，
 		多等一个 D1 往返毫无意义。写失败就吞掉 —— 统计再重要也
 		排在「不打扰下载」后面。
 	*/
 	ctx.waitUntil(
-		env.DB.prepare('INSERT INTO clicks (ts, sid, file, mirror) VALUES (?, ?, ?, ?)')
-			.bind(Math.floor(Date.now() / 1000), sid, file, mirror)
+		env.DB.prepare('INSERT INTO clicks (ts, sid, file, mirror, src) VALUES (?, ?, ?, ?, ?)')
+			.bind(Math.floor(Date.now() / 1000), sid, file, mirror, source)
 			.run()
 			.catch((err: unknown) => console.error('[click] 写入失败', err))
 	);
@@ -124,8 +139,12 @@ async function handleDaily(request: Request, env: Env): Promise<Response> {
 		byMirror 用原始计数：它是拿去从 GitHub 增量里减的，而每一次
 		透传镜像的点击都可能在 GitHub 那边 +1，所以减得多一点更安全 ——
 		宁可少算总量，不可虚报。
+
+		bySrc 跟 distinct 同口径（去重），因为它要回答的是「这个平台带来了
+		几次下载」。用原始计数的话，换过镜像的人会被算成两次，
+		平台之间就没法横向比了。
 	*/
-	const [distinct, byMirror] = await Promise.all([
+	const [distinct, byMirror, bySrc] = await Promise.all([
 		env.DB.prepare(
 			"SELECT COUNT(DISTINCT sid || '|' || file) AS n FROM clicks WHERE ts >= ? AND ts < ?"
 		)
@@ -133,6 +152,13 @@ async function handleDaily(request: Request, env: Env): Promise<Response> {
 			.all(),
 		env.DB.prepare(
 			'SELECT mirror, COUNT(*) AS n FROM clicks WHERE ts >= ? AND ts < ? GROUP BY mirror'
+		)
+			.bind(from, to)
+			.all(),
+		// COALESCE 在 SQL 里收掉 NULL：否则 JS 侧 String(null) 会变成 "null" 这个键
+		env.DB.prepare(
+			"SELECT COALESCE(src, 'unknown') AS src, COUNT(DISTINCT sid || '|' || file) AS n" +
+				' FROM clicks WHERE ts >= ? AND ts < ? GROUP BY 1'
 		)
 			.bind(from, to)
 			.all()
@@ -144,7 +170,8 @@ async function handleDaily(request: Request, env: Env): Promise<Response> {
 		distinct: Number(distinct.results?.[0]?.n ?? 0),
 		byMirror: Object.fromEntries(
 			(byMirror.results ?? []).map((r) => [String(r.mirror), Number(r.n)])
-		)
+		),
+		bySrc: Object.fromEntries((bySrc.results ?? []).map((r) => [String(r.src), Number(r.n)]))
 	});
 }
 

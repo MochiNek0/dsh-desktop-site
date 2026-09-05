@@ -215,15 +215,73 @@
         }
     }
 
+    /**
+     * 这次会话的来源标记 —— 用来回答「哪个平台真的带来了下载」。
+     *
+     * 优先取 ?from=：发帖时手工给每个平台一个不同的值，这是唯一可靠的
+     * 一手数据。取不到才退回 referrer 主机名 —— referrer 会被平台的
+     * 跳转中转页和各种 referrer policy 抹掉，只能当补充，不能当依据。
+     *
+     * 必须存进 sessionStorage：?from= 只在落地那一刻存在，而用户往往
+     * 是读完整页才点下载，那时地址栏可能已经没有它了。和 sid 同生命周期，
+     * 同样不落 IP、不落 UA，关掉标签页就没了。
+     *
+     * 字符集必须和 worker/index.ts 的 SRC_RE 保持一致，否则这边发得出去、
+     * 那边照样丢掉。
+     */
+    const SRC_KEY = "dsh-site-src";
+    const SRC_RE = /^[a-z0-9._-]{1,32}$/;
+
+    function detectSource(): string {
+        const from = new URLSearchParams(location.search)
+            .get("from")
+            ?.toLowerCase();
+        if (from && SRC_RE.test(from)) return from;
+        try {
+            const host = new URL(document.referrer).hostname
+                .replace(/^www\./, "")
+                .toLowerCase();
+            // 站内跳转（比如中英切换）不是来源
+            if (host !== location.hostname && SRC_RE.test(host)) return host;
+        } catch {
+            // referrer 为空或不是合法 URL —— 直接访问，没有来源可记
+        }
+        return "";
+    }
+
+    function clickSource(): string | null {
+        try {
+            let src = sessionStorage.getItem(SRC_KEY);
+            if (src === null) {
+                src = detectSource();
+                sessionStorage.setItem(SRC_KEY, src);
+            }
+            // "" 表示「查过了，确实没来源」，别和「还没查」混为一谈
+            return src || null;
+        } catch {
+            return null;
+        }
+    }
+
     function reportClick(file: string) {
         const sid = sessionId();
         if (!sid) return;
         try {
             navigator.sendBeacon?.(
                 "/api/click",
-                new Blob([JSON.stringify({ sid, file, mirror: mirror.id })], {
-                    type: "application/json",
-                }),
+                new Blob(
+                    [
+                        JSON.stringify({
+                            sid,
+                            file,
+                            mirror: mirror.id,
+                            src: clickSource(),
+                        }),
+                    ],
+                    {
+                        type: "application/json",
+                    },
+                ),
             );
         } catch {
             // 统计永远排在下载后面，这里什么都不做
