@@ -17,12 +17,38 @@ export const REPO = 'MochiNek0/dsh-desktop';
 export const REPO_URL = `https://github.com/${REPO}`;
 
 /**
+ * 仓库归属账号，以及它的 GitHub 主页。
+ *
+ * 结构化数据里的作者实体（Person）指向这个主页 —— 那是这个人在网上
+ * 可被指认的身份页，和 REPO_URL（项目的身份页）不是同一个东西。
+ */
+export const REPO_OWNER = REPO.split('/')[0];
+export const REPO_OWNER_URL = `https://github.com/${REPO_OWNER}`;
+
+/**
  * 当前发布版本 —— 由 scripts/sync-release.mjs 在构建期从 GitHub 的
  * 最新正式 release tag 推出，不再手填。
  *
  * 顺带把 InstallTips 里那条带版本号的 AppImage 命令也一起带对了。
  */
 export const LATEST_VERSION = releaseData.version;
+
+/*
+	release-data.json 可能来自上一次成功的构建（GitHub 取不到时脚本会沿用旧的），
+	而旧数据里没有 publishedAt。声明成可选字段让缺失走类型系统，
+	而不是在运行时变成字符串 "undefined" 混进 sitemap。
+*/
+const releaseMeta = releaseData as typeof releaseData & { publishedAt?: string };
+
+/**
+ * 最新正式版的发布时间（ISO 8601），取自 GitHub 的 published_at。
+ * 给 sitemap 的 lastmod 和结构化数据的 datePublished 用。
+ *
+ * 取不到时是 undefined，两处都会**整个省掉**对应字段 ——
+ * 宁可没有日期，也不要拿构建时间顶替：一个每次部署都在变的 lastmod
+ * 会让搜索引擎判定这个站的日期不可信，进而忽略全部 lastmod。
+ */
+export const RELEASE_DATE = releaseMeta.publishedAt;
 
 /**
  * 展示用的下载总量：所有正式版本累加，GitHub 侧 + 镜像侧，已去重。

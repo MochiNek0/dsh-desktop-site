@@ -1,6 +1,7 @@
 {
 	"version": "0.1.11",
 	"tag": "v0.1.11",
+	"publishedAt": "2026-09-05T13:26:49Z",
 	"totalDownloads": 389,
 	"assets": {
 		"dsh-desktop_0.1.11_amd64.AppImage": {
@@ -44,5 +45,5 @@
 			"downloads": 5
 		}
 	},
-	"fetchedAt": "2026-09-05T13:53:30.432Z"
+	"fetchedAt": "2026-09-05T14:32:33.989Z"
 }

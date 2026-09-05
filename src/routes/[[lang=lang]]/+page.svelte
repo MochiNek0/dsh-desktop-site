@@ -6,14 +6,18 @@
     import Logo from "$lib/components/Logo.svelte";
     import { htmlLang, i18n, pathForLang, LANGS } from "$lib/i18n.svelte";
     import type { MotionHandle, PageMotionHandle } from "$lib/motion";
-    import { LATEST_VERSION, REPO_URL, UPSTREAM_URL } from "$lib/releases";
+    import {
+        LATEST_VERSION,
+        RELEASE_DATE,
+        REPO_OWNER,
+        REPO_OWNER_URL,
+        REPO_URL,
+        UPSTREAM_URL,
+    } from "$lib/releases";
+    import { ORIGIN } from "$lib/site";
     import { onMount } from "svelte";
 
     const t = $derived(i18n.t);
-
-    // 站点根地址：canonical / og:url / 结构化数据里的绝对链接都从这里取。
-    // 必须是绝对地址 —— 相对路径在被抓取或转发时会解析到错误的源。
-    const ORIGIN = "https://dsh-desktop.cc.cd";
 
     // 本页在当前语言下的绝对地址；canonical / og:url / 结构化数据共用。
     const pageUrl = $derived(`${ORIGIN}${pathForLang(i18n.lang)}`);
@@ -208,6 +212,22 @@
         JSON.stringify({
             "@context": "https://schema.org",
             "@graph": [
+                /*
+                    作者实体。@id 用 ORIGIN 而不是 pageUrl —— 中英文是同一个
+                    作者，两页指向同一个节点才能被合并成一个实体；
+                    跟着 pageUrl 走会变成两个同名但互不相干的人。
+
+                    url 指 GitHub 主页：那是这个人在网上可被指认的身份页。
+                    不写 sameAs —— 只有这一个标识地址时，再列一遍同样的 URL
+                    是纯噪音；将来有别的公开主页再加。
+                    也不写 image/logo：icon-512.png 是应用图标，不是这个人的照片。
+                */
+                {
+                    "@type": "Person",
+                    "@id": `${ORIGIN}/#author`,
+                    name: REPO_OWNER,
+                    url: REPO_OWNER_URL,
+                },
                 {
                     "@type": "WebSite",
                     "@id": `${pageUrl}#website`,
@@ -215,6 +235,7 @@
                     name: "dsh desktop",
                     description: t("site.desc"),
                     inLanguage: htmlLang(i18n.lang),
+                    publisher: { "@id": `${ORIGIN}/#author` },
                 },
                 {
                     "@type": "SoftwareApplication",
@@ -232,6 +253,13 @@
                     isBasedOn: UPSTREAM_URL,
                     codeRepository: REPO_URL,
                     isPartOf: { "@id": `${pageUrl}#website` },
+                    author: { "@id": `${ORIGIN}/#author` },
+                    releaseNotes: `${REPO_URL}/releases/tag/v${LATEST_VERSION}`,
+                    /*
+                        取不到发布时间就整个字段不写。见 RELEASE_DATE 的说明：
+                        编一个日期会让结构化数据和 sitemap 一起变得不可信。
+                    */
+                    ...(RELEASE_DATE ? { datePublished: RELEASE_DATE } : {}),
                     offers: {
                         "@type": "Offer",
                         price: "0",

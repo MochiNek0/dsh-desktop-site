@@ -132,6 +132,17 @@ async function main() {
 	const data = {
 		version: String(latest.tag_name).replace(/^v/, ''),
 		tag: latest.tag_name,
+
+		/*
+			Release 的实际发布时间（GitHub 的 published_at）。
+
+			和 fetchedAt 是两回事，别拿后者顶替：fetchedAt 每次构建都在动，
+			用它当 sitemap 的 lastmod，等于每次部署都宣称内容刚更新过 ——
+			搜索引擎发现日期不可信之后会整体忽略 lastmod。
+			发版才是这一页内容真正变动的时刻（版本号、下载链接、体积全跟着变），
+			所以 lastmod 和结构化数据的 datePublished 都取这个值。
+		*/
+		publishedAt: latest.published_at,
 		totalDownloads,
 		assets,
 		fetchedAt: new Date().toISOString()
