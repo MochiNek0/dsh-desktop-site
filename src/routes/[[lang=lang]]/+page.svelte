@@ -503,7 +503,7 @@
     -->
     <section
         id="features"
-        class="section-x scroll-mt-20 border-t border-line bg-white lg:py-0!"
+        class="section-x scroll-mt-20 bg-white lg:py-0!"
     >
         <!--
             宽屏：pin + 展开动画。
@@ -621,9 +621,23 @@
     <!-- ========== 插件 ========== -->
     <section
         id="plugins"
-        class="section-x scroll-mt-20 border-y border-line bg-paper-200/60"
+        class="section-x section-quiet relative scroll-mt-20 overflow-hidden"
     >
-        <div class="container-page">
+        <!-- 这一屏唯一的暖色：一团很小的 accent 光斑。底色本身是中性的，
+             accent 在本站只做点缀，不铺面 —— 见 app.css 顶部的配色说明。
+             定位/层级的道理同下载区，见 Download.svelte 里的说明。 -->
+        <div
+            data-parallax="0.3"
+            class="pointer-events-none absolute -bottom-32 -left-32 h-120 w-160 rounded-full bg-accent-200/22 blur-[80px]"
+            aria-hidden="true"
+        ></div>
+
+        <div
+            class="layer-dots pointer-events-none absolute inset-0 text-slate-400/30"
+            aria-hidden="true"
+        ></div>
+
+        <div class="relative container-page">
             <div
                 class="grid grid-cols-1 gap-3xl lg:grid-cols-2 lg:items-center lg:gap-4xl"
             >
@@ -746,7 +760,7 @@
     </section>
 
     <!-- ========== 结束 CTA ========== -->
-    <section class="section-x border-t border-line">
+    <section class="section-x">
         <div class="container-page">
             <div
                 class="relative overflow-hidden rounded-3xl border border-line bg-linear-to-br from-brand-50 via-white to-accent-50 px-lg py-4xl text-center shadow-sm sm:px-14 sm:py-5xl"

@@ -391,3 +391,98 @@ h3 {
         max-width: 1240px;
     }
 }
+
+/*
+  ── 页面底色系统 ────────────────────────────────────────────
+  第一版的教训，用数字说：paper-200 对 paper-100 只差 7/255（2.7%），
+  光斑 20% 透明度再摊进 120px 模糊，峰值不到 15/255。
+  全都压在肉眼分辨阈值上下 —— 等于把「白灰条纹」换成了「什么都没有」。
+
+  这版三个变量一起动：
+
+    1. 色带不用中性灰，直接用图标里的两个色相。
+       同样的明度差，**有色相**的一片比灰的一片好认得多，
+       而且色带本身是斜向渐变（冷 → 暖或暖 → 冷），
+       一块区域内部就有明暗走向，不是一块死板的平铺。
+
+    2. 光斑降模糊、提浓度 —— 让它真的像一片光，而不是一层雾。
+
+    3. 补一层点阵纹理。它不引入新颜色，治的是「平」：
+       大面积纯色最容易显廉价，有极细的规律纹理就立刻有"材质"。
+
+  上下缘的渐隐由**盖在上面**的一层 paper-100 渐变负责：
+  首层不透明 → 透明 → 不透明，把主体色带的两端吃掉，
+  于是区块之间不再有一条可指认的硬边，也不必再挂 border-line。
+*/
+
+/* 冷色带：偏蓝紫，用在下载区 */
+@utility section-cool {
+    background-image:
+        linear-gradient(
+            to bottom,
+            var(--color-paper-100) 0%,
+            transparent 15%,
+            transparent 85%,
+            var(--color-paper-100) 100%
+        ),
+        linear-gradient(
+            135deg,
+            var(--color-brand-100) 0%,
+            var(--color-brand-50) 55%,
+            var(--color-brand-50) 100%
+        );
+}
+
+/*
+  中性带：用在插件区。
+
+  这里原来是一整片粉 —— 但 accent 在本站的定位是「唯一的暖色，做强调与渐变收尾」，
+  拿它铺满一屏是违反配色规则本身。改用调色板里带紫的中性档 paper-300：
+  与底色差 17/255（原来的 paper-200 只有 7），够看得见，又不引入第二个色相。
+  这一屏的暖意只剩标记里那一团很小的 accent 光斑 —— 那才是「点缀」该有的量。
+*/
+@utility section-quiet {
+    background-image:
+        linear-gradient(
+            to bottom,
+            var(--color-paper-100) 0%,
+            transparent 15%,
+            transparent 85%,
+            var(--color-paper-100) 100%
+        ),
+        linear-gradient(
+            to bottom left,
+            var(--color-paper-100) 0%,
+            var(--color-paper-300) 55%,
+            var(--color-paper-300) 100%
+        );
+}
+
+/*
+  点阵纹理层。
+
+  自己带遮罩从中心往外淡出：不淡的话，点阵会在区块边缘被整齐切断，
+  露出一条比 border-line 还刺眼的马赛克边。
+
+  尺寸/颜色都刻意压到很低 —— 它应该是"看不出来但拿掉就觉得空"的那种存在，
+  能一眼看清就是过头了。
+*/
+@utility layer-dots {
+    background-image: radial-gradient(
+        circle at 1px 1px,
+        currentColor 1px,
+        transparent 0
+    );
+    background-size: 26px 26px;
+    -webkit-mask-image: radial-gradient(
+        ellipse 72% 58% at 50% 42%,
+        #000 0%,
+        transparent 76%
+    );
+    mask-image: radial-gradient(
+        ellipse 72% 58% at 50% 42%,
+        #000 0%,
+        transparent 76%
+    );
+}
+
