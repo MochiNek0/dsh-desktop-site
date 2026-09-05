@@ -1,0 +1,53 @@
+# 每天汇总一次下载总量，结果提交回仓库。
+#
+# 提交本身就是部署触发器：Workers Builds 监听 push，所以站上的数字
+# 跟着这次提交一起更新 —— 这也是页面标注「每 24 小时更新」的由来。
+#
+# 需要的仓库 Secret：
+#   STATS_TOKEN —— 和 Worker 上 `wrangler secret put STATS_TOKEN` 设的值一致
+name: 汇总下载量
+
+on:
+  schedule:
+    # UTC 03:17（北京时间 11:17）。挑非整点是因为整点是 Actions 的调度高峰，
+    # 排队延迟大；这个任务只要每天跑到就行，具体几点无所谓。
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+# 默认只读，这里要把结果提交回去
+permissions:
+  contents: write
+
+# 手动触发和定时撞在一起时，别让两个任务同时改同一个文件
+concurrency:
+  group: aggregate-downloads
+  cancel-in-progress: false
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: 汇总
+        run: node scripts/aggregate-downloads.mjs
+        env:
+          STATS_TOKEN: ${{ secrets.STATS_TOKEN }}
+          # 自动注入的 token，读公开仓库足够，顺带把限流从 60/时提到 1000/时
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 提交
+        run: |
+          if git diff --quiet -- src/lib/download-total.json; then
+            echo "本期没有新增，跳过提交"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/lib/download-total.json
+          git commit -m "汇总下载量至 $(node -p "require('./src/lib/download-total.json').total")"
+          git push

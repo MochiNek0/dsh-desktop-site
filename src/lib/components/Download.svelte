@@ -2,11 +2,16 @@
     import { i18n } from "$lib/i18n.svelte";
     import { detectOs } from "$lib/os";
     import {
+        assetSize,
         downloadUrl,
+        formatCount,
+        formatSize,
+        GITHUB_DOWNLOADS,
         LATEST_VERSION,
         MIRRORS,
         OS_GROUPS,
         REPO_URL,
+        TOTAL_DOWNLOADS,
         type Mirror,
         type OsGroup,
         type OsId,
@@ -183,8 +188,53 @@
         };
     }
 
+    /**
+     * 上报一次下载点击。
+     *
+     * 用 sendBeacon 而不是把按钮指向 /dl/ 再 302：下载链接必须直连镜像，
+     * 不能因为统计端挂了就下不了。信标是 fire-and-forget，
+     * 失败、被拦截、关了 JS 都只是少记一次。
+     *
+     * sid 是每次会话随机生成的，只为把「第一个镜像挂了、换下一个再点」
+     * 收敛成一次下载 —— 汇总时按 (sid, file) 去重。关掉标签页就没了，
+     * 不落 IP、不落 UA，也就没有跨会话追踪的能力。
+     */
+    const SID_KEY = "dsh-site-sid";
+    function sessionId(): string | null {
+        try {
+            let sid = sessionStorage.getItem(SID_KEY);
+            if (!sid) {
+                const b = crypto.getRandomValues(new Uint8Array(8));
+                sid = [...b].map((n) => n.toString(16).padStart(2, "0")).join("");
+                sessionStorage.setItem(SID_KEY, sid);
+            }
+            return sid;
+        } catch {
+            // 隐私模式下 sessionStorage 不可用：放弃统计，不影响下载
+            return null;
+        }
+    }
+
+    function reportClick(file: string) {
+        const sid = sessionId();
+        if (!sid) return;
+        try {
+            navigator.sendBeacon?.(
+                "/api/click",
+                new Blob([JSON.stringify({ sid, file, mirror: mirror.id })], {
+                    type: "application/json",
+                }),
+            );
+        } catch {
+            // 统计永远排在下载后面，这里什么都不做
+        }
+    }
+
     async function copyLink(file: string) {
         const url = downloadUrl(file, mirror);
+        // 复制链接多半是拿去 wget，同样算一次下载意图；
+        // 和点按钮共用 (sid, file) 去重键，两个都做也只记一次。
+        reportClick(file);
         clearTimeout(copyTimer);
         copyError = false;
         try {
@@ -204,9 +254,29 @@
 
 <section
     id="download"
-    class="section-x scroll-mt-20 border-t border-line bg-paper-200/60"
+    class="section-x section-cool relative scroll-mt-20 overflow-hidden"
 >
-    <div class="container-page stack-section">
+    <!--
+        色相光斑：区块之间改用「冷暖」而不是「深浅」来区分。
+
+        这里不能照抄 hero 的 -z-10 —— hero 自身没有底色，负层级压在 body 上正好；
+        本区块有 section-tint 这层底色，-z-10 的光斑会被自己的底色盖掉。
+        改成「光斑与内容都是定位元素」：同为 z-index:auto 时按 DOM 顺序绘制，
+        光斑在前、内容在后，内容自然压在上面（所以下面那层要带 relative）。
+    -->
+    <div
+        data-parallax="0.2"
+        class="pointer-events-none absolute -top-24 -right-32 h-120 w-160 rounded-full bg-brand-300/40 blur-[80px]"
+        aria-hidden="true"
+    ></div>
+
+    <!-- 点阵：治「平」，不引入新颜色。自带遮罩淡出，见 app.css -->
+    <div
+        class="layer-dots pointer-events-none absolute inset-0 text-brand-400/25"
+        aria-hidden="true"
+    ></div>
+
+    <div class="relative container-page stack-section">
         <div class="stack-heading">
             {#key i18n.lang}
                 <!-- 同首页标题：被 SplitText 拆过之后只能整块重建，见 +page.svelte 里的说明 -->
@@ -404,6 +474,8 @@
 						-->
                         <div class="grid flex-1 items-start">
                             {#each [group.downloads.find((d) => d.file === active)!] as dl (dl.file)}
+                                <!-- {@const} 只能挂在块的直接子级上，所以放在 div 之前 -->
+                                {@const bytes = assetSize(dl.file)}
                                 <div
                                     class="col-start-1 row-start-1 flex h-full flex-col gap-md"
                                     in:fly={{
@@ -420,10 +492,18 @@
                                                 class="truncate text-sm font-medium text-slate-900"
                                                 >{t(dl.labelKey)}</span
                                             >
-                                            <span
-                                                class="nums-tabular shrink-0 font-mono text-[11px] text-slate-500"
-                                                >{dl.size}</span
-                                            >
+                                            <!--
+                                                体积来自构建期同步的精确字节数（见 releases.ts）。
+                                                title 给出原始字节，页面上只显示约 3 位有效数字。
+                                                取不到就整个不渲染 —— 宁可没有，也不写个约数糊弄。
+                                            -->
+                                            {#if bytes !== null}
+                                                <span
+                                                    class="nums-tabular shrink-0 font-mono text-[11px] text-slate-500"
+                                                    title="{formatCount(bytes)} bytes"
+                                                    >{formatSize(bytes)}</span
+                                                >
+                                            {/if}
                                         </div>
                                         <p
                                             class="text-[11px]/relaxed text-slate-500"
@@ -436,6 +516,8 @@
                                     <div class="mt-auto flex gap-xs">
                                         <a
                                             href={downloadUrl(dl.file, mirror)}
+                                            onclick={() =>
+                                                reportClick(dl.file)}
                                             class="flex min-h-11 flex-1 items-center justify-center gap-2xs rounded-xl px-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-px
 											{isTop
                                                 ? 'bg-brand-600 shadow-sm shadow-brand-600/20 hover:bg-brand-700'
@@ -491,15 +573,47 @@
             data-dl-meta
             class="flex flex-wrap items-center justify-between gap-sm text-sm text-slate-500"
         >
-            <span>
-                {t("hero.version")}
-                <a
-                    href="{REPO_URL}/releases/tag/v{LATEST_VERSION}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="font-mono font-medium text-slate-700 hover:text-brand-700"
-                    >v{LATEST_VERSION}</a
-                >
+            <!-- 版本与下载量是同一类「元信息」，收成左侧一簇，右侧留给全部资产链接 -->
+            <span class="flex flex-wrap items-center gap-x-sm gap-y-2xs">
+                <span>
+                    {t("hero.version")}
+                    <a
+                        href="{REPO_URL}/releases/tag/v{LATEST_VERSION}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="font-mono font-medium text-slate-700 hover:text-brand-700"
+                        >v{LATEST_VERSION}</a
+                    >
+                </span>
+
+                <!--
+                    下载量：汇总不到时为 0，那就整条不出现 ——
+                    显示一个「0 次下载」比不显示更糟。
+
+                    这个数是 GitHub 侧 + 镜像侧去重后的**估算**，所以两件事必须写在脸上：
+                    统计间隔挂在数字旁边（用户看到的可能是 24 小时前的值），
+                    口径和可核对的 GitHub 分量放进 title。
+                -->
+                {#if TOTAL_DOWNLOADS > 0}
+                    <span
+                        class="hidden h-3.5 w-px bg-line sm:block"
+                        aria-hidden="true"
+                    ></span>
+                    <span
+                        class="nums-tabular"
+                        title="{t('dl.downloadsNote')} {formatCount(
+                            GITHUB_DOWNLOADS,
+                        )}"
+                    >
+                        <span class="font-medium text-slate-700"
+                            >{formatCount(TOTAL_DOWNLOADS)}</span
+                        >
+                        {t("dl.downloads")}
+                        <span class="text-slate-400"
+                            >· {t("dl.downloadsCadence")}</span
+                        >
+                    </span>
+                {/if}
             </span>
             <a
                 href="{REPO_URL}/releases/latest"

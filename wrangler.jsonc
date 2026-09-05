@@ -1,15 +1,11 @@
 {
-  // 纯静态站点：没有 Worker 脚本，只有 vite build 产出的静态资源，
-  // 所以不需要 "main"，也没有任何绑定。
-  //
-  // 这个文件存在的另一个作用是挡住 wrangler 的 auto-config：
-  // 仓库里没有 wrangler 配置时，Workers Builds 会自己猜项目类型，
-  // 并往 package.json 的 build 脚本里加一句 `wrangler types --check`，
-  // 而这个项目没有绑定、从来不会生成 worker-configuration.d.ts，
-  // --check 找不到文件就直接让构建失败。
+  // 站点主体仍是 vite build 产出的静态资源；Worker 只挂了两个 /api 路由
+  // 用来收下载点击（见 worker/index.ts）。静态资源命中时 Worker 根本不会执行，
+  // 所以页面的响应路径和纯静态时期没有区别。
   //
   // ⚠️ "name" 必须和 Cloudflare 面板里 Worker 的名字一致，否则会部署到另一个 Worker。
   "name": "dsh-desktop-site",
+  "main": "worker/index.ts",
   "compatibility_date": "2026-08-03",
 
   // 只从自定义域提供服务。
@@ -30,9 +26,23 @@
 
   "assets": {
     "directory": "./build",
+    // 有 main 之后必须给 binding，Worker 才能把非 /api 请求交回静态资源
+    "binding": "ASSETS",
     // 真实存在的路径（/）已预渲染；
     // 真正不存在的地址应该返回 404，而不是拿首页顶包。
     // adapter-static 的 fallback 就是 404.html。
     "not_found_handling": "404-page"
-  }
+  },
+
+  // 下载点击流水。建库：wrangler d1 create dsh-desktop-site-stats
+  // 建表：wrangler d1 migrations apply DB --remote
+  // ⚠️ database_id 要换成 d1 create 输出的那个 uuid，占位值部署会失败。
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "dsh-desktop-site-stats",
+      "database_id": "14d3c226-8b04-4bac-bfd8-542f695e8271",
+      "migrations_dir": "migrations"
+    }
+  ]
 }

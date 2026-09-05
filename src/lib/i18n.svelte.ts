@@ -86,6 +86,11 @@ const zh: Dict = {
 	'dl.copyFail': '复制失败，请手动复制',
 	'dl.button': '下载',
 	'dl.size': '体积',
+	// 与 formatCount 拼成「364 次 GitHub 下载」——
+	// 口径写死在文案里：这是 GitHub 侧计数，不是安装量
+	'dl.downloads': '次下载',
+	'dl.downloadsCadence': '每 24 小时更新',
+	'dl.downloadsNote': '含所有下载源、已去重的估算值。每 24 小时汇总一次。其中 GitHub 侧',
 	'dl.checksum': '校验与签名文件',
 	'dl.allAssets': '查看全部安装包与更新日志',
 	'dl.mirrorTip':
@@ -254,6 +259,9 @@ const en: Dict = {
 	'dl.copyFail': 'Copy failed — please copy manually',
 	'dl.button': 'Download',
 	'dl.size': 'Size',
+	'dl.downloads': 'downloads',
+	'dl.downloadsCadence': 'updated every 24h',
+	'dl.downloadsNote': 'De-duplicated estimate across all download sources, aggregated every 24 hours. On GitHub:',
 	'dl.checksum': 'Signatures & checksums',
 	'dl.allAssets': 'All installers and release notes',
 	'dl.mirrorTip':

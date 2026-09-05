@@ -9,3 +9,7 @@ node_modules
 .wrangler
 .DS_Store
 *.stackdump
+
+# wrangler 本地密钥（STATS_TOKEN 等），绝不入库
+.dev.vars
+.dev.vars.*

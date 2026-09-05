@@ -10,14 +10,43 @@
  * 见 LATEST_VERSION 说明。
  */
 
+import releaseData from './release-data.json';
+import downloadTotal from './download-total.json';
+
 export const REPO = 'MochiNek0/dsh-desktop';
 export const REPO_URL = `https://github.com/${REPO}`;
 
 /**
- * 当前发布版本。发新版时只改这一处。
- * （Tauri 的资产文件名内嵌版本号，无法用版本无关地址覆盖。）
+ * 当前发布版本 —— 由 scripts/sync-release.mjs 在构建期从 GitHub 的
+ * 最新正式 release tag 推出，不再手填。
+ *
+ * 顺带把 InstallTips 里那条带版本号的 AppImage 命令也一起带对了。
  */
-export const LATEST_VERSION = '0.1.10';
+export const LATEST_VERSION = releaseData.version;
+
+/**
+ * 展示用的下载总量：GitHub 侧 + 镜像侧，已去重。
+ *
+ * 由 scripts/aggregate-downloads.mjs 每天汇总一次写入 download-total.json，
+ * 提交回仓库后随构建烤进 HTML —— 所以它天然滞后最多 24 小时，
+ * 页面上必须标明统计间隔，见 dl.downloadsCadence。
+ *
+ * 这是**估算**：缓存型镜像只有点击数（点击 ≠ 下载成功，偏高），
+ * 而 sendBeacon 会被拦截器和关掉的 JS 吃掉（偏低）。看趋势可以，对账不行。
+ * 去重公式与两侧误差的完整说明在汇总脚本的文件头。
+ */
+export const TOTAL_DOWNLOADS = downloadTotal.total;
+
+/**
+ * GitHub 侧的精确累计值。
+ *
+ * 单独留出来是因为它**可核对** —— 用户点进 release 页就能对上。
+ * 页面把它放在总量的 tooltip 里，给那个估算值一个可验证的锚点。
+ */
+export const GITHUB_DOWNLOADS = releaseData.totalDownloads;
+
+/** 总量最后一次汇总的时刻（ISO 8601） */
+export const DOWNLOADS_UPDATED_AT = downloadTotal.updatedAt;
 
 /** 上游 DeepSeek Harness 项目 */
 export const UPSTREAM_URL = 'https://github.com/deepseek-ai/deepseek-harness';
@@ -88,8 +117,6 @@ export interface Download {
 	noteKey: string;
 	/** GitHub 资产文件名 */
 	file: string;
-	/** 展示用体积（人工维护，只用于给用户一个预期） */
-	size: string;
 	/** 同一 OS 下的首选项 */
 	primary: boolean;
 }
@@ -115,7 +142,6 @@ export const OS_GROUPS: OsGroup[] = [
 				tabKey: 'dl.win.exe.tab',
 				noteKey: 'dl.win.exe.note',
 				file: `dsh-desktop_${LATEST_VERSION}_x64-setup.exe`,
-				size: '2.4 MB',
 				primary: true
 			}
 		]
@@ -131,7 +157,6 @@ export const OS_GROUPS: OsGroup[] = [
 				tabKey: 'dl.mac.dmg.tab',
 				noteKey: 'dl.mac.dmg.note',
 				file: `dsh-desktop_${LATEST_VERSION}_universal.dmg`,
-				size: '6.0 MB',
 				primary: true
 			}
 		]
@@ -147,7 +172,6 @@ export const OS_GROUPS: OsGroup[] = [
 				tabKey: 'dl.linux.appimage.tab',
 				noteKey: 'dl.linux.appimage.note',
 				file: `dsh-desktop_${LATEST_VERSION}_amd64.AppImage`,
-				size: '82 MB',
 				primary: true
 			},
 			{
@@ -155,7 +179,6 @@ export const OS_GROUPS: OsGroup[] = [
 				tabKey: 'dl.linux.deb.tab',
 				noteKey: 'dl.linux.deb.note',
 				file: `dsh-desktop_${LATEST_VERSION}_amd64.deb`,
-				size: '4.0 MB',
 				primary: false
 			}
 		]
@@ -170,4 +193,38 @@ export function githubAssetUrl(file: string): string {
 /** 该资产在指定下载源上的地址 */
 export function downloadUrl(file: string, mirror: Mirror): string {
 	return mirror.wrap(githubAssetUrl(file));
+}
+
+const ASSETS: Record<string, { size: number; downloads: number } | undefined> = releaseData.assets;
+
+/**
+ * 该资产的精确字节数；构建期没同步到就是 null（调用方负责不显示）。
+ *
+ * 会落空的唯一情况是上游改了资产命名 —— sync-release.mjs 检测到后缀集合
+ * 变化时会在构建日志里告警，别忽略那条。
+ */
+export function assetSize(file: string): number | null {
+	return ASSETS[file]?.size ?? null;
+}
+
+/**
+ * 字节数 → 展示用体积。
+ *
+ * 用 1000 进制而不是 1024：本区块底部就链去 GitHub 的 release 页，
+ * 用户最常拿来对照的就是那个数字，而 GitHub 用的是 1000 进制
+ * （81,701,368 B 在 GitHub 上显示 81.7 MB，按 1024 算则是 77.9 MiB）。
+ * 两个官方页面对同一个文件给出两个数，比「和资源管理器不一致」更让人犯嘀咕。
+ *
+ * 精度按量级给，统一保持约 3 位有效数字：
+ * 小包多一位小数才分得出差别，80 MB 的包给到 0.01 MB 反而是噪声。
+ */
+export function formatSize(bytes: number): string {
+	const mb = bytes / 1e6;
+	if (mb < 1) return `${Math.round(bytes / 1e3)} KB`;
+	return `${mb.toFixed(mb < 10 ? 2 : 1)} MB`;
+}
+
+/** 下载量：带千分位，中英文都读得通 */
+export function formatCount(n: number): string {
+	return n.toLocaleString('en-US');
 }
