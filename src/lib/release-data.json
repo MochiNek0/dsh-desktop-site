@@ -2,7 +2,7 @@
 	"version": "0.1.11",
 	"tag": "v0.1.11",
 	"publishedAt": "2026-09-05T13:26:49Z",
-	"totalDownloads": 389,
+	"totalDownloads": 393,
 	"assets": {
 		"dsh-desktop_0.1.11_amd64.AppImage": {
 			"size": 81701368,
@@ -26,7 +26,7 @@
 		},
 		"dsh-desktop_0.1.11_x64-setup.exe": {
 			"size": 2391300,
-			"downloads": 1
+			"downloads": 2
 		},
 		"dsh-desktop_0.1.11_x64-setup.exe.sig": {
 			"size": 424,
@@ -42,8 +42,8 @@
 		},
 		"latest.json": {
 			"size": 5404,
-			"downloads": 5
+			"downloads": 8
 		}
 	},
-	"fetchedAt": "2026-09-05T14:32:33.989Z"
+	"fetchedAt": "2026-09-05T18:20:40.234Z"
 }
