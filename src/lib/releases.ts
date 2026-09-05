@@ -25,7 +25,10 @@ export const REPO_URL = `https://github.com/${REPO}`;
 export const LATEST_VERSION = releaseData.version;
 
 /**
- * 展示用的下载总量：GitHub 侧 + 镜像侧，已去重。
+ * 展示用的下载总量：所有正式版本累加，GitHub 侧 + 镜像侧，已去重。
+ *
+ * 「所有正式版本」这点必须在页面文案里写出来 —— 这个数字紧挨着
+ * 「最新版本 v0.x.y」显示，不写清楚就会被读成那一个版本的下载量。
  *
  * 由 scripts/aggregate-downloads.mjs 每天汇总一次写入 download-total.json，
  * 提交回仓库后随构建烤进 HTML —— 所以它天然滞后最多 24 小时，
