@@ -19,14 +19,19 @@
 		（预渲染时 SvelteKit 就会因为找不到对应 id 直接报错）。
 		带上首页路径后，从任何页面点导航都会回到对应语言的首页再滚过去。
 	*/
-	const links = $derived(
-		[
+	const links = $derived([
+		...[
 			{ hash: '#features', key: 'nav.features' },
 			{ hash: '#download', key: 'nav.download' },
 			{ hash: '#plugins', key: 'nav.plugins' },
 			{ hash: '#faq', key: 'nav.faq' }
-		].map((l) => ({ ...l, href: `${pathForLang(i18n.lang)}${l.hash}` }))
-	);
+		].map((l) => ({ key: l.key, href: `${pathForLang(i18n.lang)}${l.hash}` })),
+		/*
+			博客只有中文一份，所以英文页不放入口 ——
+			把英文读者送进一整页中文，比没有这个入口更差。
+		*/
+		...(i18n.lang === 'zh' ? [{ key: 'nav.blog', href: '/blog/' }] : [])
+	]);
 
 	const downloadHref = $derived(`${pathForLang(i18n.lang)}#download`);
 
@@ -63,7 +68,7 @@
 
 		<!-- 桌面导航 -->
 		<nav class="hidden items-center gap-2xs md:flex" aria-label="Main">
-			{#each links as link (link.hash)}
+			{#each links as link (link.href)}
 				<a
 					href={link.href}
 					class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-paper-200 hover:text-slate-900"
@@ -135,7 +140,7 @@
 			-->
 			<div class="flex flex-col gap-sm">
 				<div class="flex flex-col gap-2xs">
-					{#each links as link (link.hash)}
+					{#each links as link (link.href)}
 						<a
 							href={link.href}
 							onclick={close}

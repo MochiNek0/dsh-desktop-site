@@ -39,6 +39,13 @@
         {
             title: t("foot.resources"),
             links: [
+                /*
+                    博客只有中文一份，英文页不放入口 ——
+                    把英文读者送进一整页中文，比没有这个入口更差。
+                */
+                ...(i18n.lang === "zh"
+                    ? [{ label: t("nav.blog"), href: "/blog/", external: false }]
+                    : []),
                 { label: t("foot.repo"), href: REPO_URL, external: true },
                 {
                     label: t("foot.releases"),

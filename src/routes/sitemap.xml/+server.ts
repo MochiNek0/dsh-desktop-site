@@ -1,4 +1,5 @@
 import { htmlLang, LANGS, pathForLang } from '$lib/i18n.svelte';
+import { posts } from '$lib/posts';
 import { RELEASE_DATE } from '$lib/releases';
 import { ORIGIN } from '$lib/site';
 
@@ -42,13 +43,37 @@ ${links}${lastmod}
 \t</url>`;
 }
 
+/**
+ * 单语页面（博客）用的条目：不带 hreflang。
+ *
+ * 博客只有中文一份，而 hreflang 的语义是「同一内容的其它语言版本在哪」——
+ * 只有一个版本时整组标注没有意义，硬写一条指向自己反而会和首页那组打架。
+ */
+function soloEntry(path: string, lastmod?: string): string {
+	const mod = lastmod ? `\n\t\t<lastmod>${lastmod}</lastmod>` : '';
+
+	return `\t<url>
+\t\t<loc>${ORIGIN}${path}</loc>${mod}
+\t</url>`;
+}
+
 export function GET() {
+	/*
+		博客列表页的 lastmod 取最新一篇的日期 —— 列表页的内容就是这些文章，
+		最新一篇没变，列表页也就没变。posts 已按日期倒序。
+	*/
+	const blog = [
+		soloEntry('/blog/', posts[0]?.date),
+		...posts.map((post) => soloEntry(`/blog/${post.slug}/`, post.date))
+	];
+
 	const body = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset
 \txmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
 \txmlns:xhtml="http://www.w3.org/1999/xhtml"
 >
 ${LANGS.map((l) => urlEntry(pathForLang(l))).join('\n')}
+${blog.join('\n')}
 </urlset>
 `;
 

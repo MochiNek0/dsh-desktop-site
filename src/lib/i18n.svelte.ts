@@ -27,6 +27,7 @@ const zh: Dict = {
 	'nav.download': '下载',
 	'nav.plugins': '插件',
 	'nav.faq': '常见问题',
+	'nav.blog': '博客',
 	'nav.github': 'GitHub',
 	'nav.menu': '打开菜单',
 	'nav.lang': '切换语言',
