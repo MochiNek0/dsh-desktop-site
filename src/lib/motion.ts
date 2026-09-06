@@ -13,6 +13,8 @@
  *    如果先用 CSS 藏起来再等 JS 放出来，JS 失败 / 被拦截 / 慢加载时
  *    用户会看到永久空白。所以初始状态一律由 gsap.set() 在 onMount
  *    同步写入 —— JS 没跑 = 内容原样可见，这是安全的降级方向。
+ *    （app.css 里的 rise-in 不算破例：那是一条 CSS animation，
+ *    不依赖 JS 就会自己播完并停在终态，风险模型完全不同。）
  *
  * B. 下载按钮和首屏 CTA 永不参与入场动画。
  *    这是下载站，转化路径上不该有任何一帧是不可点的。
@@ -151,8 +153,28 @@ function splitHeadings(root: HTMLElement): MotionHandle {
 	const splits: SplitText[] = [];
 	const tweens: gsap.core.Tween[] = [];
 
+	/*
+		只处理**还没进视口**的标题。
+
+		动效初始化被推迟到首屏绘制之后（见 +page.svelte 里的说明），
+		这时首屏那几个标题用户已经看了一秒了 —— 再把它们藏起来重播一遍
+		入场，看到的是「闪一下」，不是入场。首屏标题的入场改由
+		app.css 的 rise-in 承担：纯 CSS，跟首屏一起播，不占主线程。
+
+		顺带把最贵的一段开销一起省了：SplitText 拆字 + 逐行量测
+		是整个初始化里最重的部分，跳过首屏这几个能少掉近一半。
+
+		读写要分开：先把所有位置一次量完，再进入下面的拆字循环 ——
+		querySelectorAll 之后边读 rect 边改 DOM 就是标准的强制重排。
+		触发线取 85%，和下面 scrollTrigger 的 start 保持一致。
+	*/
+	const line = window.innerHeight * 0.85;
+	const pending = Array.from(root.querySelectorAll<HTMLElement>('[data-split]')).filter(
+		(node) => node.getBoundingClientRect().top > line
+	);
+
 	// 只对标记了 data-split 的标题做，避免把 FAQ 里的长段落也切碎
-	root.querySelectorAll<HTMLElement>('[data-split]').forEach((node) => {
+	pending.forEach((node) => {
 		// SplitText 会重排 DOM。中文没有空格分词，按 chars 切才有意义；
 		// 但纯 chars 会破坏换行，所以同时保留 lines 作为遮罩容器。
 		//
@@ -275,49 +297,19 @@ export function initMotion(root: HTMLElement): PageMotionHandle {
 			);
 		}
 
-		// ── 3. 背景光斑视差（滚动 + 鼠标）───────────────────────
-		q('[data-parallax]').forEach((el) => {
-			const node = el as HTMLElement;
-			const depth = Number(node.dataset.parallax) || 0.3;
+		/*
+			背景光斑视差已经不在这里了 —— 见 app.css 的 .blob-drift。
 
-			gsap.to(node, {
-				yPercent: -18 * depth * 10,
-				ease: 'none',
-				scrollTrigger: {
-					trigger: node.closest('section') ?? node,
-					start: 'top bottom',
-					end: 'bottom top',
-					scrub: 1.2
-				}
-			});
-		});
+			它原来是 scrub + pointermove 两条主线程逐帧写 transform 的通道，
+			而 Chrome 只把「合成器上的位移」排除在 layout shift 之外：
+			hero 那个 70rem 宽、130px 模糊的光斑一个人就吃掉了 0.106 的 CLS。
+			换成 CSS 滚动驱动动画之后，位移整条跑在合成器上，CLS 归零，
+			每帧的主线程成本和模糊层重绘也一起没了。
 
-		// 鼠标视差：只在有精确指针的设备上做（触屏没有 hover，做了也白做）
-		const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-		const blobs = q('[data-parallax]') as HTMLElement[];
-		let onMove: ((e: PointerEvent) => void) | undefined;
+			这里留一句是为了防止有人「顺手把视差加回 JS 里」。
+		*/
 
-		if (canHover && blobs.length) {
-			// quickTo 比每帧 gsap.to 便宜得多：复用同一个 tween 实例
-			const movers = blobs.map((b) => ({
-				x: gsap.quickTo(b, 'x', { duration: 1.1, ease: 'power3.out' }),
-				y: gsap.quickTo(b, 'y', { duration: 1.1, ease: 'power3.out' }),
-				depth: Number(b.dataset.parallax) || 0.3
-			}));
-
-			onMove = (e: PointerEvent) => {
-				// 归一化到 -0.5 ~ 0.5
-				const nx = e.clientX / window.innerWidth - 0.5;
-				const ny = e.clientY / window.innerHeight - 0.5;
-				for (const m of movers) {
-					m.x(nx * 90 * m.depth);
-					m.y(ny * 60 * m.depth);
-				}
-			};
-			window.addEventListener('pointermove', onMove, { passive: true });
-		}
-
-		// ── 4. 卡片入场：轻微上浮 + 交错 ────────────────────────
+		// ── 3. 卡片入场：轻微上浮 + 交错 ────────────────────────
 		// 触发器挂在每张卡自己身上，不是挂在组容器上 —— 组容器往往
 		// 比视口高，一个触发器带整组会让下半部分在屏外就播完。
 		const reveals: MotionHandle[] = [];
@@ -328,7 +320,7 @@ export function initMotion(root: HTMLElement): PageMotionHandle {
 			reveals.push(revealBatch(items));
 		});
 
-		// ── 5. 进度条 ───────────────────────────────────────────
+		// ── 4. 进度条 ───────────────────────────────────────────
 		q('[data-bar]').forEach((el) => {
 			const node = el as HTMLElement;
 			const pct = Number(node.dataset.bar) || 0;
@@ -345,7 +337,7 @@ export function initMotion(root: HTMLElement): PageMotionHandle {
 			);
 		});
 
-		// ── 6. 下载区：卡片升起 → 工具栏滑入 → 版本行跟上 ───────
+		// ── 5. 下载区：卡片升起 → 工具栏滑入 → 版本行跟上 ───────
 		//
 		// 约束 B（下载按钮永不有不可点的帧）在这里的落法：
 		// 大卡片**只做位移、不做透明度** —— 位移过程中按钮照样可见可点。
@@ -375,7 +367,7 @@ export function initMotion(root: HTMLElement): PageMotionHandle {
 				);
 		}
 
-		// ── 7. 插件区：左列逐条从左推入，右侧代码卡从右迎上 ─────
+		// ── 6. 插件区：左列逐条从左推入，右侧代码卡从右迎上 ─────
 		//
 		// 左右两组各自一个触发器，不合成一条 timeline：窄屏时两列会叠成
 		// 上下两块、总高超过一屏，一个触发器带全组又会让下面那块在屏外播完。
@@ -412,7 +404,6 @@ export function initMotion(root: HTMLElement): PageMotionHandle {
 
 		// matchMedia 的 cleanup：分支失效时自动调用
 		return () => {
-			if (onMove) window.removeEventListener('pointermove', onMove);
 			reveals.forEach((r) => r.destroy());
 			headings?.destroy();
 			headings = null;

@@ -312,7 +312,7 @@
 
 <section
     id="download"
-    class="section-x section-cool relative scroll-mt-20 overflow-hidden"
+    class="blob-scene section-x section-cool relative scroll-mt-20 overflow-hidden"
 >
     <!--
         色相光斑：区块之间改用「冷暖」而不是「深浅」来区分。
@@ -323,8 +323,7 @@
         光斑在前、内容在后，内容自然压在上面（所以下面那层要带 relative）。
     -->
     <div
-        data-parallax="0.2"
-        class="pointer-events-none absolute -top-24 -right-32 h-120 w-160 rounded-full bg-brand-300/40 blur-[80px]"
+        class="blob-drift pointer-events-none absolute -top-24 -right-32 h-120 w-160 rounded-full bg-brand-300/40 blur-[80px] [--drift:-36%]"
         aria-hidden="true"
     ></div>
 

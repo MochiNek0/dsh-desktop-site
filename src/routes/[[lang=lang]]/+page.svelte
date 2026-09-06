@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { afterFirstPaint } from "$lib/after-paint";
     import CodeBlock from "$lib/components/CodeBlock.svelte";
     import Download from "$lib/components/Download.svelte";
     import Icon from "$lib/components/Icon.svelte";
@@ -50,6 +51,14 @@
     */
     const SHOT_SIZES =
         "(min-width: 1440px) 1240px, (min-width: 1024px) calc(100vw - 200px), (min-width: 740px) 700px, calc(100vw - 40px)";
+    /*
+        avif 的 srcset 被 <picture> 和 <head> 里的 preload 共用。
+        提成一个值就是为了让两处永远不可能漂移 —— 一旦漂移，
+        preload 拿到的候选和 <picture> 最终选的不是同一张，就是白下一份。
+    */
+    const shotAvifSrcset = $derived(
+        `${shotBase}-sm.avif 680w, ${shotBase}.avif 1360w`,
+    );
 
     let pageEl: HTMLElement;
     /**
@@ -76,19 +85,28 @@
         let handles: MotionHandle[] = [];
         let cancelled = false;
 
-        import("$lib/motion").then((m) => {
-            // 卸载竞态：模块加载完时组件可能已经销毁了
-            if (cancelled) return;
+        const start = () => {
+            import("$lib/motion").then((m) => {
+                // 卸载竞态：模块加载完时组件可能已经销毁了
+                if (cancelled) return;
 
-            motion = m.initMotion(pageEl);
-            handles.push(motion);
-            if (featViewport && featGrid) {
-                handles.push(m.initPinnedStack(featViewport, featGrid));
-            }
-        });
+                motion = m.initMotion(pageEl);
+                handles.push(motion);
+                if (featViewport && featGrid) {
+                    handles.push(m.initPinnedStack(featViewport, featGrid));
+                }
+            });
+        };
+
+        /*
+            动效初始化必须等首屏画完，不能跟在 onMount 后面立刻跑 ——
+            这一整套初始化会做约 1 秒的强制同步布局，理由见 afterFirstPaint。
+        */
+        const stopWaiting = afterFirstPaint(start);
 
         return () => {
             cancelled = true;
+            stopWaiting();
             handles.forEach((h) => h.destroy());
         };
     });
@@ -277,6 +295,27 @@
     <link rel="canonical" href={pageUrl} />
 
     <!--
+        首屏截图（LCP 元素）的预加载。
+
+        原来这里是空的，理由是「预扫描器本来就能发现 <picture>」——
+        发现得到，但**排不到前面**：SvelteKit 会在 head 里先放一串
+        modulepreload，图片请求排在它们后面，实测「资源加载延迟」410ms。
+        这条 preload 写在 head 靠前的位置，把它提回队首。
+
+        只预加载 avif：type 让不支持的浏览器直接跳过这条，自己按
+        <picture> 的顺序去取 webp，不会多下一份。
+        srcset/sizes 与下面的 <picture> 共用同一组常量，不会漂移。
+    -->
+    <link
+        rel="preload"
+        as="image"
+        type="image/avif"
+        imagesrcset={shotAvifSrcset}
+        imagesizes={SHOT_SIZES}
+        fetchpriority="high"
+    />
+
+    <!--
         hreflang 必须是双向的：每个语言版本都要列出**全部**版本（含自己），
         只在一边写会被 Google 当作无效标注整组丢掉。
         x-default 指中文页 —— 它是根路径，也是语言不匹配时的兜底。
@@ -331,7 +370,7 @@
 -->
 <div bind:this={pageEl}>
     <!-- ========== Hero ========== -->
-    <section class="section-x relative overflow-hidden">
+    <section class="blob-scene section-x relative overflow-hidden">
         <!-- 背景：极淡的青→靛柔光。浅底上必须收得很淡，否则像脏了一块。
 	     自己 overflow-hidden：光斑宽 70rem，窄视口下会撑出横向滚动。 -->
         <div
@@ -339,18 +378,15 @@
             aria-hidden="true"
         >
             <!--
-            data-parallax 的值是"深度"：越大跟随幅度越大。
-            大光斑给小深度、小光斑给大深度，才符合近大远小的直觉。
-            注意 -translate-x-1/2 用 CSS 保留，GSAP 只写 x/y，
-            两者叠加不冲突（GSAP 走 transform 的独立通道）。
+            --drift 是滚动全程的纵向位移量，负值 = 往上飘。
+            大光斑给小位移、小光斑给大位移，才符合近大远小的直觉。
+            时间线由 section 上的 blob-scene 提供，见 app.css。
         -->
             <div
-                data-parallax="0.25"
-                class="absolute -top-48 left-1/2 -ml-140 h-136 w-280 rounded-full bg-brand-300/25 blur-[130px]"
+                class="blob-drift absolute -top-48 left-1/2 -ml-140 h-136 w-280 rounded-full bg-brand-300/25 blur-[130px] [--drift:-45%]"
             ></div>
             <div
-                data-parallax="0.6"
-                class="absolute top-10 right-0 h-80 w-80 rounded-full bg-accent-400/15 blur-[110px]"
+                class="blob-drift absolute top-10 right-0 h-80 w-80 rounded-full bg-accent-400/15 blur-[110px] [--drift:-108%]"
             ></div>
         </div>
 
@@ -385,37 +421,31 @@
 
                 <!-- 标题 + 副标题是一组，彼此靠得比与外部更近 -->
                 <div class="stack-heading">
-                    {#key i18n.lang}
-                        <!--
-                            key 是必需的，不是保险。
-                            SplitText 会把标题的 innerHTML 整个换成逐行/逐字的 span，
-                            revert() 也只是 innerHTML = 原始字符串 —— 两次都产生新节点，
-                            Svelte 在渲染时抓到的那个文本节点从此脱离文档。
-                            结果就是切语言时 h1/h2 纹丝不动，必须刷新页面。
-                            用 lang 做 key，让 Svelte 整块重建标题，拿到的就是全新的节点。
-                            （其余文案不受影响：只有带 data-split 的元素会被拆。）
-                        -->
-                        <h1
-                            data-split
-                            class="text-[2rem]/[1.15] font-bold tracking-tight text-balance text-slate-900 sm:text-5xl sm:leading-[1.1] lg:text-6xl"
+                    <!--
+                        首屏标题不走 SplitText，入场由 app.css 的 rise-in 承担。
+
+                        原因见 app.css 里 rise-in 的说明，简单说是两条：
+                        动效初始化被推迟到首屏画完之后，这时再把已经看见的标题
+                        藏起来重播一遍是「闪一下」；而且首屏这几个标题的拆字
+                        正是初始化里最贵的一段。
+
+                        因此这里也不再需要 {#key i18n.lang}：那个 key 存在的唯一
+                        理由是 SplitText 会把 innerHTML 换成一堆 span、让 Svelte
+                        抓着的文本节点脱离文档。不拆字就没有这个问题，
+                        切语言时 Svelte 原地更新文本即可。
+                    -->
+                    <h1
+                        class="rise-in text-[2rem]/[1.15] font-bold tracking-tight text-balance text-slate-900 sm:text-5xl sm:leading-[1.1] lg:text-6xl"
+                    >
+                        {t("hero.title1")}
+                        <code class="font-mono text-[0.85em] text-brand-600"
+                            >{t("hero.titleCode")}</code
                         >
-                            {t("hero.title1")}
-                            <!--
-                            data-nosplit：这段等宽的产品名是一个整体，
-                            被 SplitText 逐行拆开会在换行处断成两半。
-                            整体作为一个动画单元参与入场即可。
-                        -->
-                            <code
-                                data-nosplit
-                                class="font-mono text-[0.85em] text-brand-600"
-                                >{t("hero.titleCode")}</code
-                            >
-                            {t("hero.title2")}
-                        </h1>
-                    {/key}
+                        {t("hero.title2")}
+                    </h1>
 
                     <p
-                        class="mx-auto text-base/relaxed text-pretty text-slate-600 sm:text-lg/relaxed"
+                        class="rise-in mx-auto text-base/relaxed text-pretty text-slate-600 sm:text-lg/relaxed [animation-delay:90ms]"
                     >
                         {t("hero.sub")}
                     </p>
@@ -493,7 +523,7 @@
                     <picture>
                         <source
                             type="image/avif"
-                            srcset="{shotBase}-sm.avif 680w, {shotBase}.avif 1360w"
+                            srcset={shotAvifSrcset}
                             sizes={SHOT_SIZES}
                         />
                         <source
@@ -649,14 +679,13 @@
     <!-- ========== 插件 ========== -->
     <section
         id="plugins"
-        class="section-x section-quiet relative scroll-mt-20 overflow-hidden"
+        class="blob-scene section-x section-quiet relative scroll-mt-20 overflow-hidden"
     >
         <!-- 这一屏唯一的暖色：一团很小的 accent 光斑。底色本身是中性的，
              accent 在本站只做点缀，不铺面 —— 见 app.css 顶部的配色说明。
              定位/层级的道理同下载区，见 Download.svelte 里的说明。 -->
         <div
-            data-parallax="0.3"
-            class="pointer-events-none absolute -bottom-32 -left-32 h-120 w-160 rounded-full bg-accent-200/22 blur-[80px]"
+            class="blob-drift pointer-events-none absolute -bottom-32 -left-32 h-120 w-160 rounded-full bg-accent-200/22 blur-[80px] [--drift:-54%]"
             aria-hidden="true"
         ></div>
 
@@ -788,14 +817,13 @@
     </section>
 
     <!-- ========== 结束 CTA ========== -->
-    <section class="section-x">
+    <section class="blob-scene section-x">
         <div class="container-page">
             <div
                 class="relative overflow-hidden rounded-3xl border border-line bg-linear-to-br from-brand-50 via-white to-accent-50 px-lg py-4xl text-center shadow-sm sm:px-14 sm:py-5xl"
             >
                 <div
-                    data-parallax="0.35"
-                    class="pointer-events-none absolute -top-28 left-1/2 -ml-80 h-64 w-160 max-w-none rounded-full bg-brand-300/25 blur-[90px]"
+                    class="blob-drift pointer-events-none absolute -top-28 left-1/2 -ml-80 h-64 w-160 max-w-none rounded-full bg-brand-300/25 blur-[90px] [--drift:-63%]"
                     aria-hidden="true"
                 ></div>
 

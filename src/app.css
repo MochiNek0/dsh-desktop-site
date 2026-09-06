@@ -213,6 +213,13 @@ h3 {
         animation-iteration-count: 1 !important;
         transition-duration: 0.001ms !important;
     }
+    /*
+      滚动驱动动画的进度来自滚动位置而不是时间，
+      上面那条 animation-duration 对它完全无效，必须显式关掉。
+    */
+    .blob-drift {
+        animation: none !important;
+    }
 }
 
 /*
@@ -226,6 +233,79 @@ h3 {
 .split-line {
     padding-bottom: 0.12em;
     margin-bottom: -0.12em;
+}
+
+/*
+  ── 背景光斑视差：CSS 滚动驱动，不走 JS ──────────────────────
+
+  原来这个效果是 ScrollTrigger 的 scrub + pointermove 两条 JS 通道，
+  也就是**主线程每帧写一次 transform**。换掉的直接原因是 CLS：
+
+  Chrome 只把「合成器上跑的位移」排除在 layout shift 之外。截图那个元素
+  之所以不计分，是因为 motion.ts 给它显式设了 will-change:transform，
+  提升成了独立合成层；光斑没有，于是每帧都在主线程重绘 —— 而它宽 70rem、
+  带 130px 模糊，单个元素就吃掉了 0.106 的 CLS，占全站的 99%。
+
+  改成 animation-timeline 之后整条动画在合成器上跑：CLS 归零，主线程每帧
+  零成本，那层 130px 模糊也只需要光栅化一次而不是每帧一次。
+
+  ── 为什么时间线要挂在 section 上而不是光斑自己身上 ──────────
+  view() 取的是**最近的滚动容器**，而这些 section 都带 overflow-hidden ——
+  overflow:hidden 本身就构成滚动容器，光斑直接写 view() 会去量一个永远
+  不滚动的盒子，进度恒定不动。把时间线具名挂在 section 上，section 的
+  最近滚动容器才是文档本身；具名时间线对后代可见，光斑引用即可。
+
+  不支持 animation-timeline 的浏览器：整条 animation 不生效 = 光斑静止。
+  这正是想要的降级方向。
+*/
+@utility blob-scene {
+    view-timeline-name: --blob-scene;
+}
+
+@utility blob-drift {
+    /*
+      不写 animation-range：默认的 normal 就是 cover 0% → cover 100%，
+      即「区块前缘刚进视口 → 区块完全离开视口」，和原来 ScrollTrigger 的
+      start:'top bottom' → end:'bottom top' 是同一段区间。
+      （写成等价的 `entry 0% exit 100%` 会被 lightningcss 压成
+      `entry exit 0%` —— 那是另一个意思，别写。）
+    */
+    animation: blob-drift linear both;
+    animation-timeline: --blob-scene;
+    /* 显式提升成合成层：这一条才是 CLS 归零的关键，见上面的说明 */
+    will-change: translate;
+}
+
+@keyframes blob-drift {
+    /* 起点就是元素本来的位置，只写终点 */
+    to {
+        translate: 0 var(--drift, -30%);
+    }
+}
+
+/*
+  ── 首屏标题入场 ────────────────────────────────────────────
+
+  首屏的标题不参与 SplitText 的逐字入场，改用这个。两个原因：
+
+  1. 动效初始化被推迟到首屏绘制之后（见 +page.svelte 里的说明）。
+     那时首屏标题用户已经看了一秒，再藏起来重播一遍入场是「闪一下」。
+  2. 这条是纯 CSS：跟着首屏一起播，不依赖 JS，也不占主线程 ——
+     translate/opacity 都在合成器上，和 LCP 不抢资源。
+
+  用 both + 只写 from：终点就是元素自身的自然状态，不用重复声明。
+  reduced-motion 下上面那条 animation-duration:0.001ms 会让它
+  瞬间落到终点，也就是原样显示，无需额外分支。
+*/
+@utility rise-in {
+    animation: rise-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes rise-in {
+    from {
+        opacity: 0;
+        translate: 0 0.4em;
+    }
 }
 
 /*

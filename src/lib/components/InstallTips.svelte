@@ -15,6 +15,7 @@
           C. reduce-motion 分支：命中时不入场、不打字，内容直接呈现。
     */
 
+    import { afterFirstPaint } from "$lib/after-paint";
     import { i18n } from "$lib/i18n.svelte";
     import type { MotionHandle } from "$lib/motion";
     import { LATEST_VERSION } from "$lib/releases";
@@ -155,27 +156,37 @@
         let restore: (() => void) | undefined;
         let cancelled = false;
 
-        Promise.all([import("gsap"), import("$lib/motion")]).then(
-            ([{ gsap }, { revealBatch }]) => {
-                if (cancelled) return;
+        /*
+            同首页：等首屏画完再动手，理由见 afterFirstPaint。
+            这一段尤其不能提前 —— hideCodes 会把四段命令拆成上百个 span
+            再逐个 gsap.set，是一大块压在 LCP 前面的 DOM 写入 + 强制重排。
+            反正这一屏在首屏之外，晚几百毫秒开始没有任何可感知的差别。
+        */
+        const stopWaiting = afterFirstPaint(() => {
+            Promise.all([import("gsap"), import("$lib/motion")]).then(
+                ([{ gsap }, { revealBatch }]) => {
+                    if (cancelled) return;
 
-                hideCodes(gsap, grid);
-                handle = revealBatch(
-                    Array.from(grid.children) as HTMLElement[],
-                    (cards) => cards.forEach((card) => typeCodes(gsap, card)),
-                );
+                    hideCodes(gsap, grid);
+                    handle = revealBatch(
+                        Array.from(grid.children) as HTMLElement[],
+                        (cards) =>
+                            cards.forEach((card) => typeCodes(gsap, card)),
+                    );
 
-                // 中途被拆掉（卸载 / 开启 reduce-motion）时把还没显现的字符
-                // 还原，否则剩下的字永久不可见
-                restore = () =>
-                    gsap.set(grid.querySelectorAll(".ts-char"), {
-                        clearProps: "all",
-                    });
-            },
-        );
+                    // 中途被拆掉（卸载 / 开启 reduce-motion）时把还没显现的字符
+                    // 还原，否则剩下的字永久不可见
+                    restore = () =>
+                        gsap.set(grid.querySelectorAll(".ts-char"), {
+                            clearProps: "all",
+                        });
+                },
+            );
+        });
 
         return () => {
             cancelled = true;
+            stopWaiting();
             handle?.destroy();
             restore?.();
         };
