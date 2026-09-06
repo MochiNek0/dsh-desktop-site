@@ -18,9 +18,11 @@ on:
 permissions:
   contents: write
 
-# 手动触发和定时撞在一起时，别让两个任务同时改同一个文件
+# 手动触发和定时撞在一起时，别让两个任务同时改同一个文件。
+# 组名和「同步 release 数据」共用 —— 那条也会提交并 push main，
+# 两个一起推会有一个以 non-fast-forward 失败。改名请两个文件一起改。
 concurrency:
-  group: aggregate-downloads
+  group: repo-data-commit
   cancel-in-progress: false
 
 jobs:

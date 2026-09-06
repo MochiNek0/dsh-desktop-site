@@ -1,0 +1,71 @@
+# 应用仓库（MochiNek0/dsh-desktop）发布正式 release 时，由那边
+# repository_dispatch 打过来，这里重新同步 release-data.json 并提交。
+#
+# 提交本身就是部署触发器：Workers Builds 监听 push，所以站上的版本号、
+# 包体积、下载链接跟着这次提交一起更新。
+#
+# ── 为什么需要这个 ──────────────────────────────────────────
+# 版本号和体积是构建期烤进预渲染 HTML 的（见 scripts/sync-release.mjs
+# 开头对「为什么不是运行时」的说明），所以本仓库没有 push 就没有重建，
+# 上游发了新版站上也不会变。这个 workflow 就是补上那一下 push。
+#
+# 不轮询是因为发版是个低频、有明确时刻的事件 —— 有事件可听，
+# 就不必每小时空跑一次去问「变了吗」。
+#
+# ── 本仓库不需要任何新 secret ───────────────────────────────
+# 写回自己就用自动注入的 GITHUB_TOKEN。要配的东西在**发送方**，
+# 见 dsh-desktop 仓库的 .github/workflows/notify-site.yml 文件头。
+name: 同步 release 数据
+
+on:
+  repository_dispatch:
+    types: [release-published]
+  # 手动兜底：上游 dispatch 漏了、或者想立刻重取一次
+  workflow_dispatch:
+
+# 默认只读，这里要把结果提交回去
+permissions:
+  contents: write
+
+# 和「汇总下载量」共用一个组。两个 workflow 都会提交并 push main，
+# 撞在一起时后一个会以 non-fast-forward 失败 —— 而 03:17 UTC 正是
+# 北京时间 11:17，一个很可能顺手发版的时刻。
+# concurrency 组是仓库级的，同名即可让它们排队；改名请两个文件一起改。
+concurrency:
+  group: repo-data-commit
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: 同步
+        id: sync
+        run: |
+          before=$(node -p "require('./src/lib/release-data.json').version")
+          node scripts/sync-release.mjs
+          after=$(node -p "require('./src/lib/release-data.json').version")
+          echo "before=$before" >> "$GITHUB_OUTPUT"
+          echo "after=$after" >> "$GITHUB_OUTPUT"
+        env:
+          # 自动注入的 token，读公开仓库足够，顺带把限流从 60/时提到 1000/时
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 这里比的是版本号，而不是像「汇总下载量」那样用 git diff --quiet：
+      # release-data.json 里的 fetchedAt 每次同步都在动，文件必然有差异，
+      # 用 diff 判断会在每次手动重跑时都产生一次空提交（以及一次白跑的部署）。
+      # 下载量的变化交给每日汇总那条，这条只管「版本变了」。
+      - name: 提交
+        if: steps.sync.outputs.before != steps.sync.outputs.after
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/lib/release-data.json
+          git commit -m "同步 ${{ steps.sync.outputs.after }}"
+          git push
