@@ -273,52 +273,72 @@ export function initMotion(root: HTMLElement): PageMotionHandle {
 
 		/* ── 2. 截图随滚动 3D 透视翻转（Apple 风）────────────────
 
-		   ⚠️ 只在截图**位于首屏之外**时才做，别删这个判断。
+		   ⚠️ immediateRender: false 是这段的关键，别删。
 
-		   这段动画的区间是「wrap 顶部从视口 90% 走到 30%」。窄屏上截图本身
-		   就在首屏里 —— 页面一加载，wrap 顶部就已经在视口 60% 左右，
-		   区间早过了一半。而 fromTo 默认 immediateRender，创建 tween 的
-		   那一刻就把元素写成 rotateX:26 的起始态；偏偏整套初始化被
-		   afterFirstPaint 推迟到 load + idle 之后，用户已经看完首屏了，
-		   这时画面上凭空多出一个倾斜 26°、还盖到标题上的容器。
+		   截图在**桌面和手机上都位于首屏内**，也就是说页面刚加载时，
+		   滚动进度天然就该落在这条动画的区间中段甚至末尾。而 fromTo
+		   默认 immediateRender —— 创建 tween 的那一刻就把元素写成
+		   rotateX:26 的起始态，完全不看当前滚动位置。偏偏整套初始化又被
+		   afterFirstPaint 推迟到 load + idle 之后：用户已经看着正常的
+		   截图了，这时候它突然被压成倾斜 26°、还盖到标题上去。
 
-		   然后它就卡住了：scrub 只在滚动事件里向目标进度插值，用户没滚
-		   就没人把进度推上去，iOS 上 ignoreMobileResize 又挡掉了地址栏
-		   收缩带来的刷新。刷新页面之所以"好了"，是因为恢复滚动位置
-		   产生了一次真实滚动，进度这才被推到 1。
+		   之后也不会自己归位：scrub 只在滚动事件里向目标进度插值，
+		   用户没滚就没人推进度，iOS 上 ignoreMobileResize 还挡掉了
+		   地址栏收缩带来的刷新。刷新页面"看起来好了"，是因为恢复滚动
+		   位置产生了一次真实滚动，进度这才被推到 1。
 
-		   （所以不能靠「创建后补一次 refresh」了事：那只在加载瞬间成立，
-		   真正的原因是首屏元素根本不该做这种入场式 scrub。） */
+		   immediateRender: false 让起始帧不被立刻写入，元素保持终态
+		   （= 预渲染的样子）；建完再按**当前真实滚动位置**把进度摆到位
+		   （见下面那段）。停在顶部时进度为 0，照常有完整的翻转；
+		   已经滚过去了就直接是终态，不会倒回去闪一下。
+
+		   （别改成「首屏内就不建动画」：桌面端截图同样在首屏内，
+		   那样等于把这个效果整个删掉。） */
 		const shot = q('[data-shot]')[0] as HTMLElement | undefined;
 		if (shot) {
 			const wrap = shot.parentElement as HTMLElement;
+			// perspective 必须挂在父层，挂自己身上 rotateX 会没有透视效果
+			gsap.set(wrap, { perspective: 1600 });
+			gsap.set(shot, { transformOrigin: 'center top' });
 
-			// 区间起点（视口 90%）已经在 wrap 顶部之上 = 这一屏进来时动画
-			// 本该播过了，直接保持终态，不设任何初始变换。
-			const startsOffscreen = wrap.getBoundingClientRect().top > window.innerHeight * 0.9;
-
-			if (startsOffscreen) {
-				// perspective 必须挂在父层，挂自己身上 rotateX 会没有透视效果
-				gsap.set(wrap, { perspective: 1600 });
-				gsap.set(shot, { transformOrigin: 'center top', willChange: 'transform' });
-
-				gsap.fromTo(
-					shot,
-					{ rotateX: 26, scale: 0.9, y: 40 },
-					{
-						rotateX: 0,
-						scale: 1,
-						y: 0,
-						ease: 'none',
-						scrollTrigger: {
-							trigger: wrap,
-							start: 'top 90%',
-							end: 'top 30%',
-							scrub: 0.8
-						}
+			const shotTween = gsap.fromTo(
+				shot,
+				{ rotateX: 26, scale: 0.9, y: 40 },
+				{
+					rotateX: 0,
+					scale: 1,
+					y: 0,
+					ease: 'none',
+					// 见上：不要在创建时就把起始帧写进元素
+					immediateRender: false,
+					scrollTrigger: {
+						trigger: wrap,
+						start: 'top 90%',
+						end: 'top 30%',
+						scrub: 0.8
 					}
-				);
-			}
+				}
+			);
+
+			/*
+				立刻按当前滚动位置把动画摆到该在的进度上。
+
+				不调 st.refresh()：它开头有一句
+				`if ((_refreshing || !self.enabled) && !force) return;` ——
+				正赶上别处的 refresh 在跑（本页紧接着就会建特性区那个 pin，
+				它带 refreshPriority 会触发 refreshAll）时会被**静默跳过**，
+				那样元素就停在无变换的终态上，等于这条动画白建。
+
+				直接用触发器已经算好的 progress 给 tween 定位：scrub 的
+				缓动只作用于后续的滚动更新，这一下是瞬时的，
+				所以不会看到「从倾斜追回正位」的过程。
+
+				不要在这里 .pause()：scrub 靠的就是后续把 tween 的进度推来
+				推去，暂停了它就再也动不了。progress() 本身是瞬时赋值，
+				不会让动画自己播下去。
+			*/
+			const st = shotTween.scrollTrigger;
+			if (st) shotTween.progress(st.progress);
 		}
 
 		/*
