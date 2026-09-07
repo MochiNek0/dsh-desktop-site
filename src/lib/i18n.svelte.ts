@@ -94,6 +94,16 @@ const zh: Dict = {
 	'dl.downloadsNote': '所有正式版本、所有下载源的累计估算，已去重。每 24 小时汇总一次。其中 GitHub 侧',
 	'dl.checksum': '校验与签名文件',
 	'dl.allAssets': '查看全部安装包与更新日志',
+
+	// 与 formatCount 拼成「本站总共访问人数 3,289」。
+	// 口径是**人数**：按浏览器里的一个随机标识去重，
+	// 同一个人来多少次都只算一个，所以这个数远小于常见的「浏览量」。
+	'visitors.label': '本站总共访问人数',
+	// 中文把标签放数字前面（「本站总共访问人数 3,289」），
+	// 英文相反（「3,289 visitors so far」）—— 硬套同一个语序总有一边别扭
+	'visitors.order': 'label-first',
+	'visitors.note':
+		'按访客去重，同一个人多次访问只算一次。仅在你的浏览器中存一个随机标识，不记录 IP、不记录 UA，清除站点数据即重置。',
 	'dl.mirrorTip':
 		'加速源由第三方社区提供，仅代理 GitHub 流量，本站不托管安装包。若某个源失效，请换一个再试。',
 
@@ -265,6 +275,11 @@ const en: Dict = {
 	'dl.downloadsNote': 'De-duplicated estimate across every release and every download source, aggregated every 24 hours. On GitHub:',
 	'dl.checksum': 'Signatures & checksums',
 	'dl.allAssets': 'All installers and release notes',
+
+	'visitors.label': 'visitors so far',
+	'visitors.order': 'count-first',
+	'visitors.note':
+		'Unique visitors — coming back later does not count again. A random id is kept in your browser only; no IP, no user agent. Clearing site data resets it.',
 	'dl.mirrorTip':
 		'Mirrors are community-run reverse proxies for GitHub traffic. This site does not host any installer. If one mirror fails, try another.',
 

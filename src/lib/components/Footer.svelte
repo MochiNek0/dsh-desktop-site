@@ -3,6 +3,7 @@
     import { REPO_URL, UPSTREAM_URL } from "$lib/releases";
     import Icon from "./Icon.svelte";
     import Logo from "./Logo.svelte";
+    import VisitorCount from "./VisitorCount.svelte";
 
     const t = $derived(i18n.t);
     const year = new Date().getFullYear();
@@ -137,7 +138,17 @@
         <div
             class="flex flex-col gap-sm border-t border-line pt-xl text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between"
         >
-            <p>© {year} MochiNek0 · {t("foot.rights")}</p>
+            <!--
+                访客数跟在版权后面：它和「Built with / Deployed on」一样
+                是站点级元信息，不属于任何一节内容。
+
+                Footer 在根 layout 里，所以这一处就覆盖了全站每一页 ——
+                包括博客和 404。取数是模块级单例，SPA 导航不会重复请求。
+            -->
+            <p class="flex flex-wrap items-center gap-x-sm gap-y-2xs">
+                <span>© {year} MochiNek0 · {t("foot.rights")}</span>
+                <VisitorCount divider="dot" />
+            </p>
             <p>
                 Built with <a
                     href="https://svelte.dev"

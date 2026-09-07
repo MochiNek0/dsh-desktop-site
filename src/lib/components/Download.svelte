@@ -16,6 +16,7 @@
         type OsGroup,
         type OsId,
     } from "$lib/releases";
+    import { clickSource, sessionId } from "$lib/session";
     import Icon from "./Icon.svelte";
     import { fly } from "svelte/transition";
     import { cubicOut } from "svelte/easing";
@@ -195,74 +196,9 @@
      * 不能因为统计端挂了就下不了。信标是 fire-and-forget，
      * 失败、被拦截、关了 JS 都只是少记一次。
      *
-     * sid 是每次会话随机生成的，只为把「第一个镜像挂了、换下一个再点」
-     * 收敛成一次下载 —— 汇总时按 (sid, file) 去重。关掉标签页就没了，
-     * 不落 IP、不落 UA，也就没有跨会话追踪的能力。
+     * sid / clickSource 来自 $lib/session，和访客计数共用同一次会话 ——
+     * 定义和取舍都写在那个模块里。
      */
-    const SID_KEY = "dsh-site-sid";
-    function sessionId(): string | null {
-        try {
-            let sid = sessionStorage.getItem(SID_KEY);
-            if (!sid) {
-                const b = crypto.getRandomValues(new Uint8Array(8));
-                sid = [...b].map((n) => n.toString(16).padStart(2, "0")).join("");
-                sessionStorage.setItem(SID_KEY, sid);
-            }
-            return sid;
-        } catch {
-            // 隐私模式下 sessionStorage 不可用：放弃统计，不影响下载
-            return null;
-        }
-    }
-
-    /**
-     * 这次会话的来源标记 —— 用来回答「哪个平台真的带来了下载」。
-     *
-     * 优先取 ?from=：发帖时手工给每个平台一个不同的值，这是唯一可靠的
-     * 一手数据。取不到才退回 referrer 主机名 —— referrer 会被平台的
-     * 跳转中转页和各种 referrer policy 抹掉，只能当补充，不能当依据。
-     *
-     * 必须存进 sessionStorage：?from= 只在落地那一刻存在，而用户往往
-     * 是读完整页才点下载，那时地址栏可能已经没有它了。和 sid 同生命周期，
-     * 同样不落 IP、不落 UA，关掉标签页就没了。
-     *
-     * 字符集必须和 worker/index.ts 的 SRC_RE 保持一致，否则这边发得出去、
-     * 那边照样丢掉。
-     */
-    const SRC_KEY = "dsh-site-src";
-    const SRC_RE = /^[a-z0-9._-]{1,32}$/;
-
-    function detectSource(): string {
-        const from = new URLSearchParams(location.search)
-            .get("from")
-            ?.toLowerCase();
-        if (from && SRC_RE.test(from)) return from;
-        try {
-            const host = new URL(document.referrer).hostname
-                .replace(/^www\./, "")
-                .toLowerCase();
-            // 站内跳转（比如中英切换）不是来源
-            if (host !== location.hostname && SRC_RE.test(host)) return host;
-        } catch {
-            // referrer 为空或不是合法 URL —— 直接访问，没有来源可记
-        }
-        return "";
-    }
-
-    function clickSource(): string | null {
-        try {
-            let src = sessionStorage.getItem(SRC_KEY);
-            if (src === null) {
-                src = detectSource();
-                sessionStorage.setItem(SRC_KEY, src);
-            }
-            // "" 表示「查过了，确实没来源」，别和「还没查」混为一谈
-            return src || null;
-        } catch {
-            return null;
-        }
-    }
-
     function reportClick(file: string) {
         const sid = sessionId();
         if (!sid) return;
@@ -671,6 +607,11 @@
                         >
                     </span>
                 {/if}
+                <!--
+                    访客数不放这里 —— 它已经在 Footer 里，而 Footer 在根
+                    layout 中，首页同样有。放两处只会让同一个数字出现两次。
+                -->
+
             </span>
             <a
                 href="{REPO_URL}/releases/latest"
