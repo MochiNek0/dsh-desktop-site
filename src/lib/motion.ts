@@ -13,8 +13,9 @@
  *    如果先用 CSS 藏起来再等 JS 放出来，JS 失败 / 被拦截 / 慢加载时
  *    用户会看到永久空白。所以初始状态一律由 gsap.set() 在 onMount
  *    同步写入 —— JS 没跑 = 内容原样可见，这是安全的降级方向。
- *    （app.css 里的 rise-in 不算破例：那是一条 CSS animation，
- *    不依赖 JS 就会自己播完并停在终态，风险模型完全不同。）
+ *    （app.css 里的 rise-in / shot-flip / blob-drift 不算破例：它们是纯 CSS
+ *    动画，完全不依赖 JS —— 时间或滚动一到就自己走完并停在终态，
+ *    风险模型完全不同。首屏截图的初始帧只能这么给，理由见下面那段说明。）
  *
  * B. 下载按钮和首屏 CTA 永不参与入场动画。
  *    这是下载站，转化路径上不该有任何一帧是不可点的。
@@ -271,89 +272,27 @@ export function initMotion(root: HTMLElement): PageMotionHandle {
 		// ── 1. 标题逐字/逐行入场（SplitText）────────────────────
 		headings = splitHeadings(root);
 
-		/* ── 2. 截图随滚动 3D 透视翻转（Apple 风）────────────────
-
-		   ⚠️ immediateRender: false 是这段的关键，别删。
-
-		   截图在**桌面和手机上都位于首屏内**，也就是说页面刚加载时，
-		   滚动进度天然就该落在这条动画的区间中段甚至末尾。而 fromTo
-		   默认 immediateRender —— 创建 tween 的那一刻就把元素写成
-		   rotateX:26 的起始态，完全不看当前滚动位置。偏偏整套初始化又被
-		   afterFirstPaint 推迟到 load + idle 之后：用户已经看着正常的
-		   截图了，这时候它突然被压成倾斜 26°、还盖到标题上去。
-
-		   之后也不会自己归位：scrub 只在滚动事件里向目标进度插值，
-		   用户没滚就没人推进度，iOS 上 ignoreMobileResize 还挡掉了
-		   地址栏收缩带来的刷新。刷新页面"看起来好了"，是因为恢复滚动
-		   位置产生了一次真实滚动，进度这才被推到 1。
-
-		   immediateRender: false 让起始帧不被立刻写入，元素保持终态
-		   （= 预渲染的样子）；建完再按**当前真实滚动位置**把进度摆到位
-		   （见下面那段）。停在顶部时进度为 0，照常有完整的翻转；
-		   已经滚过去了就直接是终态，不会倒回去闪一下。
-
-		   （别改成「首屏内就不建动画」：桌面端截图同样在首屏内，
-		   那样等于把这个效果整个删掉。） */
-		const shot = q('[data-shot]')[0] as HTMLElement | undefined;
-		if (shot) {
-			const wrap = shot.parentElement as HTMLElement;
-			// perspective 必须挂在父层，挂自己身上 rotateX 会没有透视效果
-			gsap.set(wrap, { perspective: 1600 });
-			gsap.set(shot, { transformOrigin: 'center top' });
-
-			const shotTween = gsap.fromTo(
-				shot,
-				{ rotateX: 26, scale: 0.9, y: 40 },
-				{
-					rotateX: 0,
-					scale: 1,
-					y: 0,
-					ease: 'none',
-					// 见上：不要在创建时就把起始帧写进元素
-					immediateRender: false,
-					scrollTrigger: {
-						trigger: wrap,
-						start: 'top 90%',
-						end: 'top 30%',
-						scrub: 0.8
-					}
-				}
-			);
-
-			/*
-				立刻按当前滚动位置把动画摆到该在的进度上。
-
-				不调 st.refresh()：它开头有一句
-				`if ((_refreshing || !self.enabled) && !force) return;` ——
-				正赶上别处的 refresh 在跑（本页紧接着就会建特性区那个 pin，
-				它带 refreshPriority 会触发 refreshAll）时会被**静默跳过**，
-				那样元素就停在无变换的终态上，等于这条动画白建。
-
-				直接用触发器已经算好的 progress 给 tween 定位：scrub 的
-				缓动只作用于后续的滚动更新，这一下是瞬时的，
-				所以不会看到「从倾斜追回正位」的过程。
-
-				不要在这里 .pause()：scrub 靠的就是后续把 tween 的进度推来
-				推去，暂停了它就再也动不了。progress() 本身是瞬时赋值，
-				不会让动画自己播下去。
-			*/
-			const st = shotTween.scrollTrigger;
-			if (st) shotTween.progress(st.progress);
-		}
-
 		/*
-			背景光斑视差已经不在这里了 —— 见 app.css 的 .blob-drift。
+			首屏截图的 3D 翻转和背景光斑视差都不在这里了 ——
+			见 app.css 的 shot-flip / .blob-drift，两者都改成了 CSS 滚动驱动。
 
-			它原来是 scrub + pointermove 两条主线程逐帧写 transform 的通道，
-			而 Chrome 只把「合成器上的位移」排除在 layout shift 之外：
-			hero 那个 70rem 宽、130px 模糊的光斑一个人就吃掉了 0.106 的 CLS。
-			换成 CSS 滚动驱动动画之后，位移整条跑在合成器上，CLS 归零，
-			每帧的主线程成本和模糊层重绘也一起没了。
+			光斑是为了 CLS：它原来是 scrub + pointermove 两条主线程逐帧写
+			transform 的通道，而 Chrome 只把「合成器上的位移」排除在 layout shift
+			之外 —— hero 那个 70rem 宽、130px 模糊的光斑一个人就吃掉了 0.106 的
+			CLS。换成滚动驱动动画后位移整条跑在合成器上，CLS 归零。
 
-			这里留一句是为了防止有人「顺手把视差加回 JS 里」。
+			截图是为了**首帧**：它的进度取自滚动位置，而它在桌面和手机上都落在
+			首屏之内 —— 页面刚画出来时就该已经倾斜到区间中段了。而这套初始化
+			被推迟到 LCP 之后（见 after-paint.ts），JS 无论怎么写都只能在首帧
+			之后才写得进变换：用户必然先看到一张端正的截图，几百毫秒后它才被
+			压成倾斜态。那一下「跳」不是 JS 哪里写错了，是时机上追不上首帧 ——
+			只有把初始帧交给静态 CSS 才追得上。
+
+			这里留一段是为了防止有人「顺手把它们加回 JS 里」：
+			加回来的第一天就会把这两个问题一起带回来。
 		*/
 
-		// ── 3. 卡片入场：轻微上浮 + 交错 ────────────────────────
+		// ── 2. 卡片入场：轻微上浮 + 交错 ────────────────────────
 		// 触发器挂在每张卡自己身上，不是挂在组容器上 —— 组容器往往
 		// 比视口高，一个触发器带整组会让下半部分在屏外就播完。
 		const reveals: MotionHandle[] = [];
@@ -364,7 +303,7 @@ export function initMotion(root: HTMLElement): PageMotionHandle {
 			reveals.push(revealBatch(items));
 		});
 
-		// ── 4. 进度条 ───────────────────────────────────────────
+		// ── 3. 进度条 ───────────────────────────────────────────
 		q('[data-bar]').forEach((el) => {
 			const node = el as HTMLElement;
 			const pct = Number(node.dataset.bar) || 0;
@@ -381,7 +320,7 @@ export function initMotion(root: HTMLElement): PageMotionHandle {
 			);
 		});
 
-		// ── 5. 下载区：卡片升起 → 工具栏滑入 → 版本行跟上 ───────
+		// ── 4. 下载区：卡片升起 → 工具栏滑入 → 版本行跟上 ───────
 		//
 		// 约束 B（下载按钮永不有不可点的帧）在这里的落法：
 		// 大卡片**只做位移、不做透明度** —— 位移过程中按钮照样可见可点。
@@ -411,7 +350,7 @@ export function initMotion(root: HTMLElement): PageMotionHandle {
 				);
 		}
 
-		// ── 6. 插件区：左列逐条从左推入，右侧代码卡从右迎上 ─────
+		// ── 5. 插件区：左列逐条从左推入，右侧代码卡从右迎上 ─────
 		//
 		// 左右两组各自一个触发器，不合成一条 timeline：窄屏时两列会叠成
 		// 上下两块、总高超过一屏，一个触发器带全组又会让下面那块在屏外播完。

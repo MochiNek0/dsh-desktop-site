@@ -385,7 +385,14 @@
 -->
 <div bind:this={pageEl}>
     <!-- ========== Hero ========== -->
-    <section class="blob-scene section-x relative overflow-hidden">
+    <!--
+        这一层**不能**有 overflow-hidden：截图的翻转由 view() 滚动时间线驱动，
+        而时间线量的是最近的滚动容器 —— overflow:hidden 本身就构成滚动容器，
+        套在外面进度就永远不动了（见 app.css 的 shot-flip）。
+        光斑的横向溢出由它自己那层 absolute inset-0 overflow-hidden 兜住，
+        section 不需要再来一遍。
+    -->
+    <section class="blob-scene section-x relative">
         <!-- 背景：极淡的青→靛柔光。浅底上必须收得很淡，否则像脏了一块。
 	     自己 overflow-hidden：光斑宽 70rem，窄视口下会撑出横向滚动。 -->
         <div
@@ -517,10 +524,13 @@
 
             <!--
             产品截图：与上方文案的距离由父级 gap 统一给出。
-            外层负责 perspective（GSAP 会写进来），内层才是被旋转的对象 ——
-            透视必须挂在父级，挂自己身上 rotateX 出不来立体感。
+            外层 .shot-stage 负责 perspective 和滚动时间线，内层才是被旋转的
+            对象 —— 透视必须挂在父级，挂自己身上 rotateX 出不来立体感。
+
+            翻转整条在 CSS 里（app.css 的 shot-flip），JS 完全不参与：
+            截图就在首屏之内，首帧就该是倾斜的，而 JS 追不上首帧。
         -->
-            <div>
+            <div class="shot-stage">
                 <div
                     data-shot
                     class="overflow-hidden rounded-xl border border-line bg-white elev-3 sm:rounded-2xl"
