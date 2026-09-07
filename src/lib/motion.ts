@@ -271,30 +271,54 @@ export function initMotion(root: HTMLElement): PageMotionHandle {
 		// ── 1. 标题逐字/逐行入场（SplitText）────────────────────
 		headings = splitHeadings(root);
 
-		// ── 2. 截图随滚动 3D 透视翻转（Apple 风）────────────────
+		/* ── 2. 截图随滚动 3D 透视翻转（Apple 风）────────────────
+
+		   ⚠️ 只在截图**位于首屏之外**时才做，别删这个判断。
+
+		   这段动画的区间是「wrap 顶部从视口 90% 走到 30%」。窄屏上截图本身
+		   就在首屏里 —— 页面一加载，wrap 顶部就已经在视口 60% 左右，
+		   区间早过了一半。而 fromTo 默认 immediateRender，创建 tween 的
+		   那一刻就把元素写成 rotateX:26 的起始态；偏偏整套初始化被
+		   afterFirstPaint 推迟到 load + idle 之后，用户已经看完首屏了，
+		   这时画面上凭空多出一个倾斜 26°、还盖到标题上的容器。
+
+		   然后它就卡住了：scrub 只在滚动事件里向目标进度插值，用户没滚
+		   就没人把进度推上去，iOS 上 ignoreMobileResize 又挡掉了地址栏
+		   收缩带来的刷新。刷新页面之所以"好了"，是因为恢复滚动位置
+		   产生了一次真实滚动，进度这才被推到 1。
+
+		   （所以不能靠「创建后补一次 refresh」了事：那只在加载瞬间成立，
+		   真正的原因是首屏元素根本不该做这种入场式 scrub。） */
 		const shot = q('[data-shot]')[0] as HTMLElement | undefined;
 		if (shot) {
 			const wrap = shot.parentElement as HTMLElement;
-			// perspective 必须挂在父层，挂自己身上 rotateX 会没有透视效果
-			gsap.set(wrap, { perspective: 1600 });
-			gsap.set(shot, { transformOrigin: 'center top', willChange: 'transform' });
 
-			gsap.fromTo(
-				shot,
-				{ rotateX: 26, scale: 0.9, y: 40 },
-				{
-					rotateX: 0,
-					scale: 1,
-					y: 0,
-					ease: 'none',
-					scrollTrigger: {
-						trigger: wrap,
-						start: 'top 90%',
-						end: 'top 30%',
-						scrub: 0.8
+			// 区间起点（视口 90%）已经在 wrap 顶部之上 = 这一屏进来时动画
+			// 本该播过了，直接保持终态，不设任何初始变换。
+			const startsOffscreen = wrap.getBoundingClientRect().top > window.innerHeight * 0.9;
+
+			if (startsOffscreen) {
+				// perspective 必须挂在父层，挂自己身上 rotateX 会没有透视效果
+				gsap.set(wrap, { perspective: 1600 });
+				gsap.set(shot, { transformOrigin: 'center top', willChange: 'transform' });
+
+				gsap.fromTo(
+					shot,
+					{ rotateX: 26, scale: 0.9, y: 40 },
+					{
+						rotateX: 0,
+						scale: 1,
+						y: 0,
+						ease: 'none',
+						scrollTrigger: {
+							trigger: wrap,
+							start: 'top 90%',
+							end: 'top 30%',
+							scrub: 0.8
+						}
 					}
-				}
-			);
+				);
+			}
 		}
 
 		/*

@@ -316,6 +316,15 @@ h3 {
 */
 [data-shot] {
     backface-visibility: hidden;
+    /*
+      合成层提示写在这里，不写在 motion.ts 里。
+
+      截图的 CLS 是 0，靠的就是它被提升成独立合成层（理由见上面光斑那段）。
+      而 motion.ts 现在只有「截图在首屏之外」时才建那条翻转动画 ——
+      窄屏上截图就在首屏里，走的是不建动画的分支，
+      提示留在 JS 里的话这条路径就丢了。
+    */
+    will-change: transform;
 }
 
 @utility text-gradient {
