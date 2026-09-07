@@ -305,11 +305,26 @@
         只预加载 avif：type 让不支持的浏览器直接跳过这条，自己按
         <picture> 的顺序去取 webp，不会多下一份。
         srcset/sizes 与下面的 <picture> 共用同一组常量，不会漂移。
+
+        ⚠️ href 是必需的，别删。
+
+        imagesrcset/imagesizes 只是「修饰符」，真正标识资源的是 href。
+        少了它，这条 preload 在移动端 Safari 上匹配不到下面那个 <img>：
+        预载进来的位图成了一份无主资源，跟着 <picture> 自己那份一起画出来 ——
+        表现就是首屏截图下面多出一张一模一样的图，而且只有首次访问会出现
+        （刷新后候选都在 HTTP 缓存里，<picture> 解析期就命中，孤儿那份没机会上屏）。
+        再加上 motion.ts 取的是 [data-shot] 的**第一个**，
+        倾斜只作用在真正的那张上，多出来的那张是平的 —— 正是那个 bug 的样子。
+
+        href 取 1360w 那张，和 imagesrcset 里的最大候选保持一致：
+        支持 imagesrcset 的浏览器按 srcset/sizes 自己挑档，href 只作兜底键值，
+        不会造成重复下载。
     -->
     <link
         rel="preload"
         as="image"
         type="image/avif"
+        href="{shotBase}.avif"
         imagesrcset={shotAvifSrcset}
         imagesizes={SHOT_SIZES}
         fetchpriority="high"
