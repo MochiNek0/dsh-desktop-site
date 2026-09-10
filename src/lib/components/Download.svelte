@@ -350,7 +350,7 @@
 
                     {#key mirror.id}
                         <span
-                            class="min-w-0 max-w-full truncate text-[11px] text-slate-400 sm:ml-auto sm:text-right"
+                            class="min-w-0 max-w-full truncate text-xs text-slate-500 sm:ml-auto sm:text-right"
                             in:fly={{
                                 y: 4,
                                 duration: swapMs,
@@ -394,13 +394,28 @@
                                 <Icon name={osIcon[group.id]} size={22} />
                             </span>
                             <div class="min-w-0">
-                                <h3
-                                    class="truncate text-sm font-semibold {isTop
-                                        ? 'text-brand-800'
-                                        : 'text-slate-900'}"
-                                >
-                                    {t(group.nameKey)}
-                                </h3>
+                                <div class="flex min-w-0 items-center gap-xs">
+                                    <h3
+                                        class="truncate text-sm font-semibold {isTop
+                                            ? 'text-brand-800'
+                                            : 'text-slate-900'}"
+                                    >
+                                        {t(group.nameKey)}
+                                    </h3>
+                                    <!--
+                                        多包平台（Linux）检测到时 tabs 占了徽标位，
+                                        推荐标记改贴在标题旁 —— 否则只有渐变底和蓝按钮，
+                                        和「恰好也是黑按钮的其它平台」区分不够。
+                                    -->
+                                    {#if isTop && multi}
+                                        <span
+                                            class="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white shadow-sm"
+                                        >
+                                            <Icon name="sparkle" size={10} />
+                                            {t("dl.recommendedForYou")}
+                                        </span>
+                                    {/if}
+                                </div>
                                 <p
                                     class="truncate text-[11px] {group.verified
                                         ? 'text-brand-600'
@@ -522,9 +537,20 @@
                                         <button
                                             type="button"
                                             onclick={() => copyLink(dl.file)}
-                                            class="grid size-11 shrink-0 place-items-center rounded-xl border border-line bg-white text-slate-600 transition-colors hover:bg-paper-200 hover:text-slate-900"
-                                            aria-label={t("dl.copy")}
-                                            title={t("dl.copy")}
+                                            class="grid size-11 shrink-0 place-items-center rounded-xl border transition-colors
+											{copied === dl.file && !copyError
+                                                ? 'border-brand-200 bg-brand-50 text-brand-700'
+                                                : 'border-line bg-white text-slate-600 hover:bg-paper-200 hover:text-slate-900'}"
+                                            aria-label={copied === dl.file
+                                                ? copyError
+                                                    ? t("dl.copyFail")
+                                                    : t("dl.copied")
+                                                : t("dl.copy")}
+                                            title={copied === dl.file
+                                                ? copyError
+                                                    ? t("dl.copyFail")
+                                                    : t("dl.copied")
+                                                : t("dl.copy")}
                                         >
                                             <Icon
                                                 name={copied === dl.file &&
@@ -536,23 +562,19 @@
                                         </button>
                                     </div>
 
-                                    {#if copied === dl.file}
-                                        <p
-                                            class="text-[11px] {copyError
-                                                ? 'text-accent-600'
-                                                : 'text-brand-600'}"
-                                            role="status"
-                                            in:fly={{
-                                                y: -4,
-                                                duration: swapMs,
-                                                easing: cubicOut,
-                                            }}
-                                        >
-                                            {copyError
+                                    <!--
+                                        复制反馈看按钮对勾（同 InstallTips）。
+                                        可见文字会让这一栏在点击时顶高，
+                                        多包切换时高度跳动更明显；sr-only 不占布局，
+                                        live region 要一直在 DOM 里才会被播报。
+                                    -->
+                                    <p class="sr-only" role="status">
+                                        {copied === dl.file
+                                            ? copyError
                                                 ? t("dl.copyFail")
-                                                : t("dl.copied")}
-                                        </p>
-                                    {/if}
+                                                : t("dl.copied")
+                                            : ""}
+                                    </p>
                                 </div>
                             {/each}
                         </div>

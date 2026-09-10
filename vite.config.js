@@ -7,6 +7,28 @@ import { defineConfig } from 'vite';
 //
 // 注意：sveltekit() 来自 '@sveltejs/kit/vite'，
 // 而 '@sveltejs/vite-plugin-svelte' v7 只导出 svelte()。
+
+/**
+ * vite dev 不会跑 Cloudflare Worker，/api/* 会直接 404。
+ * 本地给访问统计一个固定响应，页面才能完整跑起来。
+ * 真 D1 用 `npm run build && npx wrangler dev`。
+ */
+const LOCAL_VISIT_TOTAL = 3289;
+
+/** @returns {import('vite').Plugin} */
+function localVisitApi() {
+	return {
+		name: 'local-visit-api',
+		apply: 'serve',
+		configureServer(server) {
+			server.middlewares.use('/api/visit', (_req, res) => {
+				res.setHeader('content-type', 'application/json');
+				res.end(JSON.stringify({ total: LOCAL_VISIT_TOTAL }));
+			});
+		}
+	};
+}
+
 export default defineConfig({
-	plugins: [tailwindcss(), sveltekit()]
+	plugins: [tailwindcss(), sveltekit(), localVisitApi()]
 });
