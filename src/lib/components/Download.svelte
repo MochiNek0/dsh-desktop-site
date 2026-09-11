@@ -12,6 +12,7 @@
         OS_GROUPS,
         REPO_URL,
         TOTAL_DOWNLOADS,
+        type Download,
         type Mirror,
         type OsGroup,
         type OsId,
@@ -81,6 +82,14 @@
             : OS_GROUPS,
     );
 
+    /**
+     * 主面板 / 侧栏拆分：ordered[0]（检测到的平台，未检测到时是
+     * Windows）占据左侧大面板，其余平台收进右侧窄列 —— 版面理由
+     * 见模板里「版面结构」的说明。
+     */
+    const primary = $derived<OsGroup>(ordered[0]);
+    const rest = $derived<OsGroup[]>(ordered.slice(1));
+
     const osIcon: Record<OsId, string> = {
         windows: "windows",
         macos: "apple",
@@ -128,10 +137,8 @@
         格式 tab 的文字按自身宽度排（不强制等宽），所以黑色激活胶囊的
         位置/宽度必须实测当前选中按钮的几何，不能再按 1/N 估算。
 
-        三个平台各有一根 tab，每根自己 rAF 的话，同一帧里就成了
-        「读 → 写 → 读 → 写」：后面每次读几何都得先让浏览器把前面写进去的
-        样式重新排一遍版，也就是强制同步重排。所以所有 rail 共用一次 rAF ——
-        先把要量的全量完，再统一写回去，一帧里只失效一次布局。
+        所有平台共用一次 rAF —— 先把要量的全量完，再统一写回去，
+        一帧里只失效一次布局，避免「读 → 写 → 读 → 写」的强制同步重排。
     */
     const dirtyRails = new Set<HTMLElement>();
     let railFrame = 0;
@@ -246,6 +253,192 @@
     }
 </script>
 
+<!-- ══ 复用片段：主面板与侧栏共用，只有字号 / 按钮档位不同 ══ -->
+
+<!--
+    格式 tab（多安装包平台用）。compact：侧栏头部里的小号；
+    主面板里的大一号。胶囊位置由 measureTabs 实测，见 script。
+-->
+{#snippet tabRail(group: OsGroup, active: string, compact: boolean)}
+    <div
+        use:measureTabs={active}
+        class="relative flex w-fit min-w-0 max-w-full shrink rounded-full bg-paper-200 p-0.5 {compact
+            ? 'ml-auto'
+            : ''}"
+        role="radiogroup"
+        aria-label={t("dl.pickFormat")}
+    >
+        <span
+            data-pill
+            aria-hidden="true"
+            class="pointer-events-none absolute top-0.5 bottom-0.5 rounded-full bg-ink-900 shadow-sm transition-[left,width] duration-300 ease-out-quint"
+        ></span>
+        {#each group.downloads as dl (dl.file)}
+            <button
+                type="button"
+                role="radio"
+                aria-checked={active === dl.file}
+                onclick={() => pickFile(group, dl.file)}
+                class="relative z-10 shrink-0 cursor-pointer rounded-full font-semibold whitespace-nowrap transition-colors
+				{compact ? 'min-h-7 px-2.5 text-[11px]' : 'min-h-9 px-3.5 text-xs'}
+				{active === dl.file
+                    ? 'text-white'
+                    : 'text-slate-600 hover:text-ink-900'}"
+            >
+                {t(dl.tabKey)}
+            </button>
+        {/each}
+    </div>
+{/snippet}
+
+<!--
+    下载按钮 + 复制链接。主面板：实底品牌色大按钮；侧栏：描边按钮。
+    原版三个平台各挂一个同重量的深色按钮，谁也不是主角 ——
+    次要平台的行动点退后一层，主 CTA 才立得起来。
+-->
+{#snippet actions(dl: Download, compact: boolean)}
+    <div class="mt-auto flex {compact ? 'gap-xs' : 'gap-sm'}">
+        <a
+            href={downloadUrl(dl.file, mirror)}
+            onclick={() => reportClick(dl.file)}
+            class="flex flex-1 items-center justify-center rounded-xl font-semibold transition-all duration-200
+			{compact
+                ? 'min-h-10 gap-2xs border border-line bg-white px-3 text-[13px] text-slate-800 hover:border-line-strong hover:bg-paper-100'
+                : 'min-h-14 gap-xs bg-brand-600 px-4 text-base text-white shadow-sm shadow-brand-600/25 hover:-translate-y-px hover:bg-brand-700'}"
+        >
+            <Icon name="download" size={compact ? 14 : 18} />
+            {t("dl.button")}
+        </a>
+        <button
+            type="button"
+            onclick={() => copyLink(dl.file)}
+            class="grid shrink-0 place-items-center rounded-xl border transition-colors
+			{compact ? 'size-10' : 'size-14'}
+			{copied === dl.file && !copyError
+                ? 'border-brand-200 bg-brand-50 text-brand-700'
+                : 'border-line bg-white text-slate-600 hover:bg-paper-200 hover:text-slate-900'}"
+            aria-label={copied === dl.file
+                ? copyError
+                    ? t("dl.copyFail")
+                    : t("dl.copied")
+                : t("dl.copy")}
+            title={copied === dl.file
+                ? copyError
+                    ? t("dl.copyFail")
+                    : t("dl.copied")
+                : t("dl.copy")}
+        >
+            <Icon
+                name={copied === dl.file && !copyError ? "check" : "copy"}
+                size={compact ? 14 : 16}
+            />
+        </button>
+    </div>
+    <!--
+        复制反馈看按钮对勾（同 InstallTips）。可见文字会让面板在点击时
+        顶高，多包切换时高度跳动更明显；sr-only 不占布局，
+        live region 要一直在 DOM 里才会被播报。
+    -->
+    <p class="sr-only" role="status">
+        {copied === dl.file
+            ? copyError
+                ? t("dl.copyFail")
+                : t("dl.copied")
+            : ""}
+    </p>
+{/snippet}
+
+<!--
+    当前选中安装包的信息区（切 tab 时整块翻页）。
+    grid + 单格：进出的两个面板叠在同一格上，所以切换时高度
+    不会先塌再撑。滑入方向见 pickFile。
+-->
+{#snippet pkgZone(group: OsGroup, compact: boolean)}
+    {@const active = currentFile(group)}
+    <div class="grid flex-1 items-start">
+        {#each [group.downloads.find((d) => d.file === active)!] as dl (dl.file)}
+            {@const bytes = assetSize(dl.file)}
+            <div
+                class="col-start-1 row-start-1 flex h-full flex-col {compact
+                    ? 'gap-md'
+                    : 'gap-xl'}"
+                in:fly={{
+                    x: slideDir * 16,
+                    duration: swapMs,
+                    easing: cubicOut,
+                }}
+            >
+                {#if compact}
+                    <div class="stack-tight">
+                        <div
+                            class="flex items-baseline justify-between gap-xs"
+                        >
+                            <span
+                                class="truncate text-[13px] font-medium text-slate-900"
+                                >{t(dl.labelKey)}</span
+                            >
+                            <!--
+                                体积来自构建期同步的精确字节数（见 releases.ts）。
+                                title 给出原始字节，页面上只显示约 3 位有效数字。
+                                取不到就整个不渲染 —— 宁可没有，也不写个约数糊弄。
+                            -->
+                            {#if bytes !== null}
+                                <span
+                                    class="nums-tabular shrink-0 font-mono text-[11px] text-slate-500"
+                                    title="{formatCount(bytes)} bytes"
+                                    >{formatSize(bytes)}</span
+                                >
+                            {/if}
+                        </div>
+                        <p class="text-[11px]/relaxed text-slate-500">
+                            {t(dl.noteKey)}
+                        </p>
+                    </div>
+
+                    <!-- mt-auto：侧栏卡片被 grid 拉平时按钮贴底 -->
+                    {@render actions(dl, true)}
+                {:else}
+                    <div class="stack-tight">
+                        <span
+                            class="text-lg font-semibold text-slate-900"
+                            >{t(dl.labelKey)}</span
+                        >
+                        <p class="max-w-[28rem] text-sm/relaxed text-slate-600">
+                            {t(dl.noteKey)}
+                        </p>
+                    </div>
+
+                    <!--
+                        底部「下载目标」块：文件名 + 体积 + 按钮收成一组，
+                        贴住面板底缘。中段的留白因此是刻意的呼吸位，而不
+                        是空洞；体积也从标题旁挪下来，和文件名凑成一对
+                        mono 规格 —— 按钮按下去拿到的是什么，这里最清楚。
+                    -->
+                    <div class="mt-auto flex flex-col gap-sm">
+                        <div
+                            class="flex items-baseline justify-between gap-sm"
+                        >
+                            <span
+                                class="nums-tabular truncate font-mono text-[11px] text-slate-500"
+                                title={dl.file}
+                                >{dl.file}</span
+                            >
+                            {#if bytes !== null}
+                                <span
+                                    class="nums-tabular shrink-0 font-mono text-[11px] font-medium text-slate-600"
+                                    title="{formatCount(bytes)} bytes"
+                                    >{formatSize(bytes)}</span
+                                >
+                            {/if}
+                        </div>
+                        {@render actions(dl, false)}
+                    </div>
+                {/if}
+            </div>
+        {/each}
+    </div>
+{/snippet}
+
 <section
     id="download"
     class="blob-scene section-x section-cool relative scroll-mt-20 overflow-hidden"
@@ -286,16 +479,20 @@
         </div>
 
         <!--
-			── 版面结构 ────────────────────────────────────────────────
-			之前这里是三层嵌套的盒子（下载源卡片 → 平台卡片 → 安装包面板），
-			边框套边框、圆角套圆角，层级全靠描边堆出来，所以显得很"模板"。
+            ── 版面结构 ────────────────────────────────────────────────
+            原来是 1240px 宽的卡片里平铺三栏，每栏只有两百来像素高：
+            宽高比接近 5:1，是全页最扁的一块 —— 这就是「臃肿」的来源。
+            问题不在容器宽（改窄会和上下区块的左缘错位），而在**整块
+            内容没有纵向体量，也没有主次**。
 
-			现在收成**一块**卡片：
-			  · 下载源是一条贴在顶部的工具栏（无独立边框，只有一条下分隔线）
-			  · 三个平台并排，用 divide-x 的细线分栏，不再各自成卡
-			  · 安装包信息直接躺在栏里，没有内层盒子
-			层级改由留白 + 底色 + 一条 hairline 表达，而不是三层描边。
-		-->
+            收法：不拆容器，拆卡片内部 ——
+              · 检测到的平台进左侧大面板（约 3/5 宽）：渐变底、大图标、
+                大按钮，内容纵向铺开，成为这一屏的锚点，高度自然长出来
+              · 其余两个平台收进右侧窄列（约 2/5 宽）：紧凑排版、描边按钮，
+                视觉上退后一层
+              · 主侧之间一条竖 hairline、侧栏两行一条横 hairline，
+                层级仍由留白 + 底色 + hairline 表达，不套边框
+        -->
         <!-- data-dl-card：入场只做位移不做透明度，下载按钮全程可点（motion.ts 约束 B） -->
         <div data-dl-card class="card elev-2 overflow-hidden">
             <!--
@@ -363,223 +560,124 @@
                 </div>
             </div>
 
-            <!-- 三平台分栏 -->
-            <div
-                class="grid divide-y divide-line lg:grid-cols-3 lg:divide-x lg:divide-y-0"
-            >
-                {#each ordered as group (group.id)}
-                    {@const isTop = detected === group.id}
-                    {@const multi = group.downloads.length > 1}
-                    {@const active = currentFile(group)}
-                    <!--
-						推荐栏用一道极淡的蓝紫→粉渐变标出来，比平铺底色更有"浮起"感。
-						三类平台共用同一 icon 渐变芯片（与特性区一致），
-						推荐项只是把标题/状态换成品牌色 —— 不再靠底色区分各自层级。
-					-->
-                    <div
-                        class="flex flex-col gap-lg p-md sm:p-lg
-						{isTop
-                            ? 'bg-linear-to-b from-brand-50/70 via-transparent to-accent-50/40'
-                            : ''}"
-                    >
+            <!-- 主面板 + 侧栏：minmax(0,·) 让轨道可以收窄，
+                 长标签（AppImage 等）才挤不出卡片右缘 -->
+            <div class="lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+                <!--
+                    主面板：ordered[0]，即检测到的平台（未检测到时是
+                    Windows）。渐变底标记的是「主面板」这个位置本身 ——
+                    大面板没有底色会像没做完；「为你推荐」徽标只在真的
+                    检测到系统时出现，未检测时不冒充推荐。
+                -->
+                <div
+                    class="flex flex-col gap-lg bg-linear-to-br from-brand-50/90 via-transparent to-accent-50/60 p-lg sm:gap-xl sm:p-xl lg:p-3xl"
+                >
+                    <div class="flex items-center gap-lg">
                         <!--
-							头部一行：icon + 标题 + （tab | 徽标）。
-							tab 和「为你推荐」都靠 ml-auto 推到行尾，二者互斥出现 ——
-							同时挂两个会把窄栏挤爆，而"多包平台"本身就用不上徽标位。
-						-->
-                        <div class="flex items-center gap-sm">
-                            <span
-                                class="grid size-10 shrink-0 place-items-center rounded-xl bg-linear-to-br from-brand-50 to-accent-50 text-brand-700 ring-1 ring-brand-100"
+                            大图标：主面板要立得住，头部得有分量 ——
+                            平台徽标就是这块面板的「产品图」，lg 下给到
+                            72px，比侧栏的小芯片大出一倍，空旷感先从这里治。
+                        -->
+                        <span
+                            class="grid size-14 shrink-0 place-items-center rounded-2xl bg-white/85 text-brand-700 shadow-sm ring-1 ring-brand-200/60 sm:size-16 lg:size-18"
+                        >
+                            <!-- svg 的尺寸用 class 响应式覆盖 width/height 属性 -->
+                            <Icon
+                                name={osIcon[primary.id]}
+                                size={32}
+                                cls="size-7 sm:size-8 lg:size-9"
+                            />
+                        </span>
+                        <div class="min-w-0 flex-1">
+                            <div
+                                class="flex min-w-0 flex-wrap items-center gap-x-sm gap-y-2xs"
                             >
-                                <Icon name={osIcon[group.id]} size={22} />
-                            </span>
-                            <div class="min-w-0">
-                                <div class="flex min-w-0 items-center gap-xs">
+                                <h3
+                                    class="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl"
+                                >
+                                    {t(primary.nameKey)}
+                                </h3>
+                                {#if detected === primary.id}
+                                    <span
+                                        class="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-600 px-2.5 py-1 text-[11px] font-bold tracking-wide text-white shadow-sm"
+                                    >
+                                        <Icon name="sparkle" size={12} />
+                                        {t("dl.recommendedForYou")}
+                                    </span>
+                                {/if}
+                            </div>
+                            <p
+                                class="truncate text-sm {primary.verified
+                                    ? 'text-brand-600'
+                                    : 'text-accent-600'}"
+                            >
+                                {t(primary.statusKey)}
+                            </p>
+                        </div>
+                    </div>
+
+                    {#if primary.downloads.length > 1}
+                        {@render tabRail(
+                            primary,
+                            currentFile(primary),
+                            false,
+                        )}
+                    {/if}
+
+                    {@render pkgZone(primary, false)}
+                </div>
+
+                <!--
+                    侧栏：其余平台。lg 下 grid-rows-2 平分主面板的高度，
+                    两条上下排开，主侧之间的竖 hairline 由本列的 border-l 给出。
+                -->
+                <div
+                    class="divide-y divide-line border-t border-line lg:grid lg:grid-rows-2 lg:border-t-0 lg:border-l"
+                >
+                    {#each rest as group (group.id)}
+                        {@const multi = group.downloads.length > 1}
+                        <div class="flex flex-col gap-md p-lg">
+                            <!--
+                                头部一行：小图标芯片 + 名称/状态；
+                                多包平台（Linux 未被检测到时）的 tab 靠
+                                ml-auto 推到行尾，单包平台就留白。
+                            -->
+                            <div class="flex items-center gap-sm">
+                                <span
+                                    class="grid size-9 shrink-0 place-items-center rounded-lg bg-paper-200 text-brand-700"
+                                >
+                                    <Icon
+                                        name={osIcon[group.id]}
+                                        size={18}
+                                    />
+                                </span>
+                                <div class="min-w-0 flex-1">
                                     <h3
-                                        class="truncate text-sm font-semibold {isTop
-                                            ? 'text-brand-800'
-                                            : 'text-slate-900'}"
+                                        class="truncate text-sm font-semibold text-slate-900"
                                     >
                                         {t(group.nameKey)}
                                     </h3>
-                                    <!--
-                                        多包平台（Linux）检测到时 tabs 占了徽标位，
-                                        推荐标记改贴在标题旁 —— 否则只有渐变底和蓝按钮，
-                                        和「恰好也是黑按钮的其它平台」区分不够。
-                                    -->
-                                    {#if isTop && multi}
-                                        <span
-                                            class="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white shadow-sm"
-                                        >
-                                            <Icon name="sparkle" size={10} />
-                                            {t("dl.recommendedForYou")}
-                                        </span>
-                                    {/if}
-                                </div>
-                                <p
-                                    class="truncate text-[11px] {group.verified
-                                        ? 'text-brand-600'
-                                        : 'text-accent-600'}"
-                                >
-                                    {t(group.statusKey)}
-                                </p>
-                            </div>
-
-                            {#if multi}
-                                <!--
-									分段控件同样用滑块：滑块宽度 = (100% - padding) / N，
-									位移 = 选中下标 * 100%，所以增删安装包不用改样式。
-								-->
-                                <!--
-									ml-auto min-w-0：允许这根 tab 在窄栏里收缩，
-									不会把 AppImage 等长标签挤出卡片右缘。
-								-->
-                                <!--
-									灰底盘 + 黑色激活胶囊：
-									文字按自身宽度排（不强制等宽、不截断），
-									标签再长也完整显示。容器与胶囊都 rounded-full。
-									胶囊的滑块动画走 left/width，位置由 measureTabs 实测。
-								-->
-                                <div
-                                    use:measureTabs={active}
-                                    class="relative ml-auto flex min-w-0 max-w-full shrink rounded-full bg-paper-200 p-0.5"
-                                    role="radiogroup"
-                                    aria-label={t("dl.pickFormat")}
-                                >
-                                    <span
-                                        data-pill
-                                        aria-hidden="true"
-                                        class="pointer-events-none absolute top-0.5 bottom-0.5 rounded-full bg-ink-900 shadow-sm transition-[left,width] duration-300 ease-out-quint"
-                                    ></span>
-                                    {#each group.downloads as dl (dl.file)}
-                                        <button
-                                            type="button"
-                                            role="radio"
-                                            aria-checked={active === dl.file}
-                                            onclick={() =>
-                                                pickFile(group, dl.file)}
-                                            class="relative z-10 min-h-7 shrink-0 cursor-pointer rounded-full px-2.5 text-[11px] font-semibold whitespace-nowrap transition-colors
-											{active === dl.file ? 'text-white' : 'text-slate-600 hover:text-ink-900'}"
-                                        >
-                                            {t(dl.tabKey)}
-                                        </button>
-                                    {/each}
-                                </div>
-                            {:else if isTop}
-                                <span
-                                    class="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold tracking-wide text-white shadow-sm"
-                                >
-                                    <Icon name="sparkle" size={10} />
-                                    {t("dl.recommendedForYou")}
-                                </span>
-                            {/if}
-                        </div>
-
-                        <!--
-							安装包信息不再套内层卡片，直接躺在栏里。
-							grid + 单格：进出的两个面板叠在同一格上，
-							所以切换时高度不会先塌再撑（那会让整行平台跳一下）。
-						-->
-                        <div class="grid flex-1 items-start">
-                            {#each [group.downloads.find((d) => d.file === active)!] as dl (dl.file)}
-                                <!-- {@const} 只能挂在块的直接子级上，所以放在 div 之前 -->
-                                {@const bytes = assetSize(dl.file)}
-                                <div
-                                    class="col-start-1 row-start-1 flex h-full flex-col gap-md"
-                                    in:fly={{
-                                        x: slideDir * 16,
-                                        duration: swapMs,
-                                        easing: cubicOut,
-                                    }}
-                                >
-                                    <div class="stack-tight">
-                                        <div
-                                            class="flex items-baseline justify-between gap-xs"
-                                        >
-                                            <span
-                                                class="truncate text-sm font-medium text-slate-900"
-                                                >{t(dl.labelKey)}</span
-                                            >
-                                            <!--
-                                                体积来自构建期同步的精确字节数（见 releases.ts）。
-                                                title 给出原始字节，页面上只显示约 3 位有效数字。
-                                                取不到就整个不渲染 —— 宁可没有，也不写个约数糊弄。
-                                            -->
-                                            {#if bytes !== null}
-                                                <span
-                                                    class="nums-tabular shrink-0 font-mono text-[11px] text-slate-500"
-                                                    title="{formatCount(bytes)} bytes"
-                                                    >{formatSize(bytes)}</span
-                                                >
-                                            {/if}
-                                        </div>
-                                        <p
-                                            class="text-[11px]/relaxed text-slate-500"
-                                        >
-                                            {t(dl.noteKey)}
-                                        </p>
-                                    </div>
-
-                                    <!-- mt-auto：多包/单包栏的按钮排在同一基线上 -->
-                                    <div class="mt-auto flex gap-xs">
-                                        <a
-                                            href={downloadUrl(dl.file, mirror)}
-                                            onclick={() =>
-                                                reportClick(dl.file)}
-                                            class="flex min-h-11 flex-1 items-center justify-center gap-2xs rounded-xl px-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-px
-											{isTop
-                                                ? 'bg-brand-600 shadow-sm shadow-brand-600/20 hover:bg-brand-700'
-                                                : 'bg-ink-900 shadow-sm hover:bg-ink-800'}"
-                                        >
-                                            <Icon name="download" size={15} />
-                                            {t("dl.button")}
-                                        </a>
-                                        <button
-                                            type="button"
-                                            onclick={() => copyLink(dl.file)}
-                                            class="grid size-11 shrink-0 place-items-center rounded-xl border transition-colors
-											{copied === dl.file && !copyError
-                                                ? 'border-brand-200 bg-brand-50 text-brand-700'
-                                                : 'border-line bg-white text-slate-600 hover:bg-paper-200 hover:text-slate-900'}"
-                                            aria-label={copied === dl.file
-                                                ? copyError
-                                                    ? t("dl.copyFail")
-                                                    : t("dl.copied")
-                                                : t("dl.copy")}
-                                            title={copied === dl.file
-                                                ? copyError
-                                                    ? t("dl.copyFail")
-                                                    : t("dl.copied")
-                                                : t("dl.copy")}
-                                        >
-                                            <Icon
-                                                name={copied === dl.file &&
-                                                !copyError
-                                                    ? "check"
-                                                    : "copy"}
-                                                size={15}
-                                            />
-                                        </button>
-                                    </div>
-
-                                    <!--
-                                        复制反馈看按钮对勾（同 InstallTips）。
-                                        可见文字会让这一栏在点击时顶高，
-                                        多包切换时高度跳动更明显；sr-only 不占布局，
-                                        live region 要一直在 DOM 里才会被播报。
-                                    -->
-                                    <p class="sr-only" role="status">
-                                        {copied === dl.file
-                                            ? copyError
-                                                ? t("dl.copyFail")
-                                                : t("dl.copied")
-                                            : ""}
+                                    <p
+                                        class="truncate text-[11px] {group.verified
+                                            ? 'text-brand-600'
+                                            : 'text-accent-600'}"
+                                    >
+                                        {t(group.statusKey)}
                                     </p>
                                 </div>
-                            {/each}
+                                {#if multi}
+                                    {@render tabRail(
+                                        group,
+                                        currentFile(group),
+                                        true,
+                                    )}
+                                {/if}
+                            </div>
+
+                            {@render pkgZone(group, true)}
                         </div>
-                    </div>
-                {/each}
+                    {/each}
+                </div>
             </div>
         </div>
 
