@@ -86,7 +86,21 @@ function refreshWhenSettled(): () => void {
 }
 
 /** 入场触发线：元素顶部进到视口 88% 处才开始 */
-const REVEAL_START = 'top 88%';
+const REVEAL_RATIO = 0.88;
+const REVEAL_START = `top ${REVEAL_RATIO * 100}%`;
+
+/**
+ * 从一组元素里挑出**还没越过入场触发线**的那些，也就是「用户还没看到的」。
+ *
+ * 两个地方要用，其实是同一件事的两面：
+ *   · revealBatch 自己拿它筛掉已经看得见的元素（理由见下）
+ *   · 需要自己额外写初始态的调用方（安装提示要先把命令拆成字符再藏起来）
+ *     必须先知道哪些元素真的会参与入场，否则会把不参与动画的内容一起藏没
+ */
+export function belowRevealLine(items: HTMLElement[]): HTMLElement[] {
+	const line = window.innerHeight * REVEAL_RATIO;
+	return items.filter((el) => el.getBoundingClientRect().top > line);
+}
 
 /**
  * 一组元素的入场：**逐元素触发**，同一屏进来的才合批交错。
@@ -99,7 +113,8 @@ const REVEAL_START = 'top 88%';
  * 陆续进来的元素并成一批回调：同屏的仍然是「一组卡片依次浮起」，
  * 屏外的各等自己的时机。
  *
- * @param items    参与入场的元素（各自独立触发）
+ * @param items    候选元素（各自独立触发）；调用时已在触发线以上的会被跳过，
+ *                 保持静态可读 —— 见下面 belowRevealLine 那段说明
  * @param onReveal 该批入场结束后的回调，参数是这一批的元素
  */
 export function revealBatch(
@@ -109,10 +124,27 @@ export function revealBatch(
 	register();
 	if (!items.length) return { destroy() {} };
 
-	// 初始态由 JS 写入（约束 A）：JS 没跑 = 内容原样可见
-	gsap.set(items, { y: 26, opacity: 0 });
+	/*
+		只给**还没进视口**的元素做入场。同 splitHeadings 的理由（见那里），
+		外加一条更硬的：
 
-	const triggers = ScrollTrigger.batch(items, {
+		动效初始化排在首屏绘制之后，而手机上很容易在那之前就已经滚到半页 ——
+		刷新和前进/后退会恢复上次的滚动位置，快速滑动也一样。对**创建时就
+		已经越过 start 的**触发器，ScrollTrigger 在初始 refresh 里不会补发
+		onEnter（那一轮的回调是被抑制的），于是下面 gsap.set 写进去的
+		opacity:0 再没人还原 —— 用户滑到那里看到的是一片空白。
+
+		安装提示区最容易撞上：它的命令还被拆成上百个字符 span 藏了起来，
+		visibility:hidden 仍然占宽度，滑过去就是一块「有滚动条但什么都没有」
+		的深色块。筛掉这些元素 = 它们保持预渲染的静态外观，永远不会空。
+	*/
+	const targets = belowRevealLine(items);
+	if (!targets.length) return { destroy() {} };
+
+	// 初始态由 JS 写入（约束 A）：JS 没跑 = 内容原样可见
+	gsap.set(targets, { y: 26, opacity: 0 });
+
+	const triggers = ScrollTrigger.batch(targets, {
 		start: REVEAL_START,
 		once: true,
 		interval: 0.1,
@@ -135,7 +167,7 @@ export function revealBatch(
 	return {
 		destroy() {
 			triggers.forEach((t) => t.kill());
-			gsap.set(items, { clearProps: 'opacity,transform' });
+			gsap.set(targets, { clearProps: 'opacity,transform' });
 		}
 	};
 }

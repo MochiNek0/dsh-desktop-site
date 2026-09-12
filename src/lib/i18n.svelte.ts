@@ -82,6 +82,17 @@ const zh: Dict = {
 	'dl.otherPlatforms': '其他平台',
 	'dl.source': '下载源',
 	'dl.sourceHint': '换一个源',
+	'dl.autoBadge': '自动优选',
+	'dl.autoPicking': '正在为你测速，挑选最快的下载源…',
+	'dl.autoPicked': '已自动选择最快的源：{name}（{ms} ms）',
+	'dl.autoNone': '所有源探测都超时了，暂时用默认源，你可以手动换一个试试',
+	'dl.switchedTo': '已切换到 {name}',
+	'dl.reAuto': '重新自动选择',
+	'dl.reAutoTitle': '重新测速并自动切换到当前最快的下载源',
+	'dl.latencyMs': '{ms} ms',
+	'dl.latencyTesting': '测速中…',
+	'dl.latencyTimeout': '超时',
+	'dl.latencyFail': '不可用',
 	'dl.copy': '复制链接',
 	'dl.copied': '已复制',
 	'dl.copyFail': '复制失败，请手动复制',
@@ -132,6 +143,7 @@ const zh: Dict = {
 	'mirror.ghproxy': '社区加速 · 国内推荐',
 	'mirror.ghfast': '社区加速 · 备用',
 	'mirror.ghproxycom': '社区加速 · 备用',
+	'mirror.ghproxyorg': '社区加速 · 备用（gh-proxy 新域名）',
 	'mirror.llkk': '社区加速 · 备用',
 	'mirror.direct': '官方直连 · 国内可能较慢',
 
@@ -150,6 +162,10 @@ const zh: Dict = {
 	'tip.cn.title': '国内网络建议',
 	'tip.cn.body':
 		'应用首次启动需要从 npm 拉取 dsh 组件。若下载缓慢，可先为 npm 配置国内镜像：',
+	// 命令块上的复制按钮：这里复制的是命令，不是下载链接，
+	// 所以不复用 dl.copy（那条是「复制链接」）
+	'tip.copy': '复制命令',
+	'tip.copyFail': '复制失败',
 
 	// ── 插件 ──
 	'plug.heading': '插件，不用碰命令行',
@@ -265,6 +281,17 @@ const en: Dict = {
 	'dl.otherPlatforms': 'Other platforms',
 	'dl.source': 'Source',
 	'dl.sourceHint': 'Change source',
+	'dl.autoBadge': 'Auto-optimized',
+	'dl.autoPicking': 'Testing mirrors to find the fastest one for you…',
+	'dl.autoPicked': 'Auto-selected the fastest source: {name} ({ms} ms)',
+	'dl.autoNone': 'All sources timed out — staying on the default for now, feel free to switch manually',
+	'dl.switchedTo': 'Switched to {name}',
+	'dl.reAuto': 'Auto-pick again',
+	'dl.reAutoTitle': 'Re-test all sources and switch to whichever is fastest right now',
+	'dl.latencyMs': '{ms} ms',
+	'dl.latencyTesting': 'testing…',
+	'dl.latencyTimeout': 'timed out',
+	'dl.latencyFail': 'unavailable',
 	'dl.copy': 'Copy link',
 	'dl.copied': 'Copied',
 	'dl.copyFail': 'Copy failed — please copy manually',
@@ -308,6 +335,7 @@ const en: Dict = {
 	'mirror.ghproxy': 'Community mirror · fastest in China',
 	'mirror.ghfast': 'Community mirror · alternate',
 	'mirror.ghproxycom': 'Community mirror · alternate',
+	'mirror.ghproxyorg': 'Community mirror · alternate (new gh-proxy domain)',
 	'mirror.llkk': 'Community mirror · alternate',
 	'mirror.direct': 'Official direct · may be slow in China',
 
@@ -325,6 +353,8 @@ const en: Dict = {
 	'tip.cn.title': 'Slow npm downloads',
 	'tip.cn.body':
 		'The first launch pulls dsh components from npm. If that is slow, point npm at a faster registry:',
+	'tip.copy': 'Copy',
+	'tip.copyFail': 'Failed',
 
 	'plug.heading': 'Plugins, without the command line',
 	'plug.sub': 'Menu → Plugins… opens the visual panel.',
@@ -385,9 +415,19 @@ class I18nStore {
 	/** 由根 layout 依据路由参数写入；预渲染阶段就必须是对的值。 */
 	lang = $state<Lang>('zh');
 
-	/** 取文案；缺失时回落到中文，再回落到 key 本身（方便发现漏翻） */
-	t = (key: string): string => {
-		return DICTS[this.lang][key] ?? zh[key] ?? key;
+	/**
+	 * 取文案；缺失时回落到中文，再回落到 key 本身（方便发现漏翻）。
+	 *
+	 * `vars` 是可选的占位符替换表：文案里的 `{foo}` 会被 `vars.foo` 替换。
+	 * 只有少数几条文案（如自动选源提示里的源名/延迟）需要插值，
+	 * 所以不引入模板库，就地做字符串替换。
+	 */
+	t = (key: string, vars?: Record<string, string | number>): string => {
+		const raw = DICTS[this.lang][key] ?? zh[key] ?? key;
+		if (!vars) return raw;
+		return raw.replace(/\{(\w+)\}/g, (m, name) =>
+			name in vars ? String(vars[name]) : m
+		);
 	};
 }
 

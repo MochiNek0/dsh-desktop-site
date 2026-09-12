@@ -80,7 +80,13 @@ export const DOWNLOADS_UPDATED_AT = downloadTotal.updatedAt;
 /** 上游 DeepSeek Harness 项目 */
 export const UPSTREAM_URL = 'https://github.com/deepseek-ai/deepseek-harness';
 
-export type MirrorId = 'ghproxy' | 'ghproxycom' | 'ghfast' | 'llkk' | 'direct';
+export type MirrorId =
+	| 'ghproxy'
+	| 'ghproxycom'
+	| 'ghproxyorg'
+	| 'ghfast'
+	| 'llkk'
+	| 'direct';
 
 export interface Mirror {
 	id: MirrorId;
@@ -94,6 +100,16 @@ export interface Mirror {
 	wrap: (githubUrl: string) => string;
 }
 
+/*
+	这些源全部是 hunshcn/gh-proxy 一系的反向代理。它们只代理**白名单内**的
+	GitHub 地址：github.com 的 releases / archive / blob / raw，外加
+	raw.githubusercontent.com 和 gist.githubusercontent.com。
+
+	这条约束直接决定了测速探针只能打在 release 资产上 —— 早先版本拿
+	github.githubassets.com 上的 favicon 当探针，那个域名不在白名单里，
+	所有代理一律返回错误，于是活得好好的源全被标成「不可用」。
+	探针地址现在由 probeUrl() 从真实资产推出来，见下面。
+*/
 export const MIRRORS: Mirror[] = [
 	{
 		id: 'ghproxy',
@@ -115,6 +131,15 @@ export const MIRRORS: Mirror[] = [
 		noteKey: 'mirror.ghproxycom',
 		recommended: true,
 		wrap: (u) => `https://gh-proxy.com/${u}`
+	},
+	{
+		// gh-proxy 官方公告的新域名，与 gh-proxy.com 同源但独立解析 ——
+		// 其中一个被墙时另一个通常还在，所以两个都留着
+		id: 'ghproxyorg',
+		name: 'gh-proxy.org',
+		noteKey: 'mirror.ghproxyorg',
+		recommended: true,
+		wrap: (u) => `https://gh-proxy.org/${u}`
 	},
 	{
 		id: 'llkk',
@@ -234,6 +259,32 @@ const ASSETS: Record<string, { size: number; downloads: number } | undefined> = 
  */
 export function assetSize(file: string): number | null {
 	return ASSETS[file]?.size ?? null;
+}
+
+/**
+ * 测速探针地址：本次 release 里**最小的那个资产**在指定源上的地址。
+ *
+ * 为什么非得打在真实资产上：这些代理只认白名单（见 MIRRORS 上方的说明），
+ * 随便找个 GitHub 静态资源当探针会被一律拒绝，把可用的源误判成挂了。
+ * 打在 release 资产上还有个附带好处 —— 测的就是**真正下载时走的那条链路**，
+ * 延迟才有代表性。
+ *
+ * 选最小的资产（通常是几百字节的 .sig 签名文件）而不是写死文件名：
+ * 以后上游增删资产、改命名都不会让探针失效，最坏情况也只是换一个小文件。
+ * 万一 assets 整个是空的（release-data.json 没同步上），回退到 Windows 安装包 ——
+ * 它体积也只有 2MB 出头，而且 fetch 拿到响应头就会被 abort，不会真的下完。
+ */
+const PROBE_FILE: string = (() => {
+	const entries = Object.entries(ASSETS).filter(
+		(e): e is [string, { size: number; downloads: number }] => !!e[1]
+	);
+	if (entries.length === 0) return `dsh-desktop_${LATEST_VERSION}_x64-setup.exe`;
+	return entries.sort((a, b) => a[1].size - b[1].size)[0][0];
+})();
+
+/** 该源的测速探针地址 */
+export function probeUrl(mirror: Mirror): string {
+	return mirror.wrap(githubAssetUrl(PROBE_FILE));
 }
 
 /**

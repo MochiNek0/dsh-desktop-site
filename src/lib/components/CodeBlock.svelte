@@ -34,8 +34,15 @@
 </script>
 
 <div class="group relative">
+	<!--
+		换行而不是横向滚动：这里放的是路径/命令，窄屏一定放不下
+		（375px 下实测溢出 73px）。横向滚动等于把后半截藏起来 ——
+		手机上既没有滚动条提示，块内横滑还和页面纵滑抢手势。
+		pr-12 给右上角的复制按钮留一档，换行后每行都留，文字不会压在按钮下。
+		同 InstallTips 的命令块，理由见那边的长注释。
+	-->
 	<pre
-		class="overflow-x-auto rounded-xl border border-line bg-ink-900 px-4 py-3 pr-12 font-mono text-[13px]/relaxed text-brand-200"><code
+		class="rounded-xl border border-line bg-ink-900 px-4 py-3 pr-12 font-mono text-[13px]/relaxed whitespace-pre-wrap text-brand-200 [overflow-wrap:anywhere]"><code
 			>{code}</code
 		></pre>
 	<button

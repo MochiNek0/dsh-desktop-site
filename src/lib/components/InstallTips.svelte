@@ -2,8 +2,11 @@
     /*
         ── 安装提示 · 终端风格多卡片 ────────────────────────────────
 
-        做成四张终端风格的卡片（桌面端 2×2），每张卡带一个深色命令区，
-        命令用打字机逐字敲出。卡片入场用「淡出 + 上滑」交错，干净不晃眼；
+        做成四张终端风格的卡片（桌面端 2×2），每张卡带一个深色命令区：
+        上面一条标题栏（三个点 + 复制），下面是命令本体，长命令**换行**
+        而不是横向滚动 —— 窄屏上任何被遮住/需要横滑才能看到的文字都是坑，
+        理由见模板里命令块那段。
+        卡片入场用「淡出 + 上滑」交错，干净不晃眼；
         命令区本身不做展开/淡入，只有里面的字符逐个敲出。
 
         动效全部走 GSAP（动态 import，不进首屏包），遵守 motion.ts 约束：
@@ -22,6 +25,23 @@
     import Icon from "./Icon.svelte";
 
     const t = $derived(i18n.t);
+
+    /**
+     * 屏幕上显示的命令：每一行都带自己的 `$` 提示符。
+     *
+     * 不是装饰 —— 命令块现在是**自动换行**的（见下面模板里的说明），
+     * 一条长命令会折成好几行。只在整段最前面放一个 `$` 的话，
+     * 折行和「第二条命令」在视觉上完全一样（Linux 那张正好是两条）。
+     * 每行一个 `$`，折行就成了唯一不带提示符的行，一眼分得清。
+     *
+     * 复制走的仍然是原始 code，不含提示符。
+     */
+    function withPrompt(code: string) {
+        return code
+            .split("\n")
+            .map((line) => `$ ${line}`)
+            .join("\n");
+    }
 
     const tips = [
         { id: "windows", icon: "windows", titleKey: "tip.win.title", bodyKey: "tip.win.body", code: null as string | null },
@@ -67,11 +87,13 @@
     let copyTimer: ReturnType<typeof setTimeout> | undefined;
     $effect(() => () => clearTimeout(copyTimer));
 
-    function copyCmd(id: string, code: string) {
+    async function copyCmd(id: string, code: string) {
         clearTimeout(copyTimer);
         copyError = false;
         try {
-            navigator.clipboard.writeText(code);
+            // 必须 await：writeText 的权限/安全上下文失败是 rejected promise，
+            // 不 await 的话 catch 永远抓不到，失败会被当成成功报给用户
+            await navigator.clipboard.writeText(code);
             copied = id;
         } catch {
             copyError = true;
@@ -119,10 +141,12 @@
      *
      * 仍然不违反约束 A：初始态由 JS 写入，gsap 没加载起来 = 命令原样可读。
      */
-    function hideCodes(gsap: typeof import("gsap").gsap, grid: HTMLElement) {
-        grid.querySelectorAll<HTMLElement>("[data-code]").forEach((code) => {
-            const chars = typeElement(code);
-            if (chars?.length) gsap.set(chars, { autoAlpha: 0 });
+    function hideCodes(gsap: typeof import("gsap").gsap, cards: HTMLElement[]) {
+        cards.forEach((card) => {
+            card.querySelectorAll<HTMLElement>("[data-code]").forEach((code) => {
+                const chars = typeElement(code);
+                if (chars?.length) gsap.set(chars, { autoAlpha: 0 });
+            });
         });
     }
 
@@ -164,14 +188,27 @@
         */
         const stopWaiting = afterFirstPaint(() => {
             Promise.all([import("gsap"), import("$lib/motion")]).then(
-                ([{ gsap }, { revealBatch }]) => {
+                ([{ gsap }, { revealBatch, belowRevealLine }]) => {
                     if (cancelled) return;
 
-                    hideCodes(gsap, grid);
-                    handle = revealBatch(
+                    /*
+                        只处理**真的会参与入场**的卡片。
+
+                        这一步不是优化，是正确性：revealBatch 会跳过初始化时
+                        已经在触发线以上的元素（理由见 motion.ts 那段说明），
+                        而藏命令是本组件自己做的 —— 按整个 grid 来藏，就会把
+                        那些不参与入场、因而永远等不到 typeCodes 的卡片一起
+                        藏掉，命令再也不显现。手机上刷新/返回恢复滚动位置时
+                        必中：深色块还占着完整宽度，横向滑过去却一个字都没有。
+                    */
+                    const pending = belowRevealLine(
                         Array.from(grid.children) as HTMLElement[],
-                        (cards) =>
-                            cards.forEach((card) => typeCodes(gsap, card)),
+                    );
+                    if (!pending.length) return;
+
+                    hideCodes(gsap, pending);
+                    handle = revealBatch(pending, (cards) =>
+                        cards.forEach((card) => typeCodes(gsap, card)),
                     );
 
                     // 中途被拆掉（卸载 / 开启 reduce-motion）时把还没显现的字符
@@ -226,11 +263,11 @@
                 <!--
                     grid-cols-1 不是多余的：只写 grid-rows-subgrid 的话列轨道是隐式的
                     `auto`，会按 max-content 撑开 —— 窄屏上那条命令有 515px 宽，
-                    轨道就跟着变 515px，<pre> 填满轨道后内容没超出自己，
-                    overflow-x-auto 永远不触发，深色块直接冲出卡片右缘
+                    轨道就跟着变 515px，命令块填满轨道后内容没超出自己，
+                    换行也就永远不会发生，深色块直接冲出卡片右缘
                     （实测 375px 下越界 224px，整页还多出 183px 横向滚动）。
                     grid-cols-1 给的是 minmax(0, 1fr)，轨道下限归零，
-                    命令区这才回到卡片宽度里，超长命令改为块内横向滚动。
+                    命令区这才回到卡片宽度里。
                 -->
                 <article
                     class="card row-span-3 grid grid-cols-1 grid-rows-subgrid gap-md p-lg sm:p-xl"
@@ -255,42 +292,75 @@
                     <!-- 命令区（终端风格）/ 无命令提示 -->
                     {#if tip.code}
                         <!--
-                            命令区这一格只放这一个盒子，h-full 把它撑满整格：
-                            只对齐上沿的话，一行命令和两行命令的深色块下沿
-                            仍然是错的（Linux 那张是两行）。
+                            ── 命令块 ──────────────────────────────────────
+
+                            这一格只放这一个盒子（subgrid 只给三格，见上面），
+                            h-full 把它撑满整格：只对齐上沿的话，一行命令和
+                            两行命令的深色块下沿仍然是错的（Linux 那张是两行）。
+
+                            ── 为什么命令**换行**而不是横向滚动 ────────────
+                            原来是 overflow-x-auto + 右上角浮着复制按钮，
+                            按钮那一档留白靠 pre 的 pr-12，再盖一层渐隐罩挡住
+                            滑到按钮下面的字。手机上这套整个是坏的：
+                              · 卡片内宽只有 ~300px，而最长的命令 515px ——
+                                默认看到的永远是被截断的半句，且没有滚动条提示
+                              · 渐隐罩贴着右缘常驻，右边 30px 内的字符是**看不见**的：
+                                横向滑动时字一到右边就淡没，看起来就是「滑过去是空的」
+                              · 块内横滑和页面纵滑在触屏上争手势，经常滑不动
+
+                            改成 whitespace-pre-wrap + overflow-wrap:anywhere：
+                            命令一定完整显示在卡片宽度内，没有任何被遮住的内容，
+                            渐隐罩和 pr-12 这两个补丁一起删掉。复制按钮挪进上面的
+                            标题条，从此不压在文字上，也不必再给它留一档空白。
                         -->
-                        <div class="relative">
-                            <pre
-                                class="h-full overflow-x-auto rounded-xl border border-line bg-ink-900 px-4 py-3 pr-12 font-mono text-[13px]/relaxed text-brand-200"
-                            ><code data-code>$ {tip.code}</code></pre>
+                        <div
+                            class="flex h-full flex-col overflow-hidden rounded-xl border border-line bg-ink-900"
+                        >
                             <!--
-                                复制按钮所在的那一档右侧留白来自 pre 的 pr-12，
-                                但那是**内容尾部**的 padding：命令一超宽、滚动位置在最左时，
-                                这段留白被推到视口外，文字就直接压在按钮底下。
-                                所以再铺一层贴着块右缘的渐隐罩 —— 文字滑到按钮前先淡掉，
-                                滚到尽头时 pr-12 又保证最后几个字符不被挡。
+                                终端标题条：左边三个点（纯装饰，不需要翻译），
+                                右边复制按钮。按钮带文字而不只是图标 ——
+                                触屏上 32px 的纯图标按钮既难点也难认。
                             -->
-                            <span
-                                aria-hidden="true"
-                                class="pointer-events-none absolute inset-y-px right-px w-14 rounded-r-xl bg-linear-to-l from-ink-900 from-55% to-transparent"
-                            ></span>
-                            <button
-                                type="button"
-                                onclick={() => copyCmd(tip.id, tip.code!)}
-                                class="absolute top-2 right-2 grid size-8 place-items-center rounded-lg bg-white/10 text-slate-300 transition-colors hover:bg-white/20 hover:text-white"
-                                aria-label={copied === tip.id ? t("dl.copied") : t("dl.copy")}
-                                title={copyError && copied === tip.id ? t("dl.copyFail") : copied === tip.id ? t("dl.copied") : t("dl.copy")}
+                            <div
+                                class="flex items-center gap-sm border-b border-white/10 px-3 py-2"
                             >
-                                <Icon
-                                    name={copied === tip.id && !copyError ? "check" : "copy"}
-                                    size={14}
-                                />
-                            </button>
+                                <span class="flex gap-1" aria-hidden="true">
+                                    <span class="size-2 rounded-full bg-white/15"></span>
+                                    <span class="size-2 rounded-full bg-white/15"></span>
+                                    <span class="size-2 rounded-full bg-white/15"></span>
+                                </span>
+                                <button
+                                    type="button"
+                                    onclick={() => copyCmd(tip.id, tip.code!)}
+                                    class="-my-1 ml-auto flex shrink-0 items-center gap-2xs rounded-lg px-2 py-1.5 text-xs text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
+                                    title={copyError && copied === tip.id ? t("dl.copyFail") : t("tip.copy")}
+                                >
+                                    <Icon
+                                        name={copied === tip.id && !copyError ? "check" : "copy"}
+                                        size={13}
+                                    />
+                                    <span>
+                                        {copied === tip.id
+                                            ? copyError
+                                                ? t("tip.copyFail")
+                                                : t("dl.copied")
+                                            : t("tip.copy")}
+                                    </span>
+                                </button>
+                            </div>
+
                             <!--
-                                复制反馈看按钮那个对勾（同 CodeBlock），这条只给读屏。
-                                原来它是流内的一行小字：一点复制就把这一格顶高，
-                                subgrid 下会连着把同一行另一张卡也撑高，
-                                而这一格被 h-full 撑满时反过来还会把代码框压扁。
+                                ⚠️ 标签之间不能留空白：pre 里的换行和缩进都是
+                                会渲染出来的真实字符（打字机还会把它们拆成 span）。
+                            -->
+                            <pre
+                                class="px-4 py-3 font-mono text-[13px]/relaxed whitespace-pre-wrap text-brand-200 [overflow-wrap:anywhere]"
+                            ><code data-code>{withPrompt(tip.code)}</code></pre>
+
+                            <!--
+                                复制反馈看按钮上的对勾与文字，这条只给读屏。
+                                流内的一行小字不行：一点复制就把这一格顶高，
+                                subgrid 下会连着把同一行另一张卡也撑高。
                                 sr-only 不占布局，且 live region 要一直在 DOM 里
                                 才会被播报，所以不加 {#if}，只换文本。
                             -->

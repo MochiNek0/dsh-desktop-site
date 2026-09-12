@@ -285,6 +285,31 @@ h3 {
 }
 
 /*
+  ── 下载源切换的高亮脉冲 ────────────────────────────────────
+  下载源刚被选中（不管是自动选优命中，还是用户手动点击）时短暂
+  scale + 外发光一下，让「切换生效了」这件事在按钮本身上有一次
+  一次性的、明确的反馈，而不必依赖用户去读旁边那行小字通知。
+  一次性动画，不受 prefers-reduced-motion 的全局压制豁免 ——
+  它足够短（620ms）且只播一次，压到 0.001ms 反而看起来像没反应，
+  但为免争议仍然遵守全局的 reduce-motion 规则（见上面的媒体查询）。
+*/
+@utility mirror-pulse {
+    animation: mirror-pulse 560ms ease-out both;
+}
+
+@keyframes mirror-pulse {
+    0% {
+        box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-brand-500) 45%, transparent);
+    }
+    70% {
+        box-shadow: 0 0 0 6px color-mix(in oklab, var(--color-brand-500) 0%, transparent);
+    }
+    100% {
+        box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-brand-500) 0%, transparent);
+    }
+}
+
+/*
   ── 首屏标题入场 ────────────────────────────────────────────
 
   首屏的标题不参与 SplitText 的逐字入场，改用这个。两个原因：

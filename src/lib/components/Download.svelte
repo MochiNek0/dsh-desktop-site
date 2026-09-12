@@ -18,8 +18,15 @@
         type OsId,
     } from "$lib/releases";
     import { clickSource, sessionId } from "$lib/session";
+    import {
+        pickBest,
+        raceMirrors,
+        raceMirrorsCached,
+        type ProbeResult,
+    } from "$lib/mirror-race";
     import Icon from "./Icon.svelte";
-    import { fly } from "svelte/transition";
+    import { onMount } from "svelte";
+    import { fly, fade } from "svelte/transition";
     import { cubicOut } from "svelte/easing";
 
     const t = $derived(i18n.t);
@@ -33,23 +40,131 @@
     let reduceMotion = $state(false);
     const swapMs = $derived(reduceMotion ? 0 : 260);
 
-    // 下载源：默认第一个（国内推荐）。用户改过之后记住选择。
+    // 下载源：默认第一个（国内推荐），随后尽量用自动测速选出的最优源覆盖。
+    // 用户手动选过之后记住选择，且不再被自动测速静默覆盖。
     const MIRROR_KEY = "dsh-site-mirror";
+    const MIRROR_LOCK_KEY = "dsh-site-mirror-locked";
     let mirror = $state<Mirror>(MIRRORS[0]);
     let detected = $state<OsId | null>(null);
     let copied = $state<string | null>(null);
     let copyError = $state(false);
     let copyTimer: ReturnType<typeof setTimeout> | undefined;
 
-    $effect(() => {
+    /**
+     * 自动选优状态机：
+     *   idle    → 还没跑过测速
+     *   racing  → 正在测速（每个源的小圆点转圈）
+     *   done    → 测速完成，probeResults 里有每个源的延迟/可用性
+     * userLocked 为 true 时，测速仍然跑（用于展示各源状态），
+     * 但结果不会自动切换当前选中的 mirror —— 尊重用户的手动选择。
+     */
+    let raceState = $state<"idle" | "racing" | "done">("idle");
+    let probeResults = $state<ProbeResult[]>([]);
+    let userLocked = $state(false);
+
+    /**
+     * 切换提示条：每次「自动选中」或「手动切换」都写一条，
+     * 短暂展示后自动消失 —— 这是本次改造里让切换意图变得显眼的核心。
+     */
+    let notice = $state<{ kind: "auto" | "manual" | "none"; text: string } | null>(
+        null,
+    );
+    let noticeTimer: ReturnType<typeof setTimeout> | undefined;
+
+    /** 切换按钮的短暂高亮脉冲：记录刚刚变化的 mirror id，配合 CSS 动画自行消退 */
+    let pulseId = $state<string | null>(null);
+    let pulseTimer: ReturnType<typeof setTimeout> | undefined;
+
+    function showNotice(kind: "auto" | "manual" | "none", text: string) {
+        clearTimeout(noticeTimer);
+        notice = { kind, text };
+        noticeTimer = setTimeout(() => {
+            notice = null;
+        }, 3600);
+    }
+
+    function firePulse(id: string) {
+        clearTimeout(pulseTimer);
+        pulseId = id;
+        pulseTimer = setTimeout(() => {
+            pulseId = null;
+        }, 620);
+    }
+
+    function probeFor(id: string): ProbeResult | undefined {
+        return probeResults.find((r) => r.id === id);
+    }
+
+    async function runAutoRace(opts: { force?: boolean } = {}) {
+        if (raceState === "racing") return;
+        raceState = "racing";
+        if (!userLocked || opts.force) {
+            showNotice("auto", t("dl.autoPicking"));
+        }
+        // 强制重测（用户主动点了「重新自动选择」）时绕开短期缓存
+        const results = opts.force
+            ? await raceMirrors()
+            : await raceMirrorsCached();
+        probeResults = results;
+        raceState = "done";
+
+        if (userLocked && !opts.force) return;
+
+        const bestId = pickBest(results);
+        if (!bestId) {
+            if (!userLocked) showNotice("none", t("dl.autoNone"));
+            return;
+        }
+        const best = MIRRORS.find((m) => m.id === bestId);
+        const bestResult = results.find((r) => r.id === bestId);
+        if (!best) return;
+
+        userLocked = false;
+        try {
+            localStorage.removeItem(MIRROR_LOCK_KEY);
+        } catch {
+            // 忽略
+        }
+
+        if (mirror.id !== best.id) {
+            mirror = best;
+            firePulse(best.id);
+        }
+        showNotice(
+            "auto",
+            t("dl.autoPicked", {
+                name: best.name,
+                ms: bestResult?.ms ?? "?",
+            }),
+        );
+    }
+
+    /*
+        这段是**一次性的挂载逻辑**，必须用 onMount 而不是 $effect。
+
+        $effect 会追踪同步执行期间读到的每一个 $state —— 而 runAutoRace 的
+        同步段就读了 raceState / userLocked，然后立刻写回它们。
+        effect 写自己的依赖 = 自我失效 = 无限重跑，Svelte 抛
+        effect_update_depth_exceeded，整个客户端 bootstrap 当场挂掉
+        （连带 motion.ts 不再初始化，全站 GSAP 入场动画一起消失）。
+
+        onMount 不建立任何依赖追踪，读写自由，且语义上也更准确：
+        探测系统、读 localStorage、起一次测速，都只该发生一次。
+    */
+    onMount(() => {
         detected = detectOs();
         try {
+            userLocked = localStorage.getItem(MIRROR_LOCK_KEY) === "1";
             const saved = localStorage.getItem(MIRROR_KEY);
             const found = MIRRORS.find((m) => m.id === saved);
             if (found) mirror = found;
         } catch {
             // 忽略：隐私模式下 localStorage 不可用
         }
+
+        // 无论用户是否锁定过手动选择，都跑一次测速 ——
+        // 锁定时只用于展示各源的实时状态点，不会挪动当前选中项（见 runAutoRace）。
+        void runAutoRace();
 
         // 偏好可能在会话中被改（系统设置里一开开关），所以监听而不是只读一次
         const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -59,17 +174,37 @@
 
         return () => {
             clearTimeout(copyTimer);
+            clearTimeout(noticeTimer);
+            clearTimeout(pulseTimer);
             mq.removeEventListener("change", onChange);
         };
     });
 
     function pickMirror(next: Mirror) {
+        const changed = next.id !== mirror.id;
         mirror = next;
+        userLocked = true;
         try {
             localStorage.setItem(MIRROR_KEY, next.id);
+            localStorage.setItem(MIRROR_LOCK_KEY, "1");
         } catch {
             // 忽略写入失败
         }
+        if (changed) {
+            firePulse(next.id);
+            showNotice("manual", t("dl.switchedTo", { name: next.name }));
+        }
+    }
+
+    /** 「重新自动选择」：解除手动锁定，强制重新测速并切到当前最快源。 */
+    function reAutoPick() {
+        userLocked = false;
+        try {
+            localStorage.removeItem(MIRROR_LOCK_KEY);
+        } catch {
+            // 忽略
+        }
+        void runAutoRace({ force: true });
     }
 
     // 检测到的平台排在最前；未检测到则保持原顺序（Win / macOS / Linux）
@@ -496,67 +631,183 @@
         <!-- data-dl-card：入场只做位移不做透明度，下载按钮全程可点（motion.ts 约束 B） -->
         <div data-dl-card class="card elev-2 overflow-hidden">
             <!--
-				下载源：不做一排灰色胶囊，而是收成一行"标签切换"。
-				选中项用一条品牌色下划线跟手滑动，比滑块更轻，
-				也不会和下面平台栏的横线打架。
+				下载源：每个源是一颗带状态点的胶囊按钮而不是纯文字 tab ——
+				状态点（转圈/绿/黄/灰/红）让"正在测速 / 谁更快 / 谁选不了"
+				一眼可辨，选中项额外带一枚"当前使用"徽标而不只是下划线。
+				顶部一条通知条负责把"自动选中了谁 / 手动切换到了谁"说出来，
+				这是让切换意图变得显眼的关键——之前唯一的反馈只有文字变粗。
 			-->
             <div
                 data-dl-bar
-                class="flex flex-col gap-sm border-b border-line bg-paper-100/70 px-md py-sm sm:flex-row sm:items-center sm:gap-md sm:px-lg sm:py-md"
+                class="flex flex-col gap-sm border-b border-line bg-paper-100/70 px-md py-sm sm:px-lg sm:py-md"
             >
-                <span
-                    class="flex shrink-0 items-center gap-xs text-sm font-semibold text-slate-900"
+                <div
+                    class="flex flex-col gap-sm sm:flex-row sm:items-center sm:gap-md"
                 >
                     <span
-                        class="grid size-7 place-items-center rounded-lg bg-linear-to-br from-brand-50 to-accent-50 text-brand-600 ring-1 ring-brand-100"
+                        class="flex shrink-0 items-center gap-xs text-sm font-semibold text-slate-900"
                     >
-                        <Icon name="bolt" size={14} />
-                    </span>
-                    {t("dl.source")}
-                </span>
-
-                <span
-                    class="hidden h-5 w-px bg-line sm:block"
-                    aria-hidden="true"
-                ></span>
-
-                <div
-                    class="flex min-w-0 flex-1 flex-wrap items-center gap-x-sm gap-y-xs"
-                    role="group"
-                    aria-label={t("dl.source")}
-                >
-                    {#each MIRRORS as m, i (m.id)}
-                        <button
-                            type="button"
-                            onclick={() => pickMirror(m)}
-                            aria-pressed={mirror.id === m.id}
-                            class="relative cursor-pointer pb-0.5 text-xs whitespace-nowrap transition-colors
-							{mirror.id === m.id
-                                ? 'font-semibold text-brand-700'
-                                : 'text-slate-500 hover:text-slate-900'}"
+                        <span
+                            class="grid size-7 place-items-center rounded-lg bg-linear-to-br from-brand-50 to-accent-50 text-brand-600 ring-1 ring-brand-100"
                         >
-                            {m.name}
-                            {#if mirror.id === m.id}
+                            <Icon name="bolt" size={14} />
+                        </span>
+                        {t("dl.source")}
+                        {#if !userLocked}
+                            <span
+                                class="hidden shrink-0 items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-bold tracking-wide text-brand-700 ring-1 ring-brand-100 sm:inline-flex"
+                            >
+                                <Icon
+                                    name={raceState === "racing"
+                                        ? "loader"
+                                        : "sparkle"}
+                                    size={10}
+                                    cls={raceState === "racing"
+                                        ? "animate-spin"
+                                        : ""}
+                                />
+                                {t("dl.autoBadge")}
+                            </span>
+                        {/if}
+                    </span>
+
+                    <span
+                        class="hidden h-5 w-px bg-line sm:block"
+                        aria-hidden="true"
+                    ></span>
+
+                    <div
+                        class="flex min-w-0 flex-1 flex-wrap items-center gap-xs"
+                        role="group"
+                        aria-label={t("dl.source")}
+                    >
+                        {#each MIRRORS as m (m.id)}
+                            {@const probe = probeFor(m.id)}
+                            {@const active = mirror.id === m.id}
+                            <button
+                                type="button"
+                                onclick={() => pickMirror(m)}
+                                aria-pressed={active}
+                                title={probe
+                                    ? probe.ok && probe.ms !== null
+                                        ? t("dl.latencyMs", { ms: probe.ms })
+                                        : probe.timedOut
+                                          ? t("dl.latencyTimeout")
+                                          : t("dl.latencyFail")
+                                    : t("dl.latencyTesting")}
+                                class="relative flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-all duration-200
+								{active
+                                    ? 'border-brand-200 bg-brand-50 text-brand-700 shadow-sm'
+                                    : 'border-line bg-white text-slate-600 hover:border-line-strong hover:bg-paper-100 hover:text-slate-900'}
+								{pulseId === m.id ? 'mirror-pulse' : ''}"
+                            >
+                                <!--
+                                    状态点：全站只有 brand/accent/slate 三种色相（见 app.css
+                                    取色说明），所以状态语义不靠"红黄绿"，靠"填充深浅 + 实心/空心"：
+                                      转圈   = 测速中
+                                      实心品牌色 = 快（更快的会被自动选中）
+                                      实心浅品牌色 = 可用但较慢
+                                      空心灰圈 = 失败/超时/未测
+                                -->
                                 <span
                                     aria-hidden="true"
-                                    class="absolute inset-x-0 -bottom-0.5 h-0.5 rounded-full bg-brand-500"
-                                ></span>
-                            {/if}
-                        </button>
-                    {/each}
+                                    class="grid size-3 shrink-0 place-items-center"
+                                >
+                                    {#if raceState === "racing" && !probe}
+                                        <span
+                                            class="size-2 animate-spin rounded-full border-[1.5px] border-slate-300 border-t-brand-500"
+                                        ></span>
+                                    {:else if probe?.ok}
+                                        <span
+                                            class="size-1.5 rounded-full {(probe.ms ??
+                                                9999) < 600
+                                                ? 'bg-brand-500'
+                                                : 'bg-brand-200'}"
+                                        ></span>
+                                    {:else if probe && (!probe.ok || probe.timedOut)}
+                                        <span
+                                            class="size-1.5 rounded-full border-[1.5px] border-slate-400"
+                                        ></span>
+                                    {:else}
+                                        <span
+                                            class="size-1.5 rounded-full bg-slate-300"
+                                        ></span>
+                                    {/if}
+                                </span>
+                                {m.name}
+                                {#if active}
+                                    <Icon
+                                        name="check"
+                                        size={11}
+                                        cls="text-brand-600"
+                                    />
+                                {/if}
+                            </button>
+                        {/each}
 
-                    {#key mirror.id}
-                        <span
-                            class="min-w-0 max-w-full truncate text-xs text-slate-500 sm:ml-auto sm:text-right"
-                            in:fly={{
-                                y: 4,
-                                duration: swapMs,
-                                easing: cubicOut,
-                            }}
+                        <!-- 重新自动选择：让「有自动优选这回事」在界面上被明确看见 -->
+                        <button
+                            type="button"
+                            onclick={reAutoPick}
+                            disabled={raceState === "racing"}
+                            title={t("dl.reAutoTitle")}
+                            class="ml-auto flex shrink-0 cursor-pointer items-center gap-1 rounded-full border border-line bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-line-strong hover:bg-paper-100 hover:text-slate-900 disabled:cursor-wait disabled:opacity-60"
                         >
-                            {t(mirror.noteKey)}
-                        </span>
-                    {/key}
+                            <Icon
+                                name="loader"
+                                size={12}
+                                cls={raceState === "racing"
+                                    ? "animate-spin"
+                                    : ""}
+                            />
+                            {t("dl.reAuto")}
+                        </button>
+                    </div>
+                </div>
+
+                <!--
+                    通知条：自动选中/手动切换都在这里说明白，出现几秒后自
+                    动淡出。kind 决定图标与色调——auto 用品牌色强调"这是
+                    系统帮你做的"，manual 用中性色强调"这是你刚点的"。
+                -->
+                <div class="grid min-h-[1.375rem]">
+                    {#if notice}
+                        <div
+                            class="col-start-1 row-start-1 flex items-center gap-1.5 text-xs
+							{notice.kind === 'auto'
+                                ? 'text-brand-700'
+                                : notice.kind === 'manual'
+                                  ? 'text-slate-600'
+                                  : 'text-accent-600'}"
+                            role="status"
+                            in:fly={{ y: -4, duration: swapMs, easing: cubicOut }}
+                            out:fade={{ duration: swapMs }}
+                        >
+                            <Icon
+                                name={notice.kind === "auto"
+                                    ? "sparkle"
+                                    : notice.kind === "manual"
+                                      ? "check"
+                                      : "info"}
+                                size={12}
+                                cls="shrink-0"
+                            />
+                            <span class="truncate">{notice.text}</span>
+                        </div>
+                    {:else}
+                        {#key mirror.id}
+                            <span
+                                class="col-start-1 row-start-1 min-w-0 max-w-full truncate text-xs text-slate-500"
+                                in:fly={{
+                                    y: 4,
+                                    duration: swapMs,
+                                    easing: cubicOut,
+                                }}
+                            >
+                                {t(mirror.noteKey)}
+                            </span>
+                        {/key}
+                    {/if}
                 </div>
             </div>
 
