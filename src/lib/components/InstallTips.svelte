@@ -382,5 +382,36 @@
                 </article>
             {/each}
         </div>
+
+        <!-- 日常使用须知 -->
+        <div class="grid grid-cols-1 gap-md sm:grid-cols-3">
+            <div class="flex items-start gap-sm rounded-xl border border-line bg-paper-100/70 p-md">
+                <span class="grid size-7 shrink-0 place-items-center rounded-lg bg-brand-100 text-brand-700">
+                    <Icon name="sparkle" size={14} />
+                </span>
+                <div class="stack-tight">
+                    <h4 class="text-xs font-semibold text-slate-900">{t("tip.note.runtime.title")}</h4>
+                    <p class="text-xs/relaxed text-slate-500">{t("tip.note.runtime.desc")}</p>
+                </div>
+            </div>
+            <div class="flex items-start gap-sm rounded-xl border border-line bg-paper-100/70 p-md">
+                <span class="grid size-7 shrink-0 place-items-center rounded-lg bg-brand-100 text-brand-700">
+                    <Icon name="layers" size={14} />
+                </span>
+                <div class="stack-tight">
+                    <h4 class="text-xs font-semibold text-slate-900">{t("tip.note.tray.title")}</h4>
+                    <p class="text-xs/relaxed text-slate-500">{t("tip.note.tray.desc")}</p>
+                </div>
+            </div>
+            <div class="flex items-start gap-sm rounded-xl border border-line bg-paper-100/70 p-md">
+                <span class="grid size-7 shrink-0 place-items-center rounded-lg bg-brand-100 text-brand-700">
+                    <Icon name="shield" size={14} />
+                </span>
+                <div class="stack-tight">
+                    <h4 class="text-xs font-semibold text-slate-900">{t("tip.note.update.title")}</h4>
+                    <p class="text-xs/relaxed text-slate-500">{t("tip.note.update.desc")}</p>
+                </div>
+            </div>
+        </div>
     </div>
 </section>

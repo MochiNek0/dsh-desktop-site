@@ -80,6 +80,10 @@ export const DOWNLOADS_UPDATED_AT = downloadTotal.updatedAt;
 /** 上游 DeepSeek Harness 项目 */
 export const UPSTREAM_URL = 'https://github.com/deepseek-ai/deepseek-harness';
 
+/** 官方插件市场 DSH Market */
+export const MARKET_URL = 'https://dshmarket.com';
+export const MARKET_REPO_URL = 'https://github.com/dsh-market/dsh-market';
+
 export type MirrorId =
 	| 'ghproxy'
 	| 'ghproxycom'

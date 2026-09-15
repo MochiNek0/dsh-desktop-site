@@ -14,6 +14,7 @@
         REPO_OWNER_URL,
         REPO_URL,
         UPSTREAM_URL,
+        MARKET_URL,
     } from "$lib/releases";
     import { ORIGIN } from "$lib/site";
     import { onMount } from "svelte";
@@ -128,11 +129,11 @@
 
     const features = [
         { icon: "bolt", title: "feat.1.title", body: "feat.1.body" },
-        { icon: "layers", title: "feat.2.title", body: "feat.2.body" },
-        { icon: "sparkle", title: "feat.3.title", body: "feat.3.body" },
-        { icon: "share", title: "feat.4.title", body: "feat.4.body" },
-        { icon: "puzzle", title: "feat.5.title", body: "feat.5.body" },
-        { icon: "shield", title: "feat.6.title", body: "feat.6.body" },
+        { icon: "sparkle", title: "feat.2.title", body: "feat.2.body" },
+        { icon: "puzzle", title: "feat.3.title", body: "feat.3.body" },
+        { icon: "lifebuoy", title: "feat.4.title", body: "feat.4.body" },
+        { icon: "bell", title: "feat.5.title", body: "feat.5.body" },
+        { icon: "layers", title: "feat.6.title", body: "feat.6.body" },
     ];
 
     const faqs = [
@@ -143,6 +144,7 @@
         { q: "faq.q5", a: "faq.a5" },
         { q: "faq.q6", a: "faq.a6" },
         { q: "faq.q7", a: "faq.a7" },
+        { q: "faq.q8", a: "faq.a8" },
     ];
 
     /*
@@ -357,7 +359,10 @@
     -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="dsh desktop" />
-    <meta property="og:locale" content={i18n.lang === "zh" ? "zh_CN" : "en_US"} />
+    <meta
+        property="og:locale"
+        content={i18n.lang === "zh" ? "zh_CN" : "en_US"}
+    />
     <meta
         property="og:locale:alternate"
         content={i18n.lang === "zh" ? "en_US" : "zh_CN"}
@@ -584,10 +589,7 @@
 
         窄屏那套是纯静态的，不加载任何动画逻辑。
     -->
-    <section
-        id="features"
-        class="section-x scroll-mt-20 bg-white lg:py-0!"
-    >
+    <section id="features" class="section-x scroll-mt-20 bg-white lg:py-0!">
         <!--
             宽屏：pin + 展开动画。
 
@@ -719,80 +721,134 @@
             aria-hidden="true"
         ></div>
 
-        <div class="relative container-page">
+        <div class="relative container-page stack-section">
+            <!-- 标题区单独提在上方 -->
+            <div class="stack-heading">
+                {#key i18n.lang}
+                    <!-- 同 hero：被 SplitText 拆过的标题只能整块重建，见那里的说明 -->
+                    <h2
+                        data-split
+                        class="text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl"
+                    >
+                        {t("plug.heading")}
+                    </h2>
+                {/key}
+                <p class="text-base/relaxed text-slate-600 sm:text-lg/relaxed">
+                    {t("plug.sub")}
+                </p>
+            </div>
+
+            <!-- 左侧列表与右侧展台整合在同一个高质感统一容器大卡片中 -->
+
             <div
-                class="grid grid-cols-1 gap-3xl lg:grid-cols-2 lg:items-center lg:gap-4xl"
+                class="grid grid-cols-1 lg:grid-cols-12 lg:divide-x lg:divide-line"
             >
-                <div class="stack-section">
-                    <div class="stack-heading">
-                        {#key i18n.lang}
-                            <!-- 同 hero：被 SplitText 拆过的标题只能整块重建，见那里的说明 -->
-                            <h2
-                                data-split
-                                class="text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl"
-                            >
-                                {t("plug.heading")}
-                            </h2>
-                        {/key}
-                        <p
-                            class="text-base/relaxed text-slate-600 sm:text-lg/relaxed"
+                <!-- 左侧：特性列表 -->
+                <div
+                    class="flex flex-col justify-between gap-xl p-lg sm:p-xl lg:col-span-7 lg:p-2xl"
+                >
+                    <div data-plug-item class="flex gap-md">
+                        <div
+                            class="grid size-11 shrink-0 place-items-center rounded-xl bg-paper-200 text-brand-700 ring-1 ring-line"
                         >
-                            {t("plug.sub")}
-                        </p>
+                            <Icon name="store" size={20} />
+                        </div>
+                        <div class="stack-tight">
+                            <h3 class="font-semibold text-slate-900 text-base">
+                                {t("plug.1.title")}
+                            </h3>
+                            <p class="text-sm/relaxed text-slate-600">
+                                {t("plug.1.body")}
+                            </p>
+                        </div>
                     </div>
 
-                    <!-- 两条特性并列：用 gap 代替 space-y -->
-                    <div class="flex flex-col gap-xl">
-                        <div data-plug-item class="flex gap-md">
-                            <div
-                                class="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-brand-700 ring-1 ring-line"
-                            >
-                                <Icon name="puzzle" size={18} />
-                            </div>
-                            <div class="stack-tight">
-                                <h3 class="font-semibold text-slate-900">
-                                    {t("plug.1.title")}
-                                </h3>
-                                <p class="text-sm/relaxed text-slate-600">
-                                    {t("plug.1.body")}
-                                </p>
-                            </div>
+                    <div data-plug-item class="flex gap-md">
+                        <div
+                            class="grid size-11 shrink-0 place-items-center rounded-xl bg-paper-200 text-brand-700 ring-1 ring-line"
+                        >
+                            <Icon name="lifebuoy" size={20} />
                         </div>
-                        <div data-plug-item class="flex gap-md">
-                            <div
-                                class="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-brand-700 ring-1 ring-line"
-                            >
-                                <Icon name="terminal" size={18} />
-                            </div>
-                            <div class="stack-tight">
-                                <h3 class="font-semibold text-slate-900">
-                                    {t("plug.2.title")}
-                                </h3>
-                                <p class="text-sm/relaxed text-slate-600">
-                                    {t("plug.2.body")}
-                                </p>
-                            </div>
+                        <div class="stack-tight">
+                            <h3 class="font-semibold text-slate-900 text-base">
+                                {t("plug.2.title")}
+                            </h3>
+                            <p class="text-sm/relaxed text-slate-600">
+                                {t("plug.2.body")}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div data-plug-item class="flex gap-md">
+                        <div
+                            class="grid size-11 shrink-0 place-items-center rounded-xl bg-paper-200 text-brand-700 ring-1 ring-line"
+                        >
+                            <Icon name="terminal" size={20} />
+                        </div>
+                        <div class="stack-tight">
+                            <h3 class="font-semibold text-slate-900 text-base">
+                                {t("plug.3.title")}
+                            </h3>
+                            <p class="text-sm/relaxed text-slate-600">
+                                {t("plug.3.body")}
+                            </p>
                         </div>
                     </div>
                 </div>
 
+                <!-- 右侧：生态与配置卡（位于同一个容器内） -->
                 <div
                     data-plug-card
-                    class="card flex flex-col gap-lg p-lg sm:p-xl"
+                    class="flex flex-col rounded-2xl justify-between gap-xl border-t border-line bg-paper-100/50 p-lg sm:p-xl lg:col-span-5 lg:border-t-0 lg:p-2xl"
                 >
-                    <p
-                        class="flex items-start gap-sm text-sm/relaxed text-slate-600"
+                    <!-- DSH Market 专属推荐卡片 -->
+                    <div
+                        class="rounded-xl border border-brand-100 bg-linear-to-br from-brand-50/70 via-white to-accent-50/50 p-md sm:p-lg flex flex-col gap-sm shadow-xs"
                     >
-                        <Icon
-                            name="info"
-                            size={16}
-                            cls="mt-0.5 shrink-0 text-accent-500"
+                        <div class="flex items-center justify-between gap-sm">
+                            <span
+                                class="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-semibold text-brand-700"
+                            >
+                                <Icon name="store" size={13} />
+                                {t("plug.market.badge")}
+                            </span>
+                            <a
+                                href={MARKET_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-800 transition-colors"
+                            >
+                                {t("plug.market.cta")}
+                                <Icon name="external" size={12} />
+                            </a>
+                        </div>
+                        <h4 class="font-semibold text-slate-900 text-base">
+                            {t("plug.market.title")}
+                        </h4>
+                        <p class="text-xs/relaxed text-slate-600">
+                            {t("plug.market.desc")}
+                        </p>
+                    </div>
+
+                    <!-- 安全放行指引 -->
+                    <div class="flex flex-col gap-sm">
+                        <div class="flex items-center gap-sm">
+                            <Icon
+                                name="info"
+                                size={15}
+                                cls="shrink-0 text-accent-600"
+                            />
+                            <span class="text-xs font-semibold text-slate-800">
+                                {t("plug.note.title")}
+                            </span>
+                        </div>
+                        <p class="text-xs/relaxed text-slate-500">
+                            {t("plug.note")}
+                        </p>
+                        <CodeBlock
+                            code={"$DSH_HOME/profiles/web/pnpm-workspace.yaml"}
                         />
-                        <span>{t("plug.note")}</span>
-                    </p>
-                    <CodeBlock
-                        code={"$DSH_HOME/profiles/web/pnpm-workspace.yaml"}
-                    />
+                    </div>
                 </div>
             </div>
         </div>

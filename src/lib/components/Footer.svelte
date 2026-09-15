@@ -1,6 +1,6 @@
 <script lang="ts">
     import { i18n, pathForLang } from "$lib/i18n.svelte";
-    import { REPO_URL, UPSTREAM_URL } from "$lib/releases";
+    import { MARKET_URL, REPO_URL, UPSTREAM_URL } from "$lib/releases";
     import Icon from "./Icon.svelte";
     import Logo from "./Logo.svelte";
     import VisitorCount from "./VisitorCount.svelte";
@@ -47,6 +47,7 @@
                 ...(i18n.lang === "zh"
                     ? [{ label: t("nav.blog"), href: "/blog/", external: false }]
                     : []),
+                { label: t("foot.market"), href: MARKET_URL, external: true },
                 { label: t("foot.repo"), href: REPO_URL, external: true },
                 {
                     label: t("foot.releases"),
