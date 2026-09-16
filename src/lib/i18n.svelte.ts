@@ -226,7 +226,7 @@ const zh: Dict = {
     "支持。桌面端启动时静默检查更新，有新版才提示，下载前征求同意。Linux 环境下推荐 AppImage 格式以获得最完整的自动更新支持。",
   "faq.q8": "支持哪些系统平台？",
   "faq.a8":
-    "Windows（.exe）、macOS（.dmg 通用二进制，支持 Apple Silicon 与 Intel）和 Linux（.deb 与 .AppImage）。目前 Windows 与 Debian 系 Linux 已完成验证，macOS 欢迎体验与反馈。",
+    "Windows（.exe）、macOS（.dmg 通用二进制，支持 Apple Silicon 与 Intel）和 Linux（.deb 与 .AppImage）。目前 Windows、macOS 与 Debian 系 Linux 均已完成验证。",
 
   // ── CTA / 页脚 ──
   "cta.heading": "现在开始",
@@ -447,7 +447,7 @@ const en: Dict = {
     "Yes. The app checks silently on launch, alerts you only when an update exists, and asks for consent before downloading. On Linux, AppImage format provides full self-update support.",
   "faq.q8": "Which platforms are supported?",
   "faq.a8":
-    "Windows (.exe), macOS (.dmg universal binary for Apple Silicon and Intel), and Linux (.deb and .AppImage). Windows and Debian Linux are verified; macOS is ready for testing and feedback.",
+    "Windows (.exe), macOS (.dmg universal binary for Apple Silicon and Intel), and Linux (.deb and .AppImage). Windows, macOS, and Debian Linux are verified.",
 
   "cta.heading": "Get started",
   "cta.sub": "Download the installer, double-click, and it handles the rest.",

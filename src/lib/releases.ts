@@ -207,8 +207,8 @@ export const OS_GROUPS: OsGroup[] = [
 	{
 		id: 'macos',
 		nameKey: 'os.macos',
-		statusKey: 'status.untested',
-		verified: false,
+		statusKey: 'status.verified',
+		verified: true,
 		downloads: [
 			{
 				labelKey: 'dl.mac.dmg',
