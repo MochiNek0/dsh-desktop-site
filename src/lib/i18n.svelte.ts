@@ -227,6 +227,9 @@ const zh: Dict = {
   "faq.q8": "支持哪些系统平台？",
   "faq.a8":
     "Windows（.exe）、macOS（.dmg 通用二进制，支持 Apple Silicon 与 Intel）和 Linux（.deb 与 .AppImage）。目前 Windows、macOS 与 Debian 系 Linux 均已完成验证。",
+  "faq.q9": "有交流群或反馈渠道吗？",
+  "faq.a9":
+    "欢迎加入 QQ 交流群：1125671315，与大家探讨使用心得、反馈 Bug 与功能建议；也可随时在 GitHub 仓库提交 Issue。",
 
   // ── CTA / 页脚 ──
   "cta.heading": "现在开始",
@@ -247,6 +250,9 @@ const zh: Dict = {
   "foot.license": "MIT 许可证",
   "foot.readme": "使用文档",
   "foot.rights": "基于 MIT 许可证开源",
+  "foot.group": "QQ 交流群",
+  "foot.groupCopied": "已复制群号",
+  "foot.clickCopy": "点击复制群号",
 };
 
 const en: Dict = {
@@ -448,6 +454,9 @@ const en: Dict = {
   "faq.q8": "Which platforms are supported?",
   "faq.a8":
     "Windows (.exe), macOS (.dmg universal binary for Apple Silicon and Intel), and Linux (.deb and .AppImage). Windows, macOS, and Debian Linux are verified.",
+  "faq.q9": "Is there a community group or feedback channel?",
+  "faq.a9":
+    "Welcome to join the QQ group 1125671315 for discussions, bug reports, and suggestions. You can also open an Issue on GitHub anytime.",
 
   "cta.heading": "Get started",
   "cta.sub": "Download the installer, double-click, and it handles the rest.",
@@ -467,6 +476,9 @@ const en: Dict = {
   "foot.license": "MIT License",
   "foot.readme": "Documentation",
   "foot.rights": "Open source under the MIT License",
+  "foot.group": "QQ Group",
+  "foot.groupCopied": "Copied",
+  "foot.clickCopy": "Click to copy group number",
 };
 
 const DICTS: Record<Lang, Dict> = { zh, en };

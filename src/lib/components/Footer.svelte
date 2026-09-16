@@ -8,6 +8,34 @@
     const t = $derived(i18n.t);
     const year = new Date().getFullYear();
 
+    interface FooterLink {
+        label: string;
+        href?: string;
+        external?: boolean;
+        copy?: string;
+    }
+
+    interface FooterCol {
+        title: string;
+        links: FooterLink[];
+    }
+
+    let copied = $state(false);
+    let copyTimer: ReturnType<typeof setTimeout> | undefined;
+
+    async function copyGroup(text = "1125671315") {
+        try {
+            await navigator.clipboard.writeText(text);
+            copied = true;
+            clearTimeout(copyTimer);
+            copyTimer = setTimeout(() => {
+                copied = false;
+            }, 2000);
+        } catch {
+            // fallback
+        }
+    }
+
     /*
         站内锚点带上当前语言的首页路径，理由同 Header：
         Footer 也在根 layout 里，会跟着渲染到 /404 上，
@@ -15,7 +43,7 @@
     */
     const home = $derived(pathForLang(i18n.lang));
 
-    const cols = $derived([
+    const cols = $derived<FooterCol[]>([
         {
             title: t("foot.product"),
             links: [
@@ -64,6 +92,10 @@
                     href: `${REPO_URL}/issues`,
                     external: true,
                 },
+                {
+                    label: `${t("foot.group")}: 1125671315`,
+                    copy: "1125671315",
+                },
             ],
         },
         {
@@ -99,6 +131,25 @@
                 <p class="text-sm/6 text-slate-500">
                     {t("foot.disclaimer")}
                 </p>
+                <div class="pt-2xs">
+                    <button
+                        type="button"
+                        onclick={() => copyGroup("1125671315")}
+                        class="inline-flex cursor-pointer items-center gap-xs rounded-lg border border-line bg-paper-100 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-line-strong hover:bg-paper-200"
+                        title={t("foot.clickCopy")}
+                    >
+                        <Icon name="chat" size={14} cls="text-brand-600" />
+                        <span>{t("foot.group")}: <strong class="font-mono text-slate-900">1125671315</strong></span>
+                        {#if copied}
+                            <span class="flex items-center gap-2xs font-medium text-brand-600">
+                                <Icon name="check" size={12} />
+                                {t("foot.groupCopied")}
+                            </span>
+                        {:else}
+                            <Icon name="copy" size={12} cls="text-slate-400" />
+                        {/if}
+                    </button>
+                </div>
             </div>
 
             {#each cols as col (col.title)}
@@ -110,25 +161,46 @@
                     <ul class="flex flex-col gap-sm">
                         {#each col.links as link (link.label)}
                             <li class="flex">
-                                <a
-                                    href={link.href}
-                                    target={link.external
-                                        ? "_blank"
-                                        : undefined}
-                                    rel={link.external
-                                        ? "noopener noreferrer"
-                                        : undefined}
-                                    class="group inline-flex items-center gap-2xs text-sm text-slate-600 transition-colors hover:text-brand-700"
-                                >
-                                    {link.label}
-                                    {#if link.external}
-                                        <Icon
-                                            name="external"
-                                            size={12}
-                                            cls="opacity-0 transition-opacity group-hover:opacity-60"
-                                        />
-                                    {/if}
-                                </a>
+                                {#if link.copy}
+                                    <button
+                                        type="button"
+                                        onclick={() => copyGroup(link.copy)}
+                                        class="group inline-flex cursor-pointer items-center gap-2xs text-left text-sm text-slate-600 transition-colors hover:text-brand-700"
+                                        title={t("foot.clickCopy")}
+                                    >
+                                        {#if copied}
+                                            <span class="font-medium text-brand-600">{t("foot.groupCopied")}</span>
+                                            <Icon name="check" size={12} cls="text-brand-600" />
+                                        {:else}
+                                            <span>{link.label}</span>
+                                            <Icon
+                                                name="copy"
+                                                size={12}
+                                                cls="opacity-0 transition-opacity group-hover:opacity-60"
+                                            />
+                                        {/if}
+                                    </button>
+                                {:else}
+                                    <a
+                                        href={link.href}
+                                        target={link.external
+                                            ? "_blank"
+                                            : undefined}
+                                        rel={link.external
+                                            ? "noopener noreferrer"
+                                            : undefined}
+                                        class="group inline-flex items-center gap-2xs text-sm text-slate-600 transition-colors hover:text-brand-700"
+                                    >
+                                        {link.label}
+                                        {#if link.external}
+                                            <Icon
+                                                name="external"
+                                                size={12}
+                                                cls="opacity-0 transition-opacity group-hover:opacity-60"
+                                            />
+                                        {/if}
+                                    </a>
+                                {/if}
                             </li>
                         {/each}
                     </ul>
