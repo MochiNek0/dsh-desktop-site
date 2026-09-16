@@ -20,16 +20,16 @@
         links: FooterLink[];
     }
 
-    let copied = $state(false);
+    let copiedKey = $state<string | null>(null);
     let copyTimer: ReturnType<typeof setTimeout> | undefined;
 
-    async function copyGroup(text = "1125671315") {
+    async function copyText(text: string) {
         try {
             await navigator.clipboard.writeText(text);
-            copied = true;
+            copiedKey = text;
             clearTimeout(copyTimer);
             copyTimer = setTimeout(() => {
-                copied = false;
+                copiedKey = null;
             }, 2000);
         } catch {
             // fallback
@@ -131,25 +131,6 @@
                 <p class="text-sm/6 text-slate-500">
                     {t("foot.disclaimer")}
                 </p>
-                <div class="pt-2xs">
-                    <button
-                        type="button"
-                        onclick={() => copyGroup("1125671315")}
-                        class="inline-flex cursor-pointer items-center gap-xs rounded-lg border border-line bg-paper-100 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-line-strong hover:bg-paper-200"
-                        title={t("foot.clickCopy")}
-                    >
-                        <Icon name="chat" size={14} cls="text-brand-600" />
-                        <span>{t("foot.group")}: <strong class="font-mono text-slate-900">1125671315</strong></span>
-                        {#if copied}
-                            <span class="flex items-center gap-2xs font-medium text-brand-600">
-                                <Icon name="check" size={12} />
-                                {t("foot.groupCopied")}
-                            </span>
-                        {:else}
-                            <Icon name="copy" size={12} cls="text-slate-400" />
-                        {/if}
-                    </button>
-                </div>
             </div>
 
             {#each cols as col (col.title)}
@@ -164,15 +145,14 @@
                                 {#if link.copy}
                                     <button
                                         type="button"
-                                        onclick={() => copyGroup(link.copy)}
+                                        onclick={() => link.copy && copyText(link.copy)}
                                         class="group inline-flex cursor-pointer items-center gap-2xs text-left text-sm text-slate-600 transition-colors hover:text-brand-700"
                                         title={t("foot.clickCopy")}
                                     >
-                                        {#if copied}
-                                            <span class="font-medium text-brand-600">{t("foot.groupCopied")}</span>
+                                        <span>{link.label}</span>
+                                        {#if copiedKey === link.copy}
                                             <Icon name="check" size={12} cls="text-brand-600" />
                                         {:else}
-                                            <span>{link.label}</span>
                                             <Icon
                                                 name="copy"
                                                 size={12}

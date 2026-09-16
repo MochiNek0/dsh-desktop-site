@@ -386,6 +386,22 @@
             copyError = false;
         }, 2200);
     }
+
+    let copiedGroup = $state(false);
+    let groupCopyTimer: ReturnType<typeof setTimeout> | undefined;
+
+    async function copyGroup() {
+        try {
+            await navigator.clipboard.writeText("1125671315");
+            copiedGroup = true;
+            clearTimeout(groupCopyTimer);
+            groupCopyTimer = setTimeout(() => {
+                copiedGroup = false;
+            }, 2200);
+        } catch {
+            // fallback
+        }
+    }
 </script>
 
 <!-- ══ 复用片段：主面板与侧栏共用，只有字号 / 按钮档位不同 ══ -->
@@ -930,6 +946,37 @@
                     {/each}
                 </div>
             </div>
+        </div>
+
+        <!-- 用户交流群入口 -->
+        <div
+            data-dl-meta
+            class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md rounded-2xl border border-line bg-paper-100/70 p-md sm:px-lg sm:py-3.5"
+        >
+            <div class="flex items-center gap-sm">
+                <span
+                    class="grid size-8 shrink-0 place-items-center rounded-xl bg-white text-brand-700 shadow-xs ring-1 ring-brand-200/60"
+                >
+                    <Icon name="chat" size={16} />
+                </span>
+                <p class="text-sm font-medium text-slate-800">
+                    {t("dl.groupPrompt")}
+                </p>
+            </div>
+            <button
+                type="button"
+                onclick={copyGroup}
+                class="inline-flex shrink-0 cursor-pointer items-center gap-xs rounded-xl border border-line bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-xs transition-colors hover:border-line-strong hover:bg-paper-50 hover:text-brand-700"
+                title={t("foot.clickCopy")}
+            >
+                <Icon name="users" size={14} cls="text-brand-600" />
+                <span>{t("foot.group")}: <strong class="font-mono font-bold text-slate-900">1125671315</strong></span>
+                {#if copiedGroup}
+                    <Icon name="check" size={13} cls="text-brand-600" />
+                {:else}
+                    <Icon name="copy" size={13} cls="text-slate-400" />
+                {/if}
+            </button>
         </div>
 
         <!-- 版本信息与全部资产 -->

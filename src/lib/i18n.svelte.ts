@@ -107,6 +107,7 @@ const zh: Dict = {
     "所有正式版本、所有下载源的累计估算，已去重。每 24 小时汇总一次。其中 GitHub 侧",
   "dl.checksum": "校验与签名文件",
   "dl.allAssets": "查看全部安装包与更新日志",
+  "dl.groupPrompt": "遇到安装或使用问题？欢迎加入用户交流群探讨",
 
   // 与 formatCount 拼成「本站总共访问人数 3,289」。
   // 口径是**人数**：按浏览器里的一个随机标识去重，
@@ -341,6 +342,7 @@ const en: Dict = {
     "De-duplicated estimate across every release and every download source, aggregated every 24 hours. On GitHub:",
   "dl.checksum": "Signatures & checksums",
   "dl.allAssets": "All installers and release notes",
+  "dl.groupPrompt": "Need help with setup or usage? Join our user community group",
 
   "visitors.label": "visitors so far",
   "visitors.order": "count-first",
