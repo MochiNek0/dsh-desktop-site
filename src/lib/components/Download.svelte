@@ -430,7 +430,7 @@
                 role="radio"
                 aria-checked={active === dl.file}
                 onclick={() => pickFile(group, dl.file)}
-                class="relative z-10 shrink-0 cursor-pointer rounded-full font-semibold whitespace-nowrap transition-colors
+                class="relative z-10 shrink-0 rounded-full font-semibold whitespace-nowrap transition-colors
 				{compact ? 'min-h-7 px-2.5 text-[11px]' : 'min-h-9 px-3.5 text-xs'}
 				{active === dl.file
                     ? 'text-white'
@@ -711,7 +711,7 @@
                                           ? t("dl.latencyTimeout")
                                           : t("dl.latencyFail")
                                     : t("dl.latencyTesting")}
-                                class="relative flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-all duration-200
+                                class="relative flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-all duration-200
 								{active
                                     ? 'border-brand-200 bg-brand-50 text-brand-700 shadow-sm'
                                     : 'border-line bg-white text-slate-600 hover:border-line-strong hover:bg-paper-100 hover:text-slate-900'}
@@ -767,7 +767,7 @@
                             onclick={reAutoPick}
                             disabled={raceState === "racing"}
                             title={t("dl.reAutoTitle")}
-                            class="ml-auto flex shrink-0 cursor-pointer items-center gap-1 rounded-full border border-line bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-line-strong hover:bg-paper-100 hover:text-slate-900 disabled:cursor-wait disabled:opacity-60"
+                            class="ml-auto flex shrink-0 items-center gap-1 rounded-full border border-line bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-line-strong hover:bg-paper-100 hover:text-slate-900 disabled:cursor-wait disabled:opacity-60"
                         >
                             <Icon
                                 name="loader"

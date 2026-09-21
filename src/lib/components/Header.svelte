@@ -13,23 +13,20 @@
 	let mobileOpen = $state(false);
 
 	/*
-		锚点带上当前语言的首页路径，而不是裸 '#features'。
+		导航里只放**真实页面**。
 
-		裸锚点在 /404 上指向 /404#features —— 那一页没有这些区块，点了没反应
-		（预渲染时 SvelteKit 就会因为找不到对应 id 直接报错）。
-		带上首页路径后，从任何页面点导航都会回到对应语言的首页再滚过去。
+		原来这四项是 `首页路径#features` 这种锚点 —— 在首页上点了只是页内滚动，
+		顶栏因此更像一份目录而不是站点结构，而且同一个入口在首页和在 /go 上
+		是两种行为。区块之间的跳转交给首屏和页脚，顶栏只回答「去哪一页」。
+
+		右侧那个「下载」按钮留着：它指的也是 #download，但它不是导航项，
+		是这一站的主转化入口，窄屏上还是唯一的下载路径。
+
+		博客只有中文一份，所以英文页不放入口 ——
+		把英文读者送进一整页中文，比没有这个入口更差。
 	*/
 	const links = $derived([
-		...[
-			{ hash: '#features', key: 'nav.features' },
-			{ hash: '#download', key: 'nav.download' },
-			{ hash: '#plugins', key: 'nav.plugins' },
-			{ hash: '#faq', key: 'nav.faq' }
-		].map((l) => ({ key: l.key, href: `${pathForLang(i18n.lang)}${l.hash}` })),
-		/*
-			博客只有中文一份，所以英文页不放入口 ——
-			把英文读者送进一整页中文，比没有这个入口更差。
-		*/
+		{ key: 'nav.connect', href: `${pathForLang(i18n.lang)}go/` },
 		...(i18n.lang === 'zh' ? [{ key: 'nav.blog', href: '/blog/' }] : [])
 	]);
 

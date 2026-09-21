@@ -37,9 +37,8 @@
     }
 
     /*
-        站内锚点带上当前语言的首页路径，理由同 Header：
-        Footer 也在根 layout 里，会跟着渲染到 /404 上，
-        裸锚点在那一页指向不存在的区块（预渲染会直接报错）。
+        门户链接带上当前语言的首页路径：Footer 在根 layout 里，
+        /en/ 下这一条必须指向 /en/go/，而不是中文那一份。
     */
     const home = $derived(pathForLang(i18n.lang));
 
@@ -47,22 +46,12 @@
         {
             title: t("foot.product"),
             links: [
-                {
-                    label: t("nav.download"),
-                    href: `${home}#download`,
-                    external: false,
-                },
-                {
-                    label: t("nav.features"),
-                    href: `${home}#features`,
-                    external: false,
-                },
-                {
-                    label: t("nav.plugins"),
-                    href: `${home}#plugins`,
-                    external: false,
-                },
-                { label: t("nav.faq"), href: `${home}#faq`, external: false },
+                /*
+                    这一列原来还有下载 / 特性 / 插件 / 常见问题四个 `#hash`，
+                    和顶栏那几项一起去掉了：它们在首页上只是页内滚动，
+                    区块之间的跳转由首屏承担，页脚只回答「去哪一页」。
+                */
+                { label: t("nav.connect"), href: `${home}go/`, external: false },
             ],
         },
         {

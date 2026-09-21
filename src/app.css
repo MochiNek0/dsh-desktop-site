@@ -103,6 +103,12 @@
 	    sm~md   同一块里的标题与正文、卡片内部堆叠    → 成组
 	    lg~xl   卡片之间、并列区块之间                → 分组
 	    2xl~4xl 标题组与内容、区块与区块              → 分节
+
+	  ⚠ 这套 token 会**遮住** Tailwind 自带的 --container 尺度。
+	  max-w 的取值链是 --max-width → --spacing → --container，--spacing 在前：
+	  写 `max-w-lg` 拿到的是 var(--spacing-lg) = 20px，不是 32rem —— 页面会
+	  塌成一个字宽，而且不报错。限宽请写 container-page 或显式的 max-w-[32rem]，
+	  别用 max-w-sm/md/lg/xl 这类和间距同名的档位。w-/h-/size- 同理。
 	*/
     --spacing-2xs: 4px;
     --spacing-xs: 8px;
@@ -183,6 +189,19 @@ h3 {
 /* 数字表格化：版本号、体积、计数器等需要不跳动 */
 .nums-tabular {
     font-variant-numeric: tabular-nums lining-nums;
+}
+
+/*
+  Tailwind v4 的 preflight 把 button 的光标改回了浏览器原生的 default
+  （v3 是 pointer）。本站没有一个按钮长得像原生控件 —— 全是自定义样式的
+  可点区域，鼠标停上去不变手型只会让人以为它是块死的装饰。
+
+  禁用态排除在外：那时候的正确反馈是「点不了」，不是「可以点」。
+  Download 里几个按钮自己挂了 disabled:cursor-wait，:not(:disabled) 不会碰它们。
+*/
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+    cursor: pointer;
 }
 
 /* 键盘可达性：统一焦点环，且只在键盘导航时出现 */

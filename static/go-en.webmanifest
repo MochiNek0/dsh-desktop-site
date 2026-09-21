@@ -1,0 +1,17 @@
+{
+	"id": "/en/go/",
+	"name": "Connect to my computer · dsh desktop",
+	"short_name": "dsh connect",
+	"lang": "en",
+	"description": "Scan the QR code on dsh desktop once, then reach your own dsh from this page.",
+	"start_url": "/en/go/",
+	"scope": "/en/go/",
+	"display": "standalone",
+	"orientation": "portrait",
+	"background_color": "#f8f8fc",
+	"theme_color": "#f8f8fc",
+	"icons": [
+		{ "src": "/icon-192.png", "sizes": "256x256", "type": "image/png" },
+		{ "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+	]
+}

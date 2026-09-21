@@ -23,10 +23,8 @@ const zh: Dict = {
   "site.desc":
     "dsh desktop 是 DeepSeek Harness（dsh web）的极简跨平台桌面客户端。自动拉起本地服务并内嵌原生窗口，免开终端、免管端口；超轻量体积，一切皆插件，支持 DSH Market 与安全模式，与 CLI 完全共享配置。",
 
-  "nav.features": "特性",
   "nav.download": "下载",
-  "nav.plugins": "插件生态",
-  "nav.faq": "常见问题",
+  "nav.connect": "手机连接",
   "nav.blog": "博客",
   "nav.github": "GitHub",
   "nav.menu": "打开菜单",
@@ -237,6 +235,91 @@ const zh: Dict = {
   "cta.sub": "下载安装包，双击打开，剩下的它自己搞定。",
   "cta.button": "下载最新版",
 
+  // ── 连接门户 /go/ ──
+  // 这一页不是给访客看的，是给已经装了 app 的人用的，所以文案一律假定
+  // 读者面前就有一台开着 dsh desktop 的电脑，不再从头解释这个产品是什么。
+  "go.title": "连接我的电脑 · dsh desktop",
+  "go.desc":
+    "扫一下 dsh desktop 上的二维码，之后从这一页直接进入自己的 dsh。机器清单只存在你自己的浏览器里。",
+
+  "go.heading": "连接我的电脑",
+  "go.sub": "扫一下电脑上「手机连接」卡片里的二维码。之后每次从这一页点进去就行，不用再扫。",
+
+  "go.soon.title": "即将推出",
+  "go.soon.body":
+    "桌面端的「手机连接」还没随版本发出来，现在电脑上还没有可扫的二维码。这一页可以先添加到主屏幕，等桌面端更新后直接用。",
+
+  "go.empty.title": "还没有添加任何电脑",
+  "go.empty.body":
+    "在电脑上打开 dsh desktop，点标题栏的「手机连接」，然后扫一下卡片上的二维码。",
+
+  "go.scan": "扫描二维码",
+  "go.type": "手动输入地址",
+  "go.add": "添加一台电脑",
+
+  "go.scan.hint": "把电脑上的二维码放进框里",
+  "go.scan.cancel": "取消",
+  "go.scan.failed": "打不开相机",
+  "go.scan.failedHint":
+    "可能是没给授权，也可能这台设备没有可用的摄像头。关掉这里改用「手动输入地址」—— 卡片上的地址和二维码是同一个。",
+
+  "go.type.title": "手动输入地址",
+  "go.type.label": "电脑卡片上显示的地址",
+  "go.type.submit": "下一步",
+  "go.type.cancel": "取消",
+
+  "go.confirm.title": "确认这个地址",
+  "go.confirm.warn":
+    "下一步会离开本站，跳到下面这台主机。请确认它确实是你自己的电脑 —— 二维码是谁都能印的。",
+  "go.confirm.name": "给这台电脑起个名字",
+  "go.confirm.defaultName": "我的电脑",
+  "go.confirm.into": "归到哪台电脑",
+  "go.confirm.intoNew": "新建一台",
+  "go.confirm.go": "连接",
+  "go.confirm.cancel": "返回",
+
+  "go.kind.lan": "局域网",
+  "go.kind.lanHint": "手机和电脑在同一个 Wi-Fi 下",
+  "go.kind.tailscale": "Tailscale",
+  "go.kind.tailscaleHint": "两边登录了同一个 tailnet",
+  "go.kind.public": "公网",
+  "go.kind.publicHint": "任何网络下都能进",
+  "go.kind.unknown": "未知",
+  "go.kind.unknownHint": "判断不出这是哪条通道",
+
+  "go.err.empty": "还没有填地址。",
+  "go.err.shape": "这看起来不是一个地址。",
+  "go.err.scheme": "只接受 http:// 和 https:// 开头的地址。",
+  "go.err.userinfo": "地址里带了用户名或密码。那是把人骗过去的经典写法，这里一律不收。",
+  "go.err.path": "地址后面还跟着路径或锚点。卡片上那个地址到端口为止。",
+  "go.err.query": "地址后面跟着不认识的参数。配对链接只应该带一个 pair_token。",
+  "go.err.loopback":
+    "这是电脑自己的地址（127.0.0.1 / localhost），在手机上只会指向手机自己。卡片上那条 localhost 是给 Cloudflare 控制台填的，不是给手机用的。",
+
+  "go.remove": "删除这台",
+  "go.remove.title": "删除「{name}」？",
+  "go.remove.body":
+    "这台电脑会从这一页的清单里消失。电脑上已经配对的设备不受影响，重新扫一次就能加回来。",
+  "go.remove.ok": "删除",
+  "go.remove.cancel": "返回",
+  "go.removeChannel": "删除这个地址",
+
+  "go.note.heading": "几件要知道的事",
+  "go.note.pick":
+    "这一页测不出哪条通道此刻能通 —— 浏览器不允许一个 HTTPS 页面去探测局域网地址。所以得你自己判断：在家用局域网，在外面用 Tailscale 或公网。",
+  "go.note.local":
+    "机器清单只存在这台设备的浏览器里，本站服务器上没有副本。清掉站点数据或者换一台手机，就要重新扫一次。",
+  "go.note.repair":
+    "跳过去之后可能还要配一次 —— 会话凭证是按地址存的，这一页给不了。照着那边的提示把电脑上的六位码输进去即可。",
+  "go.note.standalone":
+    "iOS 上从主屏幕图标点进去连接时会跳出到 Safari，因为电脑那头是另一个站点，超出了这一页的范围。这是系统行为，改不掉。",
+
+  "go.install.heading": "把这一页添加到主屏幕",
+  "go.install.body":
+    "这一页的地址永远不变，所以从主屏幕点进来永远打得开 —— 哪怕电脑关着、换了 IP、或者切了通道。直接把二维码里那个地址加到主屏幕做不到这一点：地址一变，图标点开就是一片白。",
+  "go.install.ios": "iOS：Safari 分享菜单 → 添加到主屏幕。",
+  "go.install.android": "Android：Chrome 菜单 → 添加到主屏幕。",
+
   "foot.disclaimerTitle": "非官方声明",
   "foot.disclaimer":
     "本项目为基于 DeepSeek Harness 开发的第三方桌面客户端，与 DeepSeek 官方无隶属或合作关系。",
@@ -262,10 +345,8 @@ const en: Dict = {
   "site.desc":
     "dsh desktop is an ultra-lightweight, cross-platform desktop client for DeepSeek Harness (dsh web). Embeds local services into a native window with zero terminal setup, full plugin ecosystem, Safe Mode, and shared CLI config.",
 
-  "nav.features": "Features",
   "nav.download": "Download",
-  "nav.plugins": "Plugins",
-  "nav.faq": "FAQ",
+  "nav.connect": "Phone connection",
   "nav.github": "GitHub",
   "nav.menu": "Open menu",
   "nav.lang": "Switch language",
@@ -463,6 +544,91 @@ const en: Dict = {
   "cta.heading": "Get started",
   "cta.sub": "Download the installer, double-click, and it handles the rest.",
   "cta.button": "Download latest",
+
+  "go.title": "Connect to my computer · dsh desktop",
+  "go.desc":
+    "Scan the QR code on dsh desktop once, then reach your own dsh from this page. The list of machines lives in your browser only.",
+
+  "go.heading": "Connect to my computer",
+  "go.sub":
+    "Scan the QR code on the “Phone connection” card on your computer. After that, just open this page and tap — no more scanning.",
+
+  "go.soon.title": "Coming soon",
+  "go.soon.body":
+    "Phone connection has not shipped in the desktop app yet, so there is no QR code to scan. You can add this page to your home screen now and use it once the desktop app updates.",
+
+  "go.empty.title": "No computers added yet",
+  "go.empty.body":
+    "Open dsh desktop on your computer, click “Phone connection” in the title bar, and scan the QR code on the card.",
+
+  "go.scan": "Scan QR code",
+  "go.type": "Enter address",
+  "go.add": "Add a computer",
+
+  "go.scan.hint": "Line the QR code up inside the frame",
+  "go.scan.cancel": "Cancel",
+  "go.scan.failed": "Cannot open the camera",
+  "go.scan.failedHint":
+    "Permission may have been denied, or this device has no usable camera. Close this and use “Enter address” instead — the card shows the same address the QR code carries.",
+
+  "go.type.title": "Enter address",
+  "go.type.label": "The address shown on the card",
+  "go.type.submit": "Next",
+  "go.type.cancel": "Cancel",
+
+  "go.confirm.title": "Check this address",
+  "go.confirm.warn":
+    "The next tap leaves this site for the host below. Make sure it really is your own computer — anyone can print a QR code.",
+  "go.confirm.name": "Name this computer",
+  "go.confirm.defaultName": "My computer",
+  "go.confirm.into": "Add to",
+  "go.confirm.intoNew": "A new computer",
+  "go.confirm.go": "Connect",
+  "go.confirm.cancel": "Back",
+
+  "go.kind.lan": "Local network",
+  "go.kind.lanHint": "Phone and computer on the same Wi-Fi",
+  "go.kind.tailscale": "Tailscale",
+  "go.kind.tailscaleHint": "Both signed in to the same tailnet",
+  "go.kind.public": "Public",
+  "go.kind.publicHint": "Reachable from any network",
+  "go.kind.unknown": "Unknown",
+  "go.kind.unknownHint": "Cannot tell which channel this is",
+
+  "go.err.empty": "No address yet.",
+  "go.err.shape": "That does not look like an address.",
+  "go.err.scheme": "Only http:// and https:// addresses are accepted.",
+  "go.err.userinfo":
+    "The address carries a username or password. That is a classic way to disguise where a link goes, so it is refused here.",
+  "go.err.path": "The address has a path or anchor after it. The one on the card ends at the port.",
+  "go.err.query":
+    "The address carries a parameter we do not recognise. A pairing link should only ever have pair_token.",
+  "go.err.loopback":
+    "That is the computer’s own address (127.0.0.1 / localhost) — on a phone it points at the phone. The localhost line on the card is for the Cloudflare dashboard, not for your phone.",
+
+  "go.remove": "Remove",
+  "go.remove.title": "Remove “{name}”?",
+  "go.remove.body":
+    "This computer disappears from the list on this page. Devices already paired on the computer are unaffected — scan again to add it back.",
+  "go.remove.ok": "Remove",
+  "go.remove.cancel": "Cancel",
+  "go.removeChannel": "Remove this address",
+
+  "go.note.heading": "A few things worth knowing",
+  "go.note.pick":
+    "This page cannot tell which channel is reachable right now — browsers do not let an HTTPS page probe local network addresses. So the call is yours: local network at home, Tailscale or public when you are out.",
+  "go.note.local":
+    "The list of machines lives in this browser only; there is no copy on our server. Clearing site data or switching phones means scanning again.",
+  "go.note.repair":
+    "You may still have to pair once after jumping across — session credentials are stored per address, and this page cannot supply them. Follow the prompt there and type in the six-character code from your computer.",
+  "go.note.standalone":
+    "On iOS, connecting from a home-screen icon jumps out to Safari, because your computer is a different site and falls outside this page’s scope. That is system behaviour and cannot be changed.",
+
+  "go.install.heading": "Add this page to your home screen",
+  "go.install.body":
+    "This page’s address never changes, so the icon always opens — even when the computer is off, its IP changed, or you switched channels. Putting the QR code’s address on the home screen cannot do that: the moment it changes, the icon opens onto a blank page.",
+  "go.install.ios": "iOS: Safari share menu → Add to Home Screen.",
+  "go.install.android": "Android: Chrome menu → Add to Home screen.",
 
   "foot.disclaimerTitle": "Unofficial project",
   "foot.disclaimer":
