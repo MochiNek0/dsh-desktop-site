@@ -966,7 +966,7 @@
             <button
                 type="button"
                 onclick={copyGroup}
-                class="inline-flex shrink-0 cursor-pointer items-center gap-xs rounded-xl border border-line bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-xs transition-colors hover:border-line-strong hover:bg-paper-50 hover:text-brand-700"
+                class="inline-flex shrink-0 items-center gap-xs rounded-xl border border-line bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-xs transition-colors hover:border-line-strong hover:bg-paper-50 hover:text-brand-700"
                 title={t("foot.clickCopy")}
             >
                 <Icon name="users" size={14} cls="text-brand-600" />

@@ -135,7 +135,7 @@
                                     <button
                                         type="button"
                                         onclick={() => link.copy && copyText(link.copy)}
-                                        class="group inline-flex cursor-pointer items-center gap-2xs text-left text-sm text-slate-600 transition-colors hover:text-brand-700"
+                                        class="group inline-flex items-center gap-2xs text-left text-sm text-slate-600 transition-colors hover:text-brand-700"
                                         title={t("foot.clickCopy")}
                                     >
                                         <span>{link.label}</span>
