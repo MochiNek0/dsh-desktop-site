@@ -2,48 +2,48 @@
 	"version": "0.1.19",
 	"tag": "v0.1.19",
 	"publishedAt": "2026-09-16T05:59:14Z",
-	"totalDownloads": 2835,
+	"totalDownloads": 4618,
 	"assets": {
 		"dsh-desktop_0.1.19_amd64.AppImage": {
 			"size": 81897976,
-			"downloads": 0
+			"downloads": 15
 		},
 		"dsh-desktop_0.1.19_amd64.AppImage.sig": {
 			"size": 424,
-			"downloads": 0
+			"downloads": 1
 		},
 		"dsh-desktop_0.1.19_amd64.deb": {
 			"size": 4022580,
-			"downloads": 0
+			"downloads": 11
 		},
 		"dsh-desktop_0.1.19_amd64.deb.sig": {
 			"size": 420,
-			"downloads": 0
+			"downloads": 1
 		},
 		"dsh-desktop_0.1.19_universal.dmg": {
 			"size": 6120875,
-			"downloads": 0
+			"downloads": 24
 		},
 		"dsh-desktop_0.1.19_x64-setup.exe": {
 			"size": 2414522,
-			"downloads": 0
+			"downloads": 207
 		},
 		"dsh-desktop_0.1.19_x64-setup.exe.sig": {
 			"size": 424,
-			"downloads": 0
+			"downloads": 9
 		},
 		"dsh-desktop_universal.app.tar.gz": {
 			"size": 6181255,
-			"downloads": 0
+			"downloads": 11
 		},
 		"dsh-desktop_universal.app.tar.gz.sig": {
 			"size": 412,
-			"downloads": 0
+			"downloads": 756
 		},
 		"latest.json": {
 			"size": 5404,
-			"downloads": 0
+			"downloads": 703
 		}
 	},
-	"fetchedAt": "2026-09-16T05:59:27.094Z"
+	"fetchedAt": "2026-09-21T12:04:07.816Z"
 }
