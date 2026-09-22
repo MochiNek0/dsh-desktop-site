@@ -21,6 +21,7 @@
 		hrefFor,
 		load,
 		ordered,
+		owning,
 		parseTarget,
 		remember,
 		save,
@@ -46,6 +47,18 @@
 
 	/** 刚扫到或刚粘进来、正在等用户核对的那一个。 */
 	let pending = $state<{ target: Target; name: string; into: string | null } | null>(null);
+
+	/**
+	 * 已经把人送出去了，正在等电脑那头点同意。
+	 *
+	 * 网关拿到 pair_token 的第一件事是**作废它**，然后才把问题弹到电脑上，请求
+	 * 一直挂着等人回答（桌面端 `remote/proxy.rs` 的 PAIRING_WAIT，两分钟）。也就是
+	 * 说这段时间里浏览器还停在这一页上，只有地址栏在转圈 —— 而「连接」那个按钮
+	 * 看上去和没点过一模一样。再点一次会发出第二个带着同一个 nonce 的请求，那个
+	 * nonce 已经死了，于是手机上立刻弹出「这个二维码已经失效」，而电脑上那个问题
+	 * 还好端端地开着。这个标记拦的就是第二下。
+	 */
+	let connecting = $state(false);
 
 	/** 正在等用户确认删除的那一台。 */
 	let removing = $state<Machine | null>(null);
@@ -78,7 +91,20 @@
 		typed = '';
 		scanning = false;
 		typing = false;
-		pending = { target: parsed.target, name: suggest(parsed.target), into: null };
+		connecting = false;
+
+		/*
+			这个地址清单里已经有了，就默认并回那一台，而不是默认「新建一台」。最常
+			走到这里的不是「又添一台电脑」，而是「上一次没连上，回来再扫一遍」——
+			默认新建会让那条路每走一次就多出一张一模一样的卡片。portal.ts 的
+			remember() 兜着同一条规矩，这里只是把它摆到用户眼前。
+		*/
+		const owner = owning(machines, parsed.target.origin);
+		pending = {
+			target: parsed.target,
+			name: owner?.name ?? suggest(parsed.target),
+			into: owner?.id ?? null
+		};
 	}
 
 	/** 域名本身就是个好名字；IP 不是 —— 同一台电脑在三条通道上是三个不同的 IP。 */
@@ -90,11 +116,12 @@
 	}
 
 	function connect() {
-		if (!pending) return;
+		if (!pending || connecting) return;
 		const name = pending.name.trim() || t('go.confirm.defaultName');
 		const next = remember(machines, pending.into, name, pending.target);
 		save(next);
 		machines = next;
+		connecting = true;
 		location.href = hrefFor(pending.target);
 	}
 
@@ -164,7 +191,15 @@
 	const manifest = $derived(i18n.lang === 'en' ? '/go-en.webmanifest' : '/go.webmanifest');
 </script>
 
-<svelte:window onkeydown={(e) => e.key === 'Escape' && removing && (removing = null)} />
+<!--
+	pageshow：从网关那边退回来时，iOS 会把这一页连同「正在等同意」的状态一起
+	从 bfcache 里原样端出来，而那次等待早就结束了 —— 留着它就是一个再也点不动
+	的弹窗。
+-->
+<svelte:window
+	onkeydown={(e) => e.key === 'Escape' && removing && (removing = null)}
+	onpageshow={() => (connecting = false)}
+/>
 
 <svelte:head>
 	<title>{t('go.title')}</title>
@@ -347,8 +382,14 @@
 	<QrScanner onfound={offer} oncancel={() => (scanning = false)} />
 {/if}
 
+<!--
+	grid-cols-1（另外两个全屏层同理）：默认的 auto 轨道是按内容的 max-content 量的，
+	而下面那个 <select> 的 max-content 是**最长的一个 option**。于是有人给电脑起了
+	个长名字，轨道就被撑到比屏幕还宽，w-full 跟着量到这个宽度，弹窗右半边（包括
+	「连接」）被 html 上的 overflow-x:hidden 直接裁掉。minmax(0,1fr) 让轨道等于容器。
+-->
 {#if typing}
-	<div class="fixed inset-0 z-[60] grid place-items-end bg-ink-950/50 p-lg sm:place-items-center">
+	<div class="fixed inset-0 z-[60] grid grid-cols-1 place-items-end bg-ink-950/50 p-lg sm:place-items-center">
 		<form
 			onsubmit={(e) => {
 				e.preventDefault();
@@ -398,7 +439,7 @@
 {/if}
 
 {#if pending}
-	<div class="fixed inset-0 z-[60] grid place-items-end bg-ink-950/50 p-lg sm:place-items-center">
+	<div class="fixed inset-0 z-[60] grid grid-cols-1 place-items-end bg-ink-950/50 p-lg sm:place-items-center">
 		<div class="card flex w-full max-w-[28rem] flex-col gap-md p-lg">
 			<h2 class="font-semibold text-slate-900">{t('go.confirm.title')}</h2>
 			<p class="text-sm/relaxed text-pretty text-slate-600">{t('go.confirm.warn')}</p>
@@ -419,6 +460,7 @@
 				<input
 					bind:value={pending.name}
 					type="text"
+					disabled={connecting}
 					class="min-h-11 rounded-xl border border-line bg-paper-100 px-sm text-sm text-slate-900 outline-none focus:border-brand-400"
 				/>
 			</label>
@@ -428,6 +470,7 @@
 					<span class="text-sm text-slate-600">{t('go.confirm.into')}</span>
 					<select
 						bind:value={pending.into}
+						disabled={connecting}
 						class="min-h-11 rounded-xl border border-line bg-paper-100 px-sm text-sm text-slate-900 outline-none focus:border-brand-400"
 					>
 						<option value={null}>{t('go.confirm.intoNew')}</option>
@@ -438,22 +481,37 @@
 				</label>
 			{/if}
 
-			<div class="flex gap-xs">
-				<button
-					type="button"
-					onclick={() => (pending = null)}
-					class="min-h-11 flex-1 rounded-xl border border-line font-medium text-slate-700 transition-colors hover:bg-paper-100"
-				>
-					{t('go.confirm.cancel')}
-				</button>
-				<button
-					type="button"
-					onclick={connect}
-					class="min-h-11 flex-1 rounded-xl bg-ink-900 font-semibold text-white transition-colors hover:bg-ink-800"
-				>
-					{t('go.confirm.go')}
-				</button>
-			</div>
+			<!--
+				点过之后整排按钮换掉，而不是灰掉一个。跳转要等电脑上那个人回答，
+				这段时间里页面不会有任何别的动静 —— 所以它得自己说出正在等什么，
+				否则看上去就是「点了没反应」，而那正是让人再点一次的样子。
+			-->
+			{#if connecting}
+				<div class="flex items-start gap-sm rounded-xl bg-brand-50 p-sm">
+					<Icon name="clock" size={16} cls="mt-0.5 shrink-0 text-brand-600" />
+					<div class="flex flex-col gap-2xs">
+						<p class="text-sm font-semibold text-brand-800">{t('go.confirm.waiting')}</p>
+						<p class="text-sm/relaxed text-pretty text-slate-600">{t('go.confirm.waitBody')}</p>
+					</div>
+				</div>
+			{:else}
+				<div class="flex gap-xs">
+					<button
+						type="button"
+						onclick={() => (pending = null)}
+						class="min-h-11 flex-1 rounded-xl border border-line font-medium text-slate-700 transition-colors hover:bg-paper-100"
+					>
+						{t('go.confirm.cancel')}
+					</button>
+					<button
+						type="button"
+						onclick={connect}
+						class="min-h-11 flex-1 rounded-xl bg-ink-900 font-semibold text-white transition-colors hover:bg-ink-800"
+					>
+						{t('go.confirm.go')}
+					</button>
+				</div>
+			{/if}
 		</div>
 	</div>
 {/if}
@@ -464,7 +522,7 @@
 		正是留给「这一下不可撤销」这种事的；其余按钮一律 ink-900。
 		取消放左边、删除放右边，和上面两个弹窗的左右分工保持一致。
 	-->
-	<div class="fixed inset-0 z-[60] grid place-items-end bg-ink-950/50 p-lg sm:place-items-center">
+	<div class="fixed inset-0 z-[60] grid grid-cols-1 place-items-end bg-ink-950/50 p-lg sm:place-items-center">
 		<div class="card flex w-full max-w-[28rem] flex-col gap-md p-lg">
 			<h2 class="font-semibold break-all text-slate-900">
 				{t('go.remove.title', { name: removing.name })}

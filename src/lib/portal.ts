@@ -182,12 +182,23 @@ export function newId(): string {
 	return crypto.randomUUID();
 }
 
+/** 清单里已经收着这个 origin 的那台机器，没有就是 undefined。 */
+export function owning(machines: Machine[], origin: string): Machine | undefined {
+	return machines.find((m) => m.channels.some((c) => c.origin === origin));
+}
+
 /**
  * 把一个地址并进清单。
  *
  * `into` 是要并入的机器 id，`null` 表示新建一台。同一台机器上已经有一模一样的
  * origin 时不产生第二条 —— 重扫一次同一台电脑是最常见的动作，它不该每次都
  * 在卡片上多出一行。
+ *
+ * 「新建一台」也认这条：一个 origin 不可能是两台电脑，所以清单里已经有它的
+ * 时候一律并回去，而不是添一张一模一样的卡片。这条闸挡的是配对**失败之后
+ * 重来一次** —— 第一次没连上、回来再扫一遍，是这一页上最常走的一条路，而它
+ * 原本每走一次就多出一张重复卡片。名字保持原样：用户此刻是在重连一台已经
+ * 起过名的电脑，不是在给它改名。
  */
 export function remember(
 	machines: Machine[],
@@ -199,6 +210,10 @@ export function remember(
 	const now = Date.now();
 
 	if (into === null) {
+		const owner = owning(machines, target.origin);
+		if (owner) {
+			return machines.map((m) => (m.id === owner.id ? { ...m, usedAt: now } : m));
+		}
 		return [...machines, { id: newId(), name, channels: [channel], usedAt: now }];
 	}
 

@@ -277,6 +277,9 @@ const zh: Dict = {
   "go.confirm.intoNew": "新建一台",
   "go.confirm.go": "连接",
   "go.confirm.cancel": "返回",
+  "go.confirm.waiting": "正在等电脑上点同意",
+  "go.confirm.waitBody":
+    "电脑上会弹出一个窗口，问要不要放这台手机进来。去点同意，这一页会自己跳过去。别再点一次「连接」——二维码只能用一次，再点会让手机收到一句「已经失效」，而电脑上那个窗口还开着。",
 
   "go.kind.lan": "局域网",
   "go.kind.lanHint": "手机和电脑在同一个 Wi-Fi 下",
@@ -585,6 +588,9 @@ const en: Dict = {
   "go.confirm.intoNew": "A new computer",
   "go.confirm.go": "Connect",
   "go.confirm.cancel": "Back",
+  "go.confirm.waiting": "Waiting for the computer to say yes",
+  "go.confirm.waitBody":
+    "A window has opened on the computer asking whether to let this phone in. Say yes there and this page goes through on its own. Do not press Connect again — the QR code works once, and a second press gets this phone a “no longer valid” while that window is still open on the computer.",
 
   "go.kind.lan": "Local network",
   "go.kind.lanHint": "Phone and computer on the same Wi-Fi",
