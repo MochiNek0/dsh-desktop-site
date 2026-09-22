@@ -278,10 +278,15 @@
 							<ul class="flex flex-col gap-xs">
 								{#each machine.channels as channel (channel.id)}
 									<li class="flex items-stretch gap-2xs">
+										<!--
+											min-w-0：button 自己也是 flex item，min-width 默认 auto —— 它不肯
+											比内容更窄，里面那个 truncate 就永远轮不到触发。地址来自对方
+											电脑（主机名可以很长），少了这道闸就会把整张卡片顶宽。
+										-->
 										<button
 											type="button"
 											onclick={() => open(machine, channel)}
-											class="group flex min-h-11 flex-1 items-center gap-sm rounded-xl border border-line px-sm py-2 text-left transition-colors hover:border-line-strong hover:bg-paper-100"
+											class="group flex min-h-11 min-w-0 flex-1 items-center gap-sm rounded-xl border border-line px-sm py-2 text-left transition-colors hover:border-line-strong hover:bg-paper-100"
 										>
 											<span
 												class="shrink-0 rounded-md px-2 py-1 text-xs font-semibold {TONE[
