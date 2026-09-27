@@ -1,58 +1,54 @@
 {
-	"version": "0.1.19",
-	"tag": "v0.1.19",
-	"preview": {
-		"version": "0.1.20-beta.2",
-		"tag": "v0.1.20-beta.2",
-		"publishedAt": "2026-09-22T15:31:57Z"
-	},
-	"publishedAt": "2026-09-16T05:59:14Z",
+	"version": "0.1.20",
+	"tag": "v0.1.20",
+	"preview": null,
+	"publishedAt": "2026-09-27T14:46:02Z",
 	"license": {
-		"spdx": "MIT",
-		"tag": "v0.1.19"
+		"spdx": "AGPL-3.0",
+		"tag": "v0.1.20"
 	},
-	"totalDownloads": 6573,
+	"totalDownloads": 6608,
 	"assets": {
-		"dsh-desktop_0.1.19_amd64.AppImage": {
-			"size": 81897976,
-			"downloads": 25
+		"dsh-desktop_0.1.20_amd64.AppImage": {
+			"size": 82770424,
+			"downloads": 0
 		},
-		"dsh-desktop_0.1.19_amd64.AppImage.sig": {
+		"dsh-desktop_0.1.20_amd64.AppImage.sig": {
 			"size": 424,
-			"downloads": 1
+			"downloads": 0
 		},
-		"dsh-desktop_0.1.19_amd64.deb": {
-			"size": 4022580,
-			"downloads": 17
+		"dsh-desktop_0.1.20_amd64.deb": {
+			"size": 4312358,
+			"downloads": 0
 		},
-		"dsh-desktop_0.1.19_amd64.deb.sig": {
+		"dsh-desktop_0.1.20_amd64.deb.sig": {
 			"size": 420,
-			"downloads": 1
+			"downloads": 0
 		},
-		"dsh-desktop_0.1.19_universal.dmg": {
-			"size": 6120875,
-			"downloads": 47
+		"dsh-desktop_0.1.20_universal.dmg": {
+			"size": 6616947,
+			"downloads": 0
 		},
-		"dsh-desktop_0.1.19_x64-setup.exe": {
-			"size": 2414522,
-			"downloads": 379
+		"dsh-desktop_0.1.20_x64-setup.exe": {
+			"size": 2619248,
+			"downloads": 0
 		},
-		"dsh-desktop_0.1.19_x64-setup.exe.sig": {
+		"dsh-desktop_0.1.20_x64-setup.exe.sig": {
 			"size": 424,
-			"downloads": 18
+			"downloads": 0
 		},
 		"dsh-desktop_universal.app.tar.gz": {
-			"size": 6181255,
-			"downloads": 15
+			"size": 6697053,
+			"downloads": 0
 		},
 		"dsh-desktop_universal.app.tar.gz.sig": {
 			"size": 412,
-			"downloads": 1628
+			"downloads": 0
 		},
 		"latest.json": {
 			"size": 5404,
-			"downloads": 1511
+			"downloads": 1
 		}
 	},
-	"fetchedAt": "2026-09-27T13:37:31.706Z"
+	"fetchedAt": "2026-09-27T14:46:16.539Z"
 }
