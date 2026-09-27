@@ -1,22 +1,27 @@
 <script lang="ts">
-    import { afterFirstPaint } from "$lib/after-paint";
-    import CodeBlock from "$lib/components/CodeBlock.svelte";
     import Download from "$lib/components/Download.svelte";
     import Icon from "$lib/components/Icon.svelte";
-    import InstallTips from "$lib/components/InstallTips.svelte";
-    import Logo from "$lib/components/Logo.svelte";
     import { htmlLang, i18n, pathForLang, LANGS } from "$lib/i18n.svelte";
-    import type { MotionHandle, PageMotionHandle } from "$lib/motion";
     import {
+        assetSize,
+        formatCount,
+        formatSize,
+        GITHUB_DOWNLOADS,
+        LICENSE,
         LATEST_VERSION,
+        OS_GROUPS,
+        PHONE_STABLE,
+        PREVIEW,
         RELEASE_DATE,
         REPO_OWNER,
         REPO_OWNER_URL,
         REPO_URL,
+        TOTAL_DOWNLOADS,
         UPSTREAM_URL,
         MARKET_URL,
     } from "$lib/releases";
     import { ORIGIN } from "$lib/site";
+    import { ensureVisitorCount, visitorCount } from "$lib/visitors.svelte";
     import { onMount } from "svelte";
 
     const t = $derived(i18n.t);
@@ -61,71 +66,40 @@
         `${shotBase}-sm.avif 680w, ${shotBase}.avif 1360w`,
     );
 
-    let pageEl: HTMLElement;
-    /**
-     * motion 模块是动态 import 的，到位之前是 undefined。
-     * 故意不用 $state：下面那个 effect 只该由语言变化驱动，
-     * 让它跟着这个赋值再跑一次没有意义（那次 reflow 是空转）。
-     */
-    let motion: PageMotionHandle | undefined;
-    let featViewport: HTMLElement | undefined = $state();
-    let featGrid: HTMLElement | undefined = $state();
-
-    onMount(() => {
-        /*
-            GSAP 走动态 import，不进首屏包。
-
-            这不是可有可无的优化：GSAP + ScrollTrigger + SplitText 约 44KB gzip，
-            静态引入会让页面 chunk 从 ~21KB 涨到 ~54KB，直接压在 LCP 前面。
-            而本站的 LCP 元素是那张产品截图 —— 让装饰性动画去和它抢带宽，
-            是拿真实加载速度换视觉效果，不划算。
-
-            动态引入后：HTML/CSS/截图先到并完整可读，动效随后接管。
-            这也正好符合 motion.ts 里「动画是增强而非前置条件」的约束。
-        */
-        let handles: MotionHandle[] = [];
-        let cancelled = false;
-
-        const start = () => {
-            import("$lib/motion").then((m) => {
-                // 卸载竞态：模块加载完时组件可能已经销毁了
-                if (cancelled) return;
-
-                motion = m.initMotion(pageEl);
-                handles.push(motion);
-                if (featViewport && featGrid) {
-                    handles.push(m.initPinnedStack(featViewport, featGrid));
-                }
-            });
-        };
-
-        /*
-            动效初始化必须等首屏画完，不能跟在 onMount 后面立刻跑 ——
-            这一整套初始化会做约 1 秒的强制同步布局，理由见 afterFirstPaint。
-        */
-        const stopWaiting = afterFirstPaint(start);
-
-        return () => {
-            cancelled = true;
-            stopWaiting();
-            handles.forEach((h) => h.destroy());
-        };
-    });
-
     /*
-        切语言之后让动效层跟上：标题被上面那些 {#key} 整块重建过，
-        旧的 SplitText 和触发器都指着已经脱离文档的节点了。
+        首屏的三个数字。
 
-        $effect 在 DOM 更新之后跑，这时新文案已经排好版，正好重来一遍。
-        比对上一次的值是必需的：effect 首次挂载时也会跑一次，
-        那时 motion 还没到位、DOM 也还是初始语言，reflow 纯属空转。
+        下载量是构建期烤进 HTML 的（见 releases.ts 的 TOTAL_DOWNLOADS），
+        访问人数要到浏览器里才拿得到 —— 预渲染时先亮占位数，真数到了再覆盖
+        （见 $lib/visitors）。两个数字都是 tabular-nums，换数时不会把旁边挤动。
+
+        下载量是估算，口径和统计间隔必须能被看到：放进 title，和下载区那行
+        「每 24 小时更新」是同一段说明。
+
+        体积取 Windows 安装包的真实字节数 —— 它是最小的那个，取不到就不显示这一格。
     */
-    let reflowedFor = i18n.lang;
-    $effect(() => {
-        if (i18n.lang === reflowedFor) return;
-        reflowedFor = i18n.lang;
-        motion?.reflow();
-    });
+    onMount(ensureVisitorCount);
+
+    const smallest = assetSize(OS_GROUPS[0].downloads[0].file);
+    const stats = $derived(
+        [
+            TOTAL_DOWNLOADS > 0 && {
+                label: t("hero.stat.downloads"),
+                value: formatCount(TOTAL_DOWNLOADS),
+                title: `${t("dl.downloadsNote")} ${formatCount(GITHUB_DOWNLOADS)} · ${t("dl.downloadsCadence")}`,
+            },
+            {
+                label: t("hero.stat.visitors"),
+                value: formatCount(visitorCount() ?? 0),
+                title: t("visitors.note"),
+            },
+            smallest !== null && {
+                label: t("hero.stat.size"),
+                value: formatSize(smallest),
+                title: OS_GROUPS[0].downloads[0].file,
+            },
+        ].filter((s) => !!s),
+    );
 
     const features = [
         { icon: "bolt", title: "feat.1.title", body: "feat.1.body" },
@@ -136,93 +110,19 @@
         { icon: "layers", title: "feat.6.title", body: "feat.6.body" },
     ];
 
-    const faqs = [
-        { q: "faq.q1", a: "faq.a1" },
-        { q: "faq.q2", a: "faq.a2" },
-        { q: "faq.q3", a: "faq.a3" },
-        { q: "faq.q4", a: "faq.a4" },
-        { q: "faq.q5", a: "faq.a5" },
-        { q: "faq.q6", a: "faq.a6" },
-        { q: "faq.q7", a: "faq.a7" },
-        { q: "faq.q8", a: "faq.a8" },
-        { q: "faq.q9", a: "faq.a9" },
+    const channels = [
+        { icon: "wifi", title: "phone.lan", body: "phone.lanBody" },
+        { icon: "share", title: "phone.ts", body: "phone.tsBody" },
+        { icon: "globe", title: "phone.cf", body: "phone.cfBody" },
     ];
 
-    /*
-        FAQ 展开/收起动画。
+    const plugins = [
+        { icon: "store", title: "plug.1.title", body: "plug.1.body" },
+        { icon: "lifebuoy", title: "plug.2.title", body: "plug.2.body" },
+        { icon: "terminal", title: "plug.3.title", body: "plug.3.body" },
+    ];
 
-        原生 <details> 没有可过渡的中间态：open 一变，非 summary 的子元素
-        直接进出渲染树，高度是跳变的。所以接管 summary 的点击自己排时序 ——
-        展开先把 open 置 true 再从 0 撑到自然高度，收起先播完再把 open 置回 false。
-        （不换成 Svelte 的 {#if} + slide：那样答案在收起时会被移出 DOM，
-        预渲染的 HTML 里就只剩问题，FAQ 富摘要和站内搜索都会跟着丢。）
-
-        chevron 不能挂 group-open —— 收起时 open 要等动画播完才翻回来，
-        箭头会比内容晚 260ms。改用 data-expanded，点下去立刻同步。
-    */
-    function disclose(el: HTMLDetailsElement) {
-        const summary = el.querySelector("summary")!;
-        const body = el.querySelector<HTMLElement>("[data-answer]")!;
-        const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-        let expanded = el.open;
-        let anim: Animation | null = null;
-
-        const sync = () => el.toggleAttribute("data-expanded", el.open);
-
-        const onClick = (e: MouseEvent) => {
-            // 约束 C：减少动态效果时不接管，交回浏览器的原生瞬时行为
-            if (reduce.matches) return;
-            e.preventDefault();
-
-            expanded = !expanded;
-            el.toggleAttribute("data-expanded", expanded);
-
-            // 动画进行中再次点击时，起点取当前的视觉高度而不是 0 / 自然高度，
-            // 否则反向的那一下会先跳一段再动
-            const from = el.open ? body.getBoundingClientRect().height : 0;
-            anim?.cancel(); // cancel 不触发 onfinish，收起的收尾回调不会误跑
-            el.open = true; // 收起过程中也要保持渲染，否则没得可动
-
-            const to = expanded ? body.offsetHeight : 0;
-            anim = body.animate(
-                { height: [`${from}px`, `${to}px`] },
-                { duration: 260, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
-            );
-            anim.onfinish = () => {
-                anim = null;
-                el.open = expanded;
-            };
-        };
-
-        summary.addEventListener("click", onClick);
-        el.addEventListener("toggle", sync);
-        sync();
-
-        return {
-            destroy() {
-                summary.removeEventListener("click", onClick);
-                el.removeEventListener("toggle", sync);
-                anim?.cancel();
-            },
-        };
-    }
-
-    // 结构化数据：让搜索引擎把 FAQ 收进富摘要。
-    // 用 zh 文案生成即可 —— 预渲染产物本身就是中文。
-    const faqJsonLd = $derived(
-        JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            "@id": `${pageUrl}#faq`,
-            isPartOf: { "@id": `${pageUrl}#website` },
-            mainEntity: faqs.map((f) => ({
-                "@type": "Question",
-                name: t(f.q),
-                acceptedAnswer: { "@type": "Answer", text: t(f.a) },
-            })),
-        }),
-    );
+    const home = $derived(pathForLang(i18n.lang));
 
     /*
         结构化数据里的 @id 是内部锚点，把 WebSite / SoftwareApplication
@@ -266,7 +166,7 @@
                     applicationCategory: "DeveloperApplication",
                     operatingSystem: "Windows, macOS, Linux",
                     softwareVersion: LATEST_VERSION,
-                    license: "https://opensource.org/licenses/MIT",
+                    license: `https://spdx.org/licenses/${LICENSE.spdx}.html`,
                     url: pageUrl,
                     downloadUrl: `${REPO_URL}/releases/latest`,
                     screenshot,
@@ -316,7 +216,7 @@
         预载进来的位图成了一份无主资源，跟着 <picture> 自己那份一起画出来 ——
         表现就是首屏截图下面多出一张一模一样的图，而且只有首次访问会出现
         （刷新后候选都在 HTTP 缓存里，<picture> 解析期就命中，孤儿那份没机会上屏）。
-        再加上 motion.ts 取的是 [data-shot] 的**第一个**，
+        再加上当时的 motion.ts 取的是 [data-shot] 的**第一个**，
         倾斜只作用在真正的那张上，多出来的那张是平的 —— 正是那个 bug 的样子。
 
         href 取 1360w 那张，和 imagesrcset 里的最大候选保持一致：
@@ -382,579 +282,347 @@
     <meta name="twitter:image:alt" content={t("shot.alt")} />
 
     {@html `<script type="application/ld+json">${appJsonLd}</script>`}
-    {@html `<script type="application/ld+json">${faqJsonLd}</script>`}
 </svelte:head>
 
 <!--
-    pageEl 是所有动效的查询根：限定在这里，
-    就不会误伤 Header / Footer 里的元素。
+    ── 动效约定（整页只有两种，全是 CSS，零 JS）──────────────────
+      · 首屏之内：rise-in，按时间播，animation-delay 错开
+      · 首屏之外：data-reveal，滚动驱动，--i 错开同一行
+    两条都在 app.css 里，各自的边界条件写在那边。
+
+    下载按钮和首屏 CTA 永不参与入场：这是下载站，转化路径上不该有任何一帧
+    是看不见的。
 -->
-<div bind:this={pageEl}>
-    <!-- ========== Hero ========== -->
-    <!--
-        这一层**不能**有 overflow-hidden：截图的翻转由 view() 滚动时间线驱动，
-        而时间线量的是最近的滚动容器 —— overflow:hidden 本身就构成滚动容器，
-        套在外面进度就永远不动了（见 app.css 的 shot-flip）。
-        光斑的横向溢出由它自己那层 absolute inset-0 overflow-hidden 兜住，
-        section 不需要再来一遍。
-    -->
-    <section class="blob-scene section-x relative">
-        <!-- 背景：极淡的青→靛柔光。浅底上必须收得很淡，否则像脏了一块。
-	     自己 overflow-hidden：光斑宽 70rem，窄视口下会撑出横向滚动。 -->
-        <div
-            class="pointer-events-none absolute inset-0 -z-10 overflow-hidden"
-            aria-hidden="true"
-        >
+
+<!-- ========== Hero ========== -->
+<!--
+    这一层**不能**有 overflow-hidden：截图的翻转由 view() 滚动时间线驱动，
+    而时间线量的是最近的滚动容器 —— overflow:hidden 本身就构成滚动容器，
+    套在外面进度就永远不动了（见 app.css 的 shot-flip）。
+    isolate 让背景那层 -z-10 停在本区块的层叠上下文里，不会沉到 body 底色下面。
+-->
+<section class="section-x relative isolate">
+    <!-- 背景：一道极淡的顶光，静态渐变，不做任何动画。-top-16 让它延伸到顶栏底下，否则顶栏那 64px 会是一条色差 -->
+    <div
+        class="pointer-events-none absolute inset-x-0 -top-16 -z-10 h-[48rem] bg-[radial-gradient(60%_55%_at_50%_0%,var(--color-brand-100),transparent)]"
+        aria-hidden="true"
+    ></div>
+
+    <div class="container-page flex flex-col items-center gap-4xl sm:gap-5xl">
+        <div class="flex flex-col items-center gap-xl text-center sm:gap-2xl">
             <!--
-            --drift 是滚动全程的纵向位移量，负值 = 往上飘。
-            大光斑给小位移、小光斑给大位移，才符合近大远小的直觉。
-            时间线由 section 上的 blob-scene 提供，见 app.css。
-        -->
-            <div
-                class="blob-drift absolute -top-48 left-1/2 -ml-140 h-136 w-280 rounded-full bg-brand-300/25 blur-[130px] [--drift:-45%]"
-            ></div>
-            <div
-                class="blob-drift absolute top-10 right-0 h-80 w-80 rounded-full bg-accent-400/15 blur-[110px] [--drift:-108%]"
-            ></div>
-        </div>
-
-        <!--
-        Hero 垂直节奏全部由这一层 flex + gap 承担：
-        logo / 徽标 / 标题组 / 按钮 / 特性行 / 截图 之间不再各自挂 mt-*。
-    -->
-        <div class="container-page flex flex-col gap-4xl sm:gap-5xl">
-            <div class="flex flex-col items-center gap-xl text-center">
-                <!-- 品牌鲸鱼：放大展示 -->
-                <Logo size={96} />
-
-                <a
-                    href="{REPO_URL}/releases/tag/v{LATEST_VERSION}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center gap-xs rounded-full border border-line bg-white px-3.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition-colors hover:border-brand-400 hover:text-slate-900"
+                徽标：有比正式版新的测试版时报测试版（下载按钮仍然指正式版），
+                否则报正式版的更新说明。测试版号由构建期同步，见 sync-release.mjs。
+            -->
+            <a
+                href="{REPO_URL}/releases/tag/{PREVIEW ? PREVIEW.tag : `v${LATEST_VERSION}`}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="rise-in group inline-flex max-w-full items-center gap-xs rounded-full border border-line bg-white/70 py-1 pr-3 pl-1 text-xs font-medium text-slate-600 shadow-xs backdrop-blur transition-colors hover:border-line-strong hover:text-slate-900"
+            >
+                <span
+                    class="shrink-0 rounded-full bg-ink-900 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white"
+                    >NEW</span
                 >
-                    <span class="relative flex size-1.5">
-                        <span
-                            class="absolute inline-flex size-full animate-ping rounded-full bg-brand-500 opacity-75"
-                        ></span>
-                        <span
-                            class="relative inline-flex size-1.5 rounded-full bg-brand-500"
-                        ></span>
-                    </span>
-                    {t("hero.badge")}
-                    <span class="font-mono text-slate-400"
-                        >v{LATEST_VERSION}</span
-                    >
-                </a>
+                <span class="truncate">
+                    {PREVIEW
+                        ? t("hero.preview", {
+                              version: `v${PREVIEW.version.replace(/-.*/, "")}`,
+                          })
+                        : t("hero.released", { version: LATEST_VERSION })}
+                </span>
+                <Icon
+                    name="arrow"
+                    size={12}
+                    cls="shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5"
+                />
+            </a>
 
-                <!-- 标题 + 副标题是一组，彼此靠得比与外部更近 -->
-                <div class="stack-heading">
-                    <!--
-                        首屏标题不走 SplitText，入场由 app.css 的 rise-in 承担。
-
-                        原因见 app.css 里 rise-in 的说明，简单说是两条：
-                        动效初始化被推迟到首屏画完之后，这时再把已经看见的标题
-                        藏起来重播一遍是「闪一下」；而且首屏这几个标题的拆字
-                        正是初始化里最贵的一段。
-
-                        因此这里也不再需要 {#key i18n.lang}：那个 key 存在的唯一
-                        理由是 SplitText 会把 innerHTML 换成一堆 span、让 Svelte
-                        抓着的文本节点脱离文档。不拆字就没有这个问题，
-                        切语言时 Svelte 原地更新文本即可。
-                    -->
-                    <h1
-                        class="rise-in text-[2rem]/[1.15] font-bold tracking-tight text-balance text-slate-900 sm:text-5xl sm:leading-[1.1] lg:text-6xl"
-                    >
-                        {t("hero.title1")}
-                        <code class="font-mono text-[0.85em] text-brand-600"
-                            >{t("hero.titleCode")}</code
-                        >
-                        {t("hero.title2")}
-                    </h1>
-
-                    <p
-                        class="rise-in mx-auto text-base/relaxed text-pretty text-slate-600 sm:text-lg/relaxed [animation-delay:90ms]"
-                    >
-                        {t("hero.sub")}
-                    </p>
-                </div>
-
-                <!-- 按钮组与其下的特性行同属"行动区"，用 md 收紧成一块 -->
-                <div class="flex flex-col items-center gap-xl">
-                    <div class="cluster-cta w-full">
-                        <a
-                            href="#download"
-                            class="flex min-h-12 w-full items-center justify-center gap-xs rounded-xl bg-ink-900 px-6 font-semibold text-white shadow-sm transition-colors hover:bg-ink-800 sm:w-auto"
-                        >
-                            <Icon name="download" size={18} />
-                            {t("hero.cta")}
-                        </a>
-                        <a
-                            href={REPO_URL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="flex min-h-12 w-full items-center justify-center gap-xs rounded-xl border border-line bg-white px-6 font-semibold text-slate-800 shadow-sm transition-colors hover:border-line-strong hover:bg-paper-100 sm:w-auto"
-                        >
-                            <Icon name="github" size={18} />
-                            {t("hero.cta2")}
-                        </a>
-                    </div>
-
-                    <div
-                        class="flex flex-wrap items-center justify-center gap-x-lg gap-y-xs text-xs text-slate-500"
-                    >
-                        <span class="flex items-center gap-2xs">
-                            <Icon
-                                name="check"
-                                size={13}
-                                cls="text-brand-600"
-                            />{t("hero.platforms")}
-                        </span>
-                        <span class="flex items-center gap-2xs">
-                            <Icon
-                                name="check"
-                                size={13}
-                                cls="text-brand-600"
-                            />{t("hero.free")}
-                        </span>
-                        <span class="flex items-center gap-2xs">
-                            <Icon
-                                name="check"
-                                size={13}
-                                cls="text-brand-600"
-                            />{t("hero.ctaSub")}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <!--
-            产品截图：与上方文案的距离由父级 gap 统一给出。
-            外层 .shot-stage 负责 perspective 和滚动时间线，内层才是被旋转的
-            对象 —— 透视必须挂在父级，挂自己身上 rotateX 出不来立体感。
-
-            翻转整条在 CSS 里（app.css 的 shot-flip），JS 完全不参与：
-            截图就在首屏之内，首帧就该是倾斜的，而 JS 追不上首帧。
-        -->
-            <div class="shot-stage">
-                <div
-                    data-shot
-                    class="overflow-hidden rounded-xl border border-line bg-white elev-3 sm:rounded-2xl"
+            <!-- 标题 + 副标题是一组，彼此靠得比与外部更近 -->
+            <div class="flex flex-col items-center gap-md sm:gap-lg">
+                <h1
+                    class="rise-in text-[2.5rem]/[1.08] font-semibold tracking-[-0.035em] text-balance text-slate-900 [animation-delay:60ms] sm:text-6xl/[1.05] lg:text-7xl/[1.02]"
                 >
-                    <!--
-                        源图是 1360x900 的 PNG（79KB）。这是 LCP 元素，所以：
-                        - avif / webp 两级现代格式，PNG 只作兜底（现代浏览器不会去取它）
-                        - 680w 变体给窄屏：移动端渲染宽度约 372px，即使 DPR 2 也只要
-                          744 设备像素，直接下 1360w 是四倍多的无用像素
-
-                        不额外加 <link rel="preload">：这张图就在初始 HTML 里，
-                        预加载扫描器早就发现它了，加了只是把 sizes 抄第二遍，
-                        两处一旦漂移就会重复下载。
-                    -->
-                    <picture>
-                        <source
-                            type="image/avif"
-                            srcset={shotAvifSrcset}
-                            sizes={SHOT_SIZES}
-                        />
-                        <source
-                            type="image/webp"
-                            srcset="{shotBase}-sm.webp 680w, {shotBase}.webp 1360w"
-                            sizes={SHOT_SIZES}
-                        />
-                        <img
-                            src="{shotBase}.png"
-                            alt={t("shot.alt")}
-                            width="1360"
-                            height="900"
-                            loading="eager"
-                            fetchpriority="high"
-                            class="block w-full"
-                        />
-                    </picture>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ========== 特性 ========== -->
-    <!--
-        ── 特性区：宽屏 pin 住，卡片初始堆叠在右下角，随滚动展开成两行 ──
-
-        动画由 motion.ts 的 initPinnedStack 驱动：
-        滚动经过这一屏时，section 固定在视口，6 张卡片从右下角同一处
-        逐张展开到 3×2 的两行网格位置。
-
-        两套 DOM（宽屏 pin / 窄屏网格）而不是一套 + CSS 切换：
-        pin 需要"视口容器"结构，窄屏只是普通网格，分开更稳。
-
-        窄屏那套是纯静态的，不加载任何动画逻辑。
-    -->
-    <section id="features" class="section-x scroll-mt-20 bg-white lg:py-0!">
-        <!--
-            宽屏：pin + 展开动画。
-
-            高度撑满视口并垂直居中：pin 期间这一屏是一整屏内容，
-            减去顶栏 64px 才不会被导航遮住。
-        -->
-        <div
-            bind:this={featViewport}
-            class="relative hidden min-h-[calc(100dvh-4rem)] flex-col justify-center lg:flex"
-        >
-            <div class="container-page stack-section">
-                <div class="stack-heading">
-                    {#key i18n.lang}
-                        <!-- 同 hero：被 SplitText 拆过的标题只能整块重建，见那里的说明 -->
-                        <h2
-                            data-split
-                            class="text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl"
-                        >
-                            {t("feat.heading")}
-                        </h2>
-                    {/key}
-                    <p
-                        class="text-base/relaxed text-slate-600 sm:text-lg/relaxed"
+                    {t("hero.title1")}
+                    <code class="font-mono text-[0.82em] tracking-[-0.04em] text-brand-600"
+                        >{t("hero.titleCode")}</code
                     >
-                        {t("feat.sub")}
-                    </p>
-                </div>
-
-                <!--
-                    两行网格（lg 下 3 列 × 2 行）是卡片的最终落位。
-                    卡片外面包一层 wrapper：动画动的是 wrapper，
-                    不直接动卡片 —— 卡片自己挂着 card-hover 的 transform 过渡，
-                    GSAP 直接改卡片 transform 会和 CSS 过渡互相打架。
-                -->
-                <div bind:this={featGrid} class="grid gap-lg lg:grid-cols-3">
-                    {#each features as f (f.title)}
-                        <div class="will-change-transform">
-                            <!-- 卡片内部：图标 → 标题 → 正文，标题与正文更紧 -->
-                            <div
-                                class="card card-hover flex h-full flex-col gap-md p-lg sm:p-xl"
-                            >
-                                <div
-                                    class="grid size-11 place-items-center rounded-xl bg-linear-to-br from-brand-50 to-accent-50 text-brand-700 ring-1 ring-brand-100"
-                                >
-                                    <Icon name={f.icon} size={20} />
-                                </div>
-                                <div class="stack-tight">
-                                    <h3 class="font-semibold text-slate-900">
-                                        {t(f.title)}
-                                    </h3>
-                                    <p class="text-sm/relaxed text-slate-600">
-                                        {t(f.body)}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    {/each}
-                </div>
-            </div>
-        </div>
-
-        <!--
-            窄屏：标题 + 普通网格。
-            两者同属一个 stack-section，间距交给父级 gap ——
-            和本页其他区块保持同一套节奏，不额外挂 mt-*。
-        -->
-        <div class="container-page stack-section lg:hidden">
-            <div class="stack-heading">
-                {#key i18n.lang}
-                    <!-- 同 hero：被 SplitText 拆过的标题只能整块重建，见那里的说明 -->
-                    <h2
-                        data-split
-                        class="text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl"
-                    >
-                        {t("feat.heading")}
-                    </h2>
-                {/key}
-                <p class="text-base/relaxed text-slate-600 sm:text-lg/relaxed">
-                    {t("feat.sub")}
+                    {t("hero.title2")}
+                </h1>
+                <p
+                    class="rise-in max-w-[36rem] text-base/relaxed text-pretty text-slate-500 [animation-delay:120ms] sm:text-lg/relaxed"
+                >
+                    {t("hero.sub")}
                 </p>
             </div>
-            <div data-stagger class="grid gap-md sm:grid-cols-2 sm:gap-lg">
-                {#each features as f (f.title)}
-                    <!-- 卡片内部：图标 → 标题 → 正文，标题与正文更紧 -->
+
+            <!-- 首屏 CTA：不挂 rise-in，首帧即可见可点 -->
+            <div class="cluster-cta w-full">
+                <a
+                    href="#download"
+                    class="flex min-h-12 w-full items-center justify-center gap-xs rounded-full bg-ink-900 px-7 font-semibold text-white shadow-sm transition-colors hover:bg-ink-800 sm:w-auto"
+                >
+                    <Icon name="download" size={18} />
+                    {t("hero.cta")}
+                </a>
+                <a
+                    href={REPO_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex min-h-12 w-full items-center justify-center gap-xs rounded-full border border-line bg-white px-7 font-semibold text-slate-800 transition-colors hover:border-line-strong hover:bg-paper-100 sm:w-auto"
+                >
+                    <Icon name="github" size={18} />
+                    {t("hero.cta2")}
+                </a>
+            </div>
+
+            <!--
+                数字条。三格等宽 + 发丝线分隔，不套卡片 —— 首屏已经有一张截图做主角，
+                这里只是一行「量级」的证据，越轻越好。
+            -->
+            <dl
+                class="rise-in grid w-full max-w-[34rem] [animation-delay:200ms]"
+                style="grid-template-columns: repeat({stats.length}, minmax(0, 1fr))"
+            >
+                {#each stats as s, i (s.label)}
                     <div
-                        class="card card-hover flex flex-col gap-md p-lg sm:p-xl"
+                        class="flex flex-col-reverse items-center gap-2xs px-xs {i
+                            ? 'border-l border-line'
+                            : ''}"
+                        title={s.title}
                     >
-                        <div
-                            class="grid size-11 place-items-center rounded-xl bg-linear-to-br from-brand-50 to-accent-50 text-brand-700 ring-1 ring-brand-100"
+                        <dt class="text-xs text-slate-500 sm:text-sm">{s.label}</dt>
+                        <dd
+                            class="nums-tabular text-xl font-semibold tracking-tight text-slate-900 sm:text-3xl"
                         >
-                            <Icon name={f.icon} size={20} />
-                        </div>
+                            {s.value}
+                        </dd>
+                    </div>
+                {/each}
+            </dl>
+        </div>
+
+        <!--
+            产品截图。外层 .shot-stage 负责 perspective 和滚动时间线，内层才是被旋转的
+            对象 —— 透视必须挂在父级，挂自己身上 rotateX 出不来立体感。
+            翻转整条在 CSS 里（app.css 的 shot-flip）：截图就在首屏之内，首帧就该是倾斜的。
+        -->
+        <div class="shot-stage w-full">
+            <div
+                data-shot
+                class="overflow-hidden rounded-xl border border-line bg-white elev-3 sm:rounded-2xl"
+            >
+                <!--
+                    源图是 1360x900 的 PNG。这是 LCP 元素，所以：
+                    - avif / webp 两级现代格式，PNG 只作兜底（现代浏览器不会去取它）
+                    - 680w 变体给窄屏：移动端渲染宽度约 372px，即使 DPR 2 也只要
+                      744 设备像素，直接下 1360w 是四倍多的无用像素
+                    预加载见 <head> 里那条 preload，srcset/sizes 与这里共用同一组常量。
+                -->
+                <picture>
+                    <source
+                        type="image/avif"
+                        srcset={shotAvifSrcset}
+                        sizes={SHOT_SIZES}
+                    />
+                    <source
+                        type="image/webp"
+                        srcset="{shotBase}-sm.webp 680w, {shotBase}.webp 1360w"
+                        sizes={SHOT_SIZES}
+                    />
+                    <img
+                        src="{shotBase}.png"
+                        alt={t("shot.alt")}
+                        width="1360"
+                        height="900"
+                        loading="eager"
+                        fetchpriority="high"
+                        class="block w-full"
+                    />
+                </picture>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ========== 特性 ========== -->
+<!--
+    一整块发丝线网格：父层 bg-line + gap-px，格子自己是白底，缝就是线。
+    比六张各带投影的卡片安静得多 —— 首页只让截图和下载卡有「高度」。
+    入场挂在格子**里面**的内容上，不挂格子本身：格子一透明，底下的 bg-line
+    就露出来，会闪一整块灰。
+    圆角用 overflow-clip 裁，不用 overflow-hidden：后者会构成滚动容器，
+    里面的 data-reveal 就去量它、永远停在 opacity 0（见 app.css）。
+-->
+<section id="features" class="section-x scroll-mt-20">
+    <div class="container-page stack-section">
+        <div data-reveal class="stack-heading">
+            <h2 class="heading-2">{t("feat.heading")}</h2>
+            <p class="lede">{t("feat.sub")}</p>
+        </div>
+
+        <div
+            class="grid gap-px overflow-clip rounded-3xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3"
+        >
+            {#each features as f, i (f.title)}
+                <div class="bg-white p-xl sm:p-2xl">
+                    <div
+                        data-reveal
+                        style="--i: {i % 3}"
+                        class="flex flex-col gap-lg"
+                    >
+                        <Icon name={f.icon} size={22} cls="text-brand-600" />
                         <div class="stack-tight">
-                            <h3 class="font-semibold text-slate-900">
-                                {t(f.title)}
-                            </h3>
-                            <p class="text-sm/relaxed text-slate-600">
+                            <h3 class="font-semibold text-slate-900">{t(f.title)}</h3>
+                            <p class="text-sm/relaxed text-pretty text-slate-500">
                                 {t(f.body)}
                             </p>
                         </div>
                     </div>
-                {/each}
-            </div>
+                </div>
+            {/each}
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- ========== 下载 ========== -->
-    <Download />
-
-    <!-- ========== 安装提示 ========== -->
-    <!-- 终端窗：OS 标签切换翻卡 + 命令打字机，见 InstallTips.svelte -->
-    <InstallTips />
-
-    <!-- ========== 插件 ========== -->
-    <section
-        id="plugins"
-        class="blob-scene section-x section-quiet relative scroll-mt-20 overflow-hidden"
+<!-- ========== 手机连接 ========== -->
+<section id="phone" class="section-x scroll-mt-20">
+    <div
+        class="container-page grid items-center gap-4xl lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-6xl"
     >
-        <!-- 这一屏唯一的暖色：一团很小的 accent 光斑。底色本身是中性的，
-             accent 在本站只做点缀，不铺面 —— 见 app.css 顶部的配色说明。
-             定位/层级的道理同下载区，见 Download.svelte 里的说明。 -->
-        <div
-            class="blob-drift pointer-events-none absolute -bottom-32 -left-32 h-120 w-160 rounded-full bg-accent-200/22 blur-[80px] [--drift:-54%]"
-            aria-hidden="true"
-        ></div>
-
-        <div
-            class="layer-dots pointer-events-none absolute inset-0 text-slate-400/30"
-            aria-hidden="true"
-        ></div>
-
-        <div class="relative container-page stack-section">
-            <!-- 标题区单独提在上方 -->
+        <div data-reveal class="flex flex-col items-start gap-2xl">
             <div class="stack-heading">
-                {#key i18n.lang}
-                    <!-- 同 hero：被 SplitText 拆过的标题只能整块重建，见那里的说明 -->
-                    <h2
-                        data-split
-                        class="text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl"
-                    >
-                        {t("plug.heading")}
-                    </h2>
-                {/key}
-                <p class="text-base/relaxed text-slate-600 sm:text-lg/relaxed">
-                    {t("plug.sub")}
-                </p>
+                <span
+                    class="inline-flex w-fit items-center gap-2xs rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 ring-1 ring-brand-100"
+                >
+                    <Icon name="phone" size={13} />
+                    {t(PHONE_STABLE ? "phone.badgeNew" : "phone.badge")}
+                </span>
+                <h2 class="heading-2">{t("phone.heading")}</h2>
+                <p class="lede">{t("phone.sub")}</p>
             </div>
-
-            <!-- 左侧列表与右侧展台整合在同一个高质感统一容器大卡片中 -->
-
-            <div
-                class="grid grid-cols-1 lg:grid-cols-12 lg:divide-x lg:divide-line"
-            >
-                <!-- 左侧：特性列表 -->
-                <div
-                    class="flex flex-col justify-between gap-xl p-lg sm:p-xl lg:col-span-7 lg:p-2xl"
+            <div class="flex flex-wrap items-center gap-sm">
+                <a
+                    href="{home}go/"
+                    class="flex min-h-11 items-center gap-xs rounded-full bg-ink-900 px-5 text-sm font-semibold text-white transition-colors hover:bg-ink-800"
                 >
-                    <div data-plug-item class="flex gap-md">
-                        <div
-                            class="grid size-11 shrink-0 place-items-center rounded-xl bg-paper-200 text-brand-700 ring-1 ring-line"
-                        >
-                            <Icon name="store" size={20} />
-                        </div>
-                        <div class="stack-tight">
-                            <h3 class="font-semibold text-slate-900 text-base">
-                                {t("plug.1.title")}
-                            </h3>
-                            <p class="text-sm/relaxed text-slate-600">
-                                {t("plug.1.body")}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div data-plug-item class="flex gap-md">
-                        <div
-                            class="grid size-11 shrink-0 place-items-center rounded-xl bg-paper-200 text-brand-700 ring-1 ring-line"
-                        >
-                            <Icon name="lifebuoy" size={20} />
-                        </div>
-                        <div class="stack-tight">
-                            <h3 class="font-semibold text-slate-900 text-base">
-                                {t("plug.2.title")}
-                            </h3>
-                            <p class="text-sm/relaxed text-slate-600">
-                                {t("plug.2.body")}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div data-plug-item class="flex gap-md">
-                        <div
-                            class="grid size-11 shrink-0 place-items-center rounded-xl bg-paper-200 text-brand-700 ring-1 ring-line"
-                        >
-                            <Icon name="terminal" size={20} />
-                        </div>
-                        <div class="stack-tight">
-                            <h3 class="font-semibold text-slate-900 text-base">
-                                {t("plug.3.title")}
-                            </h3>
-                            <p class="text-sm/relaxed text-slate-600">
-                                {t("plug.3.body")}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 右侧：生态与配置卡（位于同一个容器内） -->
-                <div
-                    data-plug-card
-                    class="flex flex-col rounded-2xl justify-between gap-xl border-t border-line bg-paper-100/50 p-lg sm:p-xl lg:col-span-5 lg:border-t-0 lg:p-2xl"
+                    {t("phone.cta")}
+                    <Icon name="arrow" size={15} />
+                </a>
+                <a
+                    href="{home}docs/phone-connection/"
+                    class="flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-paper-200 hover:text-slate-900"
                 >
-                    <!-- DSH Market 专属推荐卡片 -->
-                    <div
-                        class="rounded-xl border border-brand-100 bg-linear-to-br from-brand-50/70 via-white to-accent-50/50 p-md sm:p-lg flex flex-col gap-sm shadow-xs"
-                    >
-                        <div class="flex items-center justify-between gap-sm">
-                            <span
-                                class="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-semibold text-brand-700"
-                            >
-                                <Icon name="store" size={13} />
-                                {t("plug.market.badge")}
-                            </span>
-                            <a
-                                href={MARKET_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:text-brand-800 transition-colors"
-                            >
-                                {t("plug.market.cta")}
-                                <Icon name="external" size={12} />
-                            </a>
-                        </div>
-                        <h4 class="font-semibold text-slate-900 text-base">
-                            {t("plug.market.title")}
-                        </h4>
-                        <p class="text-xs/relaxed text-slate-600">
-                            {t("plug.market.desc")}
-                        </p>
-                    </div>
-
-                    <!-- 安全放行指引 -->
-                    <div class="flex flex-col gap-sm">
-                        <div class="flex items-center gap-sm">
-                            <Icon
-                                name="info"
-                                size={15}
-                                cls="shrink-0 text-accent-600"
-                            />
-                            <span class="text-xs font-semibold text-slate-800">
-                                {t("plug.note.title")}
-                            </span>
-                        </div>
-                        <p class="text-xs/relaxed text-slate-500">
-                            {t("plug.note")}
-                        </p>
-                        <CodeBlock
-                            code={"$DSH_HOME/profiles/web/pnpm-workspace.yaml"}
-                        />
-                    </div>
-                </div>
+                    {t("phone.docs")}
+                </a>
             </div>
         </div>
-    </section>
 
-    <!-- ========== FAQ ========== -->
-    <section id="faq" class="section-x scroll-mt-20 bg-white">
-        <div class="container-page stack-section">
-            {#key i18n.lang}
-                <!-- 同 hero：被 SplitText 拆过的标题只能整块重建，见那里的说明 -->
-                <h2
-                    data-split
-                    class="text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl"
-                >
-                    {t("faq.heading")}
-                </h2>
-            {/key}
+        <ul class="card divide-y divide-line">
+            {#each channels as c, i (c.title)}
+                <li data-reveal style="--i: {i}" class="flex items-start gap-md p-lg sm:p-xl">
+                    <span
+                        class="grid size-10 shrink-0 place-items-center rounded-full bg-paper-200 text-slate-700"
+                    >
+                        <Icon name={c.icon} size={18} />
+                    </span>
+                    <div class="stack-tight">
+                        <h3 class="font-semibold text-slate-900">{t(c.title)}</h3>
+                        <p class="text-sm/relaxed text-slate-500">{t(c.body)}</p>
+                    </div>
+                </li>
+            {/each}
+        </ul>
+    </div>
+</section>
 
-            <div class="divide-y divide-line">
-                {#each faqs as f (f.q)}
-                    <!--
-                        问答间距挂在答案的 pt-sm 上，不用 details 的 gap ——
-                        gap 不参与高度动画，收起到最后会剩一道空隙突然消失。
-                    -->
-                    <details use:disclose class="group py-md sm:py-lg">
-                        <summary
-                            class="flex cursor-pointer list-none items-center justify-between gap-md font-medium text-slate-900 marker:hidden hover:text-brand-700"
-                        >
-                            {t(f.q)}
-                            <Icon
-                                name="chevron"
-                                size={18}
-                                cls="shrink-0 text-slate-400 transition-transform group-data-expanded:rotate-180"
-                            />
-                        </summary>
-                        <div data-answer class="overflow-hidden">
-                            <p
-                                class="pt-sm text-sm/relaxed text-slate-600 max-w-245"
-                            >
-                                {t(f.a)}
-                            </p>
+<!-- ========== 插件 ========== -->
+<section id="plugins" class="section-x scroll-mt-20">
+    <div class="container-page stack-section">
+        <div data-reveal class="stack-heading">
+            <h2 class="heading-2">{t("plug.heading")}</h2>
+            <p class="lede">{t("plug.sub")}</p>
+        </div>
+
+        <div class="grid gap-3xl lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-5xl">
+            <ul class="flex flex-col divide-y divide-line border-y border-line">
+                {#each plugins as p, i (p.title)}
+                    <li data-reveal style="--i: {i}" class="flex gap-md py-xl">
+                        <Icon name={p.icon} size={20} cls="mt-0.5 shrink-0 text-brand-600" />
+                        <div class="stack-tight">
+                            <h3 class="font-semibold text-slate-900">{t(p.title)}</h3>
+                            <p class="text-sm/relaxed text-pretty text-slate-500">{t(p.body)}</p>
                         </div>
-                    </details>
+                    </li>
                 {/each}
-            </div>
-        </div>
-    </section>
+            </ul>
 
-    <!-- ========== 结束 CTA ========== -->
-    <section class="blob-scene section-x">
-        <div class="container-page">
-            <div
-                class="relative overflow-hidden rounded-3xl border border-line bg-linear-to-br from-brand-50 via-white to-accent-50 px-lg py-4xl text-center shadow-sm sm:px-14 sm:py-5xl"
+            <!-- DSH Market：全页唯一一块深色面，给「生态」一个明确的落点 -->
+            <a
+                data-reveal
+                href={MARKET_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group flex flex-col justify-between gap-4xl rounded-3xl bg-ink-900 p-2xl text-white transition-colors hover:bg-ink-800 sm:p-3xl"
             >
-                <div
-                    class="blob-drift pointer-events-none absolute -top-28 left-1/2 -ml-80 h-64 w-160 max-w-none rounded-full bg-brand-300/25 blur-[90px] [--drift:-63%]"
-                    aria-hidden="true"
-                ></div>
-
-                <div class="relative flex flex-col items-center gap-2xl">
-                    <div class="stack-heading">
-                        {#key i18n.lang}
-                            <!-- 同 hero：被 SplitText 拆过的标题只能整块重建，见那里的说明 -->
-                            <h2
-                                data-split
-                                class="text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl"
-                            >
-                                {t("cta.heading")}
-                            </h2>
-                        {/key}
-                        <p
-                            class="text-base/relaxed text-slate-600 sm:text-lg/relaxed"
-                        >
-                            {t("cta.sub")}
-                        </p>
-                    </div>
-
-                    <div class="cluster-cta w-full">
-                        <a
-                            href="#download"
-                            class="flex min-h-12 w-full items-center justify-center gap-xs rounded-xl bg-ink-900 px-6 font-semibold text-white shadow-sm transition-colors hover:bg-ink-800 sm:w-auto"
-                        >
-                            <Icon name="download" size={18} />
-                            {t("cta.button")}
-                        </a>
-                        <a
-                            href={UPSTREAM_URL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="flex min-h-12 w-full items-center justify-center gap-xs rounded-xl border border-line bg-white px-6 font-semibold text-slate-800 transition-colors hover:border-line-strong hover:bg-paper-100 sm:w-auto"
-                        >
-                            {t("foot.upstream")}
-                            <Icon name="external" size={15} />
-                        </a>
-                    </div>
-
-                    <p class="text-xs/relaxed text-slate-500">
-                        <strong class="font-semibold text-slate-700"
-                            >{t("foot.disclaimerTitle")}</strong
-                        >
-                        · {t("foot.disclaimer")}
-                    </p>
-                </div>
-            </div>
+                <span
+                    class="inline-flex w-fit items-center gap-2xs rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-white/80"
+                >
+                    <Icon name="store" size={13} />
+                    {t("plug.market.badge")}
+                </span>
+                <span class="flex flex-col gap-sm">
+                    <span class="text-2xl font-semibold tracking-tight">{t("plug.market.title")}</span>
+                    <span class="text-sm/relaxed text-pretty text-white/60">{t("plug.market.desc")}</span>
+                    <span class="mt-md inline-flex items-center gap-xs text-sm font-semibold">
+                        {t("plug.market.cta")}
+                        <Icon
+                            name="arrow"
+                            size={15}
+                            cls="transition-transform group-hover:translate-x-0.5"
+                        />
+                    </span>
+                </span>
+            </a>
         </div>
-    </section>
-</div>
-<!-- /pageEl -->
+    </div>
+</section>
+
+<!-- ========== 下载 ========== -->
+<Download />
+
+<!-- ========== 结束 CTA ========== -->
+<section class="section-x">
+    <div
+        class="container-page flex flex-col items-center gap-2xl border-t border-line pt-6xl text-center"
+    >
+        <div data-reveal class="flex flex-col items-center gap-md">
+            <h2 class="heading-2">{t("cta.heading")}</h2>
+            <p class="lede">{t("cta.sub")}</p>
+        </div>
+
+        <div class="cluster-cta w-full">
+            <a
+                href="#download"
+                class="flex min-h-12 w-full items-center justify-center gap-xs rounded-full bg-ink-900 px-7 font-semibold text-white shadow-sm transition-colors hover:bg-ink-800 sm:w-auto"
+            >
+                <Icon name="download" size={18} />
+                {t("cta.button")}
+            </a>
+            <a
+                href={UPSTREAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex min-h-12 w-full items-center justify-center gap-xs rounded-full px-6 font-semibold text-slate-700 transition-colors hover:bg-paper-200 hover:text-slate-900 sm:w-auto"
+            >
+                {t("foot.upstream")}
+                <Icon name="external" size={15} />
+            </a>
+        </div>
+
+        <p class="max-w-[40rem] text-xs/relaxed text-pretty text-slate-400">
+            <strong class="font-semibold text-slate-600">{t("foot.disclaimerTitle")}</strong>
+            · {t("foot.disclaimer")}
+        </p>
+    </div>
+</section>

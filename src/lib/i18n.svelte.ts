@@ -25,24 +25,26 @@ const zh: Dict = {
 
   "nav.download": "下载",
   "nav.connect": "手机连接",
-  "nav.blog": "博客",
+  "nav.docs": "文档",
   "nav.github": "GitHub",
   "nav.menu": "打开菜单",
   "nav.lang": "切换语言",
 
   // ── Hero ──
-  "hero.badge": "基于 Tauri v2 · 开源 MIT",
+  // {version} 由构建期同步的测试版号填入（见 sync-release.mjs）
+  "hero.preview": "{version} 测试版已发布 · 抢先体验",
+  "hero.released": "v{version} 已发布 · 查看更新内容",
   "hero.title1": "把",
   "hero.titleCode": "dsh web",
   "hero.title2": "装进桌面",
   "hero.sub":
     "启动时自动在后台拉起本地 dsh web 并嵌入原生窗口。无需开终端、无需管理端口，会话、凭证与配置与 CLI 完全共享。",
   "hero.cta": "免费下载",
-  "hero.ctaSub": "国内高速源 · 免登录",
   "hero.cta2": "在 GitHub 上查看",
   "hero.version": "最新版本",
-  "hero.platforms": "Windows · macOS · Linux",
-  "hero.free": "超轻量 2.3 MB 起",
+  "hero.stat.downloads": "累计下载",
+  "hero.stat.visitors": "访问人数",
+  "hero.stat.size": "最小安装包",
 
   // ── 特性 ──
   "feat.heading": "为什么用桌面版",
@@ -71,6 +73,21 @@ const zh: Dict = {
   "shot.heading": "界面预览",
   "shot.sub": "原生窗口里的完整 dsh web 体验。",
   "shot.alt": "dsh desktop 应用界面预览",
+
+  // ── 手机连接 ──
+  "phone.badge": "测试版",
+  "phone.badgeNew": "新功能",
+  "phone.heading": "离开电脑，也能接着用",
+  "phone.sub":
+    "扫一下桌面端卡片上的二维码，手机就进入同一个 dsh 会话。每次接入都要电脑上点头，配对活过桌面重启。",
+  "phone.lan": "局域网",
+  "phone.lanBody": "同一个 Wi-Fi 下直连，最快。",
+  "phone.ts": "Tailscale",
+  "phone.tsBody": "在外面也能进，WireGuard 加密。",
+  "phone.cf": "Cloudflare 隧道",
+  "phone.cfBody": "任何网络可达，带 TLS；空闲 30 分钟自动关闭。",
+  "phone.cta": "打开连接门户",
+  "phone.docs": "使用说明",
 
   // ── 下载 ──
   "dl.heading": "下载 dsh desktop",
@@ -106,6 +123,7 @@ const zh: Dict = {
   "dl.checksum": "校验与签名文件",
   "dl.allAssets": "查看全部安装包与更新日志",
   "dl.groupPrompt": "遇到安装或使用问题？欢迎加入用户交流群探讨",
+  "dl.installHelp": "安装指引",
 
   // 与 formatCount 拼成「本站总共访问人数 3,289」。
   // 口径是**人数**：按浏览器里的一个随机标识去重，
@@ -148,36 +166,6 @@ const zh: Dict = {
   "mirror.llkk": "社区加速 · 备用",
   "mirror.direct": "官方直连 · 国内可能较慢",
 
-  // ── 安装提示 ──
-  "tip.heading": "安装指引与日常须知",
-  "tip.win.title": "Windows",
-  "tip.win.body":
-    "安装包为 .exe（NSIS）。需 WebView2，缺失时会自动引导安装（已验证）。首次启动缺失环境时需联网拉取核心组件。",
-  "tip.win.ready": "即开即用 —— 无需手动配置",
-  "tip.mac.title": "macOS 首次运行被拦截",
-  "tip.mac.body":
-    "通用二进制支持 Apple Silicon 与 Intel。在访达中右键点击应用选择「打开」，或在终端执行以下命令解除隔离：",
-  "tip.linux.title": "Linux 运行与自更新",
-  "tip.linux.body":
-    "推荐 AppImage 以获得完整自更新支持（Debian 系已验证）。下载后赋予可执行权限即可运行：",
-  "tip.cn.title": "国内网络加速建议",
-  "tip.cn.body":
-    "应用首次启动需要从 npm 拉取 dsh 组件。若下载缓慢，可先为 npm 配置国内镜像：",
-  // 命令块上的复制按钮：这里复制的是命令，不是下载链接，
-  // 所以不复用 dl.copy（那条是「复制链接」）
-  "tip.copy": "复制命令",
-  "tip.copyFail": "复制失败",
-
-  "tip.note.runtime.title": "自动运行环境",
-  "tip.note.runtime.desc":
-    "若机器上未找到可用的 Node，应用会自动弹出「运行环境」面板，一键装好 Node 24。",
-  "tip.note.tray.title": "关闭即收进托盘",
-  "tip.note.tray.desc":
-    "点按窗口关闭按钮仅收进托盘常驻，长线任务不中断；彻底退出请使用菜单里的「退出 dsh」。",
-  "tip.note.update.title": "静默检查更新",
-  "tip.note.update.desc":
-    "启动时在后台静默检查，有更新才提示，下载前先征求同意，安心无打扰。",
-
   // ── 插件 ──
   "plug.heading": "一切皆插件，不用碰命令行",
   "plug.sub":
@@ -196,44 +184,20 @@ const zh: Dict = {
   "plug.3.title": "独立环境变量终端",
   "plug.3.body":
     "菜单 → 打开终端，启动一个已配好 dsh 环境变量的独立终端，安全调试且绝不污染系统全局 PATH。",
-  "plug.note.title": "安装 github: 插件安全提示",
-  "plug.note":
-    "提示：安装 github: 形式的插件时，pnpm 出于安全考虑默认会拦截构建脚本。如遇报错，请按面板提示在配置文件中放行该插件：",
-
-  // ── FAQ ──
-  "faq.heading": "常见问题",
-  "faq.q1": "dsh desktop 是 DeepSeek 官方产品吗？",
-  "faq.a1":
-    "不是。本项目是基于 DeepSeek Harness 开发的第三方开源桌面客户端，与 DeepSeek 官方没有隶属或合作关系，代码在 GitHub 完全开源。",
-  "faq.q2": "需要先安装 Node.js 和 dsh 吗？",
-  "faq.a2":
-    "不需要。应用会自动检测环境：如果机器上已有合适的 Node 和 dsh 就直接用；如果没有，应用会自动弹出「运行环境」面板，支持一键安装 Node 24 与 dsh。全程不需要管理员权限。",
-  "faq.q3": "为什么安装包体积这么小（仅 2.3 MB 起）？",
-  "faq.a3":
-    "基于 Tauri v2 构建，直接调用操作系统自带的原生 WebView 内核（Windows WebView2 / macOS WebKit / Linux WebKitGTK），不打包上百兆的 Chromium 浏览器内核，内存与磁盘占用大幅缩减。",
-  "faq.q4": "遇到插件崩溃导致应用打不开怎么办？",
-  "faq.a4":
-    "独创「安全模式」：插件在 dsh web 端口绑定前加载，若遇崩溃停在加载页，加载页会直接提供「不加载插件启动」按钮，一键把用户插件暂摘出层列表启动，直接打开面板卸掉出问题的插件，之后在菜单点「重新加载插件」原样装回。",
-  "faq.q5": "会和我终端里的 dsh 冲突吗？",
-  "faq.a5":
-    "完全不会。应用采用动态空闲端口分配，可以和终端里手动运行的 dsh web 同时开着。它也不会改写系统的全局 PATH，保证环境干净独立。",
-  "faq.q6": "会话记录和配置存在哪里？支持哪些环境变量？",
-  "faq.a6":
-    "与 CLI 全局共享，严格保存在 $DSH_HOME（默认 ~/.dsh）。支持 DSH_BIN 指定 dsh 可执行文件的绝对路径（优先级最高且跳过 Node 版本检查），支持 DSH_HOME 自定义数据与配置目录。",
-  "faq.q7": "支持自动更新吗？",
-  "faq.a7":
-    "支持。桌面端启动时静默检查更新，有新版才提示，下载前征求同意。Linux 环境下推荐 AppImage 格式以获得最完整的自动更新支持。",
-  "faq.q8": "支持哪些系统平台？",
-  "faq.a8":
-    "Windows（.exe）、macOS（.dmg 通用二进制，支持 Apple Silicon 与 Intel）和 Linux（.deb 与 .AppImage）。目前 Windows、macOS 与 Debian 系 Linux 均已完成验证。",
-  "faq.q9": "有交流群或反馈渠道吗？",
-  "faq.a9":
-    "欢迎加入 QQ 交流群：1125671315，与大家探讨使用心得、反馈 Bug 与功能建议；也可随时在 GitHub 仓库提交 Issue。",
 
   // ── CTA / 页脚 ──
   "cta.heading": "现在开始",
   "cta.sub": "下载安装包，双击打开，剩下的它自己搞定。",
   "cta.button": "下载最新版",
+
+  // ── 文档 ──
+  "docs.title": "文档",
+  "docs.desc": "安装、手机连接、插件与常见问题。",
+  "docs.copy": "复制",
+  "docs.copied": "已复制",
+  "docs.copyFail": "复制失败",
+  "docs.prev": "上一篇",
+  "docs.next": "下一篇",
 
   // ── 连接门户 /go/ ──
   // 这一页不是给访客看的，是给已经装了 app 的人用的，所以文案一律假定
@@ -245,9 +209,9 @@ const zh: Dict = {
   "go.heading": "连接我的电脑",
   "go.sub": "扫一下电脑上「手机连接」卡片里的二维码。之后每次从这一页点进去就行，不用再扫。",
 
-  "go.soon.title": "即将推出",
+  "go.soon.title": "目前在测试版中",
   "go.soon.body":
-    "桌面端的「手机连接」还没随版本发出来，现在电脑上还没有可扫的二维码。这一页可以先添加到主屏幕，等桌面端更新后直接用。",
+    "手机连接随桌面端测试版提供，正式版暂未包含。这一页可以先添加到主屏幕，等正式版发布后直接用。",
 
   "go.empty.title": "还没有添加任何电脑",
   "go.empty.body":
@@ -307,16 +271,7 @@ const zh: Dict = {
   "go.remove.cancel": "返回",
   "go.removeChannel": "删除这个地址",
 
-  "go.note.heading": "几件要知道的事",
-  "go.note.pick":
-    "这一页测不出哪条通道此刻能通 —— 浏览器不允许一个 HTTPS 页面去探测局域网地址。所以得你自己判断：在家用局域网，在外面用 Tailscale 或公网。",
-  "go.note.local":
-    "机器清单只存在这台设备的浏览器里，本站服务器上没有副本。清掉站点数据或者换一台手机，就要重新扫一次。",
-  "go.note.repair":
-    "跳过去之后可能还要配一次 —— 会话凭证是按地址存的，这一页给不了。照着那边的提示把电脑上的六位码输进去即可。",
-  "go.note.standalone":
-    "iOS 上从主屏幕图标点进去连接时会跳出到 Safari，因为电脑那头是另一个站点，超出了这一页的范围。这是系统行为，改不掉。",
-
+  "go.notes": "使用前，几件要知道的事",
   "go.install.heading": "把这一页添加到主屏幕",
   "go.install.body":
     "这一页的地址永远不变，所以从主屏幕点进来永远打得开 —— 哪怕电脑关着、换了 IP、或者切了通道。直接把二维码里那个地址加到主屏幕做不到这一点：地址一变，图标点开就是一片白。",
@@ -334,9 +289,9 @@ const zh: Dict = {
   "foot.issues": "反馈问题",
   "foot.upstream": "DeepSeek Harness",
   "foot.market": "DSH Market 插件市场",
-  "foot.license": "MIT 许可证",
-  "foot.readme": "使用文档",
-  "foot.rights": "基于 MIT 许可证开源",
+  "foot.license": "{license} 许可证",
+  "foot.readme": "GitHub README",
+  "foot.rights": "基于 {license} 许可证开源",
   "foot.group": "QQ 交流群",
   "foot.groupCopied": "已复制群号",
   "foot.clickCopy": "点击复制群号",
@@ -350,22 +305,24 @@ const en: Dict = {
 
   "nav.download": "Download",
   "nav.connect": "Phone connection",
+  "nav.docs": "Docs",
   "nav.github": "GitHub",
   "nav.menu": "Open menu",
   "nav.lang": "Switch language",
 
-  "hero.badge": "Built with Tauri v2 · Open source, MIT",
   "hero.title1": "Put",
   "hero.titleCode": "dsh web",
   "hero.title2": "on your desktop",
   "hero.sub":
     "Launches the local dsh web service in the background on startup and embeds it in a native desktop window. No terminal, no port management — sessions and config are shared with the CLI.",
   "hero.cta": "Download free",
-  "hero.ctaSub": "Fast mirrors · No login",
   "hero.cta2": "View on GitHub",
   "hero.version": "Latest version",
-  "hero.platforms": "Windows · macOS · Linux",
-  "hero.free": "Ultra-light from 2.3 MB",
+  "hero.preview": "{version} pre-release is out · Try it early",
+  "hero.released": "v{version} is out · What’s new",
+  "hero.stat.downloads": "Downloads",
+  "hero.stat.visitors": "Visitors",
+  "hero.stat.size": "Smallest installer",
 
   "feat.heading": "Why dsh desktop",
   "feat.sub":
@@ -393,6 +350,20 @@ const en: Dict = {
   "shot.heading": "A look inside",
   "shot.sub": "The full dsh web experience in a native window.",
   "shot.alt": "Preview of the dsh desktop application interface",
+
+  "phone.badge": "Pre-release",
+  "phone.badgeNew": "New",
+  "phone.heading": "Step away, keep going",
+  "phone.sub":
+    "Scan the QR code on the desktop card and your phone joins the same dsh session. Every new device needs a yes on the computer, and pairing survives desktop restarts.",
+  "phone.lan": "Local network",
+  "phone.lanBody": "Direct on the same Wi-Fi — the fastest.",
+  "phone.ts": "Tailscale",
+  "phone.tsBody": "Reach it while out, encrypted by WireGuard.",
+  "phone.cf": "Cloudflare tunnel",
+  "phone.cfBody": "Any network, with TLS; closes itself after 30 idle minutes.",
+  "phone.cta": "Open the portal",
+  "phone.docs": "How it works",
 
   "dl.heading": "Download dsh desktop",
   "dl.sub":
@@ -427,6 +398,7 @@ const en: Dict = {
   "dl.checksum": "Signatures & checksums",
   "dl.allAssets": "All installers and release notes",
   "dl.groupPrompt": "Need help with setup or usage? Join our user community group",
+  "dl.installHelp": "Installation guide",
 
   "visitors.label": "visitors so far",
   "visitors.order": "count-first",
@@ -466,33 +438,6 @@ const en: Dict = {
   "mirror.llkk": "Community mirror · alternate",
   "mirror.direct": "Official direct · may be slow in China",
 
-  "tip.heading": "Installation & runtime notes",
-  "tip.win.title": "Windows",
-  "tip.win.body":
-    ".exe installer (NSIS). Requires WebView2; downloaded automatically if missing (verified). On first run, it fetches core components if needed.",
-  "tip.win.ready": "Ready to go — nothing to configure",
-  "tip.mac.title": "macOS blocks the first launch",
-  "tip.mac.body":
-    "Universal binary for Apple Silicon and Intel. Right-click the app in Finder and choose “Open”, or clear the quarantine flag from a terminal:",
-  "tip.linux.title": "Linux execution & updates",
-  "tip.linux.body":
-    "AppImage is recommended for full self-update support (verified on Debian). Make it executable after downloading:",
-  "tip.cn.title": "Slow npm downloads in China",
-  "tip.cn.body":
-    "The first launch pulls dsh components from npm. If that is slow, point npm at a faster domestic registry:",
-  "tip.copy": "Copy",
-  "tip.copyFail": "Failed",
-
-  "tip.note.runtime.title": "Runtime auto-detection",
-  "tip.note.runtime.desc":
-    "If no usable Node is found, the Runtime panel opens by itself and installs Node 24 in one click.",
-  "tip.note.tray.title": "Minimize to tray",
-  "tip.note.tray.desc":
-    'Closing the window parks in the tray so in-flight tasks stay alive. Use "Quit dsh" in the menu to exit.',
-  "tip.note.update.title": "Silent auto-updates",
-  "tip.note.update.desc":
-    "Checked silently on launch, raised only when there is one, and downloaded only with your consent.",
-
   "plug.heading": "Plugins, without the command line",
   "plug.sub":
     "Not a single line of dsh code modified. Built-in visual panel and featured DSH Market.",
@@ -510,43 +455,18 @@ const en: Dict = {
   "plug.3.title": "Isolated env terminal",
   "plug.3.body":
     "Menu → Open Terminal launches a shell with dsh env vars already configured, leaving your global PATH untouched.",
-  "plug.note.title": "GitHub plugin build security",
-  "plug.note":
-    "Note: pnpm blocks build scripts from git sources by default. If it errors, allow the package under allowBuilds in the workspace file:",
-
-  "faq.heading": "Frequently asked questions",
-  "faq.q1": "Is dsh desktop an official DeepSeek product?",
-  "faq.a1":
-    "No. This is a third-party, open-source desktop client built on DeepSeek Harness. It has no affiliation with DeepSeek, and its source is fully open on GitHub.",
-  "faq.q2": "Do I need Node.js and dsh installed first?",
-  "faq.a2":
-    "No. The app detects your environment: if a suitable Node and dsh exist it uses them; otherwise the Runtime panel pops up to install Node 24 and dsh in one click, without admin rights.",
-  "faq.q3": "Why are the installers so small (from 2.3 MB)?",
-  "faq.a3":
-    "Built on Tauri v2 using the operating system’s native WebView engine (WebView2 on Windows, WebKit on macOS/Linux) instead of bundling a 100+ MB Chromium runtime, dramatically reducing memory and disk footprint.",
-  "faq.q4": "What if a broken plugin crashes the app on launch?",
-  "faq.a4":
-    'The app features Safe Mode: plugins load before dsh web binds its port. If one crashes, the loading page offers "Start without plugins" to temporarily isolate user plugins, launch cleanly, and let you uninstall the culprit from the panel.',
-  "faq.q5": "Will it conflict with the dsh in my terminal?",
-  "faq.a5":
-    "Not at all. It allocates dynamic loopback ports, so it can run alongside manual CLI instances without collision. It also never rewrites your global PATH.",
-  "faq.q6":
-    "Where are sessions and config stored? What env vars are supported?",
-  "faq.a6":
-    "Data is shared globally with the CLI under $DSH_HOME (default ~/.dsh). Supported env vars: DSH_BIN specifies the absolute dsh executable path and skips version checks; DSH_HOME specifies the root data and config directory.",
-  "faq.q7": "Does it auto-update?",
-  "faq.a7":
-    "Yes. The app checks silently on launch, alerts you only when an update exists, and asks for consent before downloading. On Linux, AppImage format provides full self-update support.",
-  "faq.q8": "Which platforms are supported?",
-  "faq.a8":
-    "Windows (.exe), macOS (.dmg universal binary for Apple Silicon and Intel), and Linux (.deb and .AppImage). Windows, macOS, and Debian Linux are verified.",
-  "faq.q9": "Is there a community group or feedback channel?",
-  "faq.a9":
-    "Welcome to join the QQ group 1125671315 for discussions, bug reports, and suggestions. You can also open an Issue on GitHub anytime.",
 
   "cta.heading": "Get started",
   "cta.sub": "Download the installer, double-click, and it handles the rest.",
   "cta.button": "Download latest",
+
+  "docs.title": "Docs",
+  "docs.desc": "Installation, phone connection, plugins, and FAQ.",
+  "docs.copy": "Copy",
+  "docs.copied": "Copied",
+  "docs.copyFail": "Failed",
+  "docs.prev": "Previous",
+  "docs.next": "Next",
 
   "go.title": "Connect to my computer · dsh desktop",
   "go.desc":
@@ -556,9 +476,9 @@ const en: Dict = {
   "go.sub":
     "Scan the QR code on the “Phone connection” card on your computer. After that, just open this page and tap — no more scanning.",
 
-  "go.soon.title": "Coming soon",
+  "go.soon.title": "In pre-release for now",
   "go.soon.body":
-    "Phone connection has not shipped in the desktop app yet, so there is no QR code to scan. You can add this page to your home screen now and use it once the desktop app updates.",
+    "Phone connection ships in the desktop pre-release builds and is not in the stable release yet. You can add this page to your home screen now and use it once the stable release lands.",
 
   "go.empty.title": "No computers added yet",
   "go.empty.body":
@@ -620,16 +540,7 @@ const en: Dict = {
   "go.remove.cancel": "Cancel",
   "go.removeChannel": "Remove this address",
 
-  "go.note.heading": "A few things worth knowing",
-  "go.note.pick":
-    "This page cannot tell which channel is reachable right now — browsers do not let an HTTPS page probe local network addresses. So the call is yours: local network at home, Tailscale or public when you are out.",
-  "go.note.local":
-    "The list of machines lives in this browser only; there is no copy on our server. Clearing site data or switching phones means scanning again.",
-  "go.note.repair":
-    "You may still have to pair once after jumping across — session credentials are stored per address, and this page cannot supply them. Follow the prompt there and type in the six-character code from your computer.",
-  "go.note.standalone":
-    "On iOS, connecting from a home-screen icon jumps out to Safari, because your computer is a different site and falls outside this page’s scope. That is system behaviour and cannot be changed.",
-
+  "go.notes": "A few things worth knowing first",
   "go.install.heading": "Add this page to your home screen",
   "go.install.body":
     "This page’s address never changes, so the icon always opens — even when the computer is off, its IP changed, or you switched channels. Putting the QR code’s address on the home screen cannot do that: the moment it changes, the icon opens onto a blank page.",
@@ -647,9 +558,9 @@ const en: Dict = {
   "foot.issues": "Report an issue",
   "foot.upstream": "DeepSeek Harness",
   "foot.market": "DSH Market",
-  "foot.license": "MIT License",
-  "foot.readme": "Documentation",
-  "foot.rights": "Open source under the MIT License",
+  "foot.license": "{license} License",
+  "foot.readme": "README",
+  "foot.rights": "Open source under the {license} License",
   "foot.group": "QQ Group",
   "foot.groupCopied": "Copied",
   "foot.clickCopy": "Click to copy group number",

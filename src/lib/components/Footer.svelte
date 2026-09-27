@@ -1,6 +1,6 @@
 <script lang="ts">
     import { i18n, pathForLang } from "$lib/i18n.svelte";
-    import { MARKET_URL, REPO_URL, UPSTREAM_URL } from "$lib/releases";
+    import { LICENSE, LICENSE_URL, MARKET_URL, REPO_URL, UPSTREAM_URL } from "$lib/releases";
     import Icon from "./Icon.svelte";
     import Logo from "./Logo.svelte";
     import VisitorCount from "./VisitorCount.svelte";
@@ -51,19 +51,13 @@
                     和顶栏那几项一起去掉了：它们在首页上只是页内滚动，
                     区块之间的跳转由首屏承担，页脚只回答「去哪一页」。
                 */
+                { label: t("nav.docs"), href: `${home}docs/`, external: false },
                 { label: t("nav.connect"), href: `${home}go/`, external: false },
             ],
         },
         {
             title: t("foot.resources"),
             links: [
-                /*
-                    博客只有中文一份，英文页不放入口 ——
-                    把英文读者送进一整页中文，比没有这个入口更差。
-                */
-                ...(i18n.lang === "zh"
-                    ? [{ label: t("nav.blog"), href: "/blog/", external: false }]
-                    : []),
                 { label: t("foot.market"), href: MARKET_URL, external: true },
                 { label: t("foot.repo"), href: REPO_URL, external: true },
                 {
@@ -96,8 +90,8 @@
                     external: true,
                 },
                 {
-                    label: t("foot.license"),
-                    href: `${REPO_URL}/blob/main/LICENSE`,
+                    label: t("foot.license", { license: LICENSE.spdx }),
+                    href: LICENSE_URL,
                     external: true,
                 },
             ],
@@ -185,10 +179,10 @@
                 是站点级元信息，不属于任何一节内容。
 
                 Footer 在根 layout 里，所以这一处就覆盖了全站每一页 ——
-                包括博客和 404。取数是模块级单例，SPA 导航不会重复请求。
+                包括文档和 404。取数是模块级单例，SPA 导航不会重复请求。
             -->
             <p class="flex flex-wrap items-center gap-x-sm gap-y-2xs">
-                <span>© {year} MochiNek0 · {t("foot.rights")}</span>
+                <span>© {year} MochiNek0 · {t("foot.rights", { license: LICENSE.spdx })}</span>
                 <VisitorCount divider="dot" />
             </p>
             <p>

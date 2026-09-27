@@ -14,7 +14,8 @@
 	 */
 	import Icon from '$lib/components/Icon.svelte';
 	import QrScanner from '$lib/components/QrScanner.svelte';
-	import { i18n } from '$lib/i18n.svelte';
+	import { i18n, pathForLang } from '$lib/i18n.svelte';
+	import { PHONE_STABLE } from '$lib/releases';
 	import {
 		forgetChannel,
 		forgetMachine,
@@ -239,17 +240,19 @@
 		</div>
 
 		<!--
-			桌面端那一半还没发。这一页本身是通的 —— 扫码、手输、清单都能用，
+			桌面端那一半目前只在测试版里，正式版还没带上。这一页本身是通的 —— 扫码、手输、清单都能用，
 			手上已经有地址的人（比如自己编译的）照样进得去，所以只在顶上说一句，
-			不去关任何功能。等桌面端发了，删掉这个块即可。
+			不去关任何功能。正式版带上之后（PHONE_STABLE）这个块自动消失。
 		-->
-		<div class="flex items-start gap-sm rounded-2xl border border-brand-200 bg-brand-50 p-lg">
-			<Icon name="clock" size={17} cls="mt-0.5 shrink-0 text-brand-600" />
-			<div class="flex flex-col gap-2xs">
-				<p class="text-sm font-semibold text-brand-800">{t('go.soon.title')}</p>
-				<p class="text-sm/relaxed text-pretty text-slate-600">{t('go.soon.body')}</p>
+		{#if !PHONE_STABLE}
+			<div class="flex items-start gap-sm rounded-2xl border border-brand-200 bg-brand-50 p-lg">
+				<Icon name="clock" size={17} cls="mt-0.5 shrink-0 text-brand-600" />
+				<div class="flex flex-col gap-2xs">
+					<p class="text-sm font-semibold text-brand-800">{t('go.soon.title')}</p>
+					<p class="text-sm/relaxed text-pretty text-slate-600">{t('go.soon.body')}</p>
+				</div>
 			</div>
-		</div>
+		{/if}
 
 		{#if ready}
 			{#if listed.length === 0}
@@ -361,18 +364,19 @@
 			</button>
 		</div>
 
-		<div class="card flex flex-col gap-sm p-lg">
-			<h2 class="flex items-center gap-xs text-sm font-semibold text-slate-900">
-				<Icon name="info" size={15} cls="text-slate-400" />
-				{t('go.note.heading')}
-			</h2>
-			<ul class="flex list-disc flex-col gap-xs pl-5 text-sm/relaxed text-slate-600">
-				<li>{t('go.note.pick')}</li>
-				<li>{t('go.note.repair')}</li>
-				<li>{t('go.note.local')}</li>
-				<li>{t('go.note.standalone')}</li>
-			</ul>
-		</div>
+		<!-- 须知搬进了文档（手机连接那一篇），这里只留一个入口，门户页只管「连」 -->
+		<a
+			href="{pathForLang(i18n.lang)}docs/phone-connection/"
+			class="card card-hover group flex items-center gap-sm p-lg text-sm font-semibold text-slate-900"
+		>
+			<Icon name="info" size={15} cls="shrink-0 text-slate-400" />
+			<span class="flex-1">{t('go.notes')}</span>
+			<Icon
+				name="arrow"
+				size={15}
+				cls="shrink-0 text-slate-400 transition-[color,translate] group-hover:translate-x-0.5 group-hover:text-slate-900"
+			/>
+		</a>
 
 		<div class="flex flex-col gap-xs">
 			<h2 class="text-sm font-semibold text-slate-900">{t('go.install.heading')}</h2>

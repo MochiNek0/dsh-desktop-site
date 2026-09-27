@@ -38,7 +38,36 @@ export const LATEST_VERSION = releaseData.version;
 	而旧数据里没有 publishedAt。声明成可选字段让缺失走类型系统，
 	而不是在运行时变成字符串 "undefined" 混进 sitemap。
 */
-const releaseMeta = releaseData as typeof releaseData & { publishedAt?: string };
+const releaseMeta = releaseData as typeof releaseData & {
+	publishedAt?: string;
+	preview?: { version: string; tag: string; publishedAt: string } | null;
+	license?: { spdx: string; tag: string } | null;
+};
+
+/**
+ * 比正式版更新的测试版；没有就是 null。
+ *
+ * 只给首屏徽标用，下载按钮永远指正式版 —— 测试版不走应用内更新，
+ * 推给普通访客等于让他们装一个之后不会自动升级的版本。
+ */
+export const PREVIEW = releaseMeta.preview ?? null;
+
+/**
+ * 正式版所用的许可证（SPDX 标识，如 MIT、AGPL-3.0），由同步脚本按正式版 tag 取。
+ * 链接也指向那个 tag 下的 LICENSE —— main 上的可能已经换了，和访客下到的包对不上。
+ * 旧数据里没有这个字段时退回 MIT（0.1.19 及以前的许可证）。
+ */
+/**
+ * 手机连接是否已进正式版（0.1.20 起）。首页的「测试版」徽标、/go 顶上的提示都看它 ——
+ * 正式版一同步过来就自动切换，不用人记得去改文案。
+ */
+export const PHONE_STABLE = (() => {
+	const [a = 0, b = 0, c = 0] = LATEST_VERSION.split('.').map(Number);
+	return a * 1e6 + b * 1e3 + c >= 1020;
+})();
+
+export const LICENSE = releaseMeta.license ?? { spdx: 'MIT', tag: releaseData.tag };
+export const LICENSE_URL = `${REPO_URL}/blob/${LICENSE.tag}/LICENSE`;
 
 /**
  * 最新正式版的发布时间（ISO 8601），取自 GitHub 的 published_at。

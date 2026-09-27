@@ -1,4 +1,4 @@
-# 应用仓库（MochiNek0/dsh-desktop）发布正式 release 时，由那边
+# 应用仓库（MochiNek0/dsh-desktop）发布 release（正式版或测试版）时，由那边
 # repository_dispatch 打过来，这里重新同步 release-data.json 并提交。
 #
 # 提交本身就是部署触发器：Workers Builds 监听 push，所以站上的版本号、
@@ -48,16 +48,18 @@ jobs:
       - name: 同步
         id: sync
         run: |
-          before=$(node -p "require('./src/lib/release-data.json').version")
+          # 正式版号 + 测试版 tag：发测试版也要重建一次，首屏徽标才会换
+          key='const d = require("./src/lib/release-data.json"); `${d.version} ${d.preview?.tag ?? "-"}`'
+          before=$(node -p "$key")
           node scripts/sync-release.mjs
-          after=$(node -p "require('./src/lib/release-data.json').version")
+          after=$(node -p "$key")
           echo "before=$before" >> "$GITHUB_OUTPUT"
           echo "after=$after" >> "$GITHUB_OUTPUT"
         env:
           # 自动注入的 token，读公开仓库足够，顺带把限流从 60/时提到 1000/时
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 这里比的是版本号，而不是像「汇总下载量」那样用 git diff --quiet：
+      # 这里比的是版本号（正式版 + 测试版 tag），而不是像「汇总下载量」那样用 git diff --quiet：
       # release-data.json 里的 fetchedAt 每次同步都在动，文件必然有差异，
       # 用 diff 判断会在每次手动重跑时都产生一次空提交（以及一次白跑的部署）。
       # 下载量的变化交给每日汇总那条，这条只管「版本变了」。

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { i18n } from "$lib/i18n.svelte";
+    import { i18n, pathForLang } from "$lib/i18n.svelte";
     import { detectOs } from "$lib/os";
     import {
         assetSize,
@@ -145,8 +145,7 @@
         $effect 会追踪同步执行期间读到的每一个 $state —— 而 runAutoRace 的
         同步段就读了 raceState / userLocked，然后立刻写回它们。
         effect 写自己的依赖 = 自我失效 = 无限重跑，Svelte 抛
-        effect_update_depth_exceeded，整个客户端 bootstrap 当场挂掉
-        （连带 motion.ts 不再初始化，全站 GSAP 入场动画一起消失）。
+        effect_update_depth_exceeded，整个客户端 bootstrap 当场挂掉。
 
         onMount 不建立任何依赖追踪，读写自由，且语义上也更准确：
         探测系统、读 localStorage、起一次测速，都只该发生一次。
@@ -590,43 +589,11 @@
     </div>
 {/snippet}
 
-<section
-    id="download"
-    class="blob-scene section-x section-cool relative scroll-mt-20 overflow-hidden"
->
-    <!--
-        色相光斑：区块之间改用「冷暖」而不是「深浅」来区分。
-
-        这里不能照抄 hero 的 -z-10 —— hero 自身没有底色，负层级压在 body 上正好；
-        本区块有 section-tint 这层底色，-z-10 的光斑会被自己的底色盖掉。
-        改成「光斑与内容都是定位元素」：同为 z-index:auto 时按 DOM 顺序绘制，
-        光斑在前、内容在后，内容自然压在上面（所以下面那层要带 relative）。
-    -->
-    <div
-        class="blob-drift pointer-events-none absolute -top-24 -right-32 h-120 w-160 rounded-full bg-brand-300/40 blur-[80px] [--drift:-36%]"
-        aria-hidden="true"
-    ></div>
-
-    <!-- 点阵：治「平」，不引入新颜色。自带遮罩淡出，见 app.css -->
-    <div
-        class="layer-dots pointer-events-none absolute inset-0 text-brand-400/25"
-        aria-hidden="true"
-    ></div>
-
-    <div class="relative container-page stack-section">
-        <div class="stack-heading">
-            {#key i18n.lang}
-                <!-- 同首页标题：被 SplitText 拆过之后只能整块重建，见 +page.svelte 里的说明 -->
-                <h2
-                    data-split
-                    class="text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl"
-                >
-                    {t("dl.heading")}
-                </h2>
-            {/key}
-            <p class="text-base/relaxed text-slate-600 sm:text-lg/relaxed">
-                {t("dl.sub")}
-            </p>
+<section id="download" class="section-x scroll-mt-20">
+    <div class="container-page stack-section">
+        <div data-reveal class="stack-heading">
+            <h2 class="heading-2">{t("dl.heading")}</h2>
+            <p class="lede">{t("dl.sub")}</p>
         </div>
 
         <!--
@@ -644,8 +611,8 @@
               · 主侧之间一条竖 hairline、侧栏两行一条横 hairline，
                 层级仍由留白 + 底色 + hairline 表达，不套边框
         -->
-        <!-- data-dl-card：入场只做位移不做透明度，下载按钮全程可点（motion.ts 约束 B） -->
-        <div data-dl-card class="card elev-2 overflow-hidden">
+        <!-- 下载卡片不参与入场动画：这是下载站，下载按钮不该有任何一帧是看不见的 -->
+        <div class="card elev-2 overflow-hidden">
             <!--
 				下载源：每个源是一颗带状态点的胶囊按钮而不是纯文字 tab ——
 				状态点（转圈/绿/黄/灰/红）让"正在测速 / 谁更快 / 谁选不了"
@@ -654,7 +621,6 @@
 				这是让切换意图变得显眼的关键——之前唯一的反馈只有文字变粗。
 			-->
             <div
-                data-dl-bar
                 class="flex flex-col gap-sm border-b border-line bg-paper-100/70 px-md py-sm sm:px-lg sm:py-md"
             >
                 <div
@@ -950,7 +916,6 @@
 
         <!-- 用户交流群入口 -->
         <div
-            data-dl-meta
             class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md rounded-2xl border border-line bg-paper-100/70 p-md sm:px-lg sm:py-3.5"
         >
             <div class="flex items-center gap-sm">
@@ -981,7 +946,6 @@
 
         <!-- 版本信息与全部资产 -->
         <div
-            data-dl-meta
             class="flex flex-wrap items-center justify-between gap-sm text-sm text-slate-500"
         >
             <!-- 版本与下载量是同一类「元信息」，收成左侧一簇，右侧留给全部资产链接 -->
@@ -1031,19 +995,32 @@
                 -->
 
             </span>
-            <a
-                href="{REPO_URL}/releases/latest"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="group inline-flex items-center gap-1.5 font-medium text-slate-600 hover:text-brand-700"
-            >
-                {t("dl.allAssets")}
-                <Icon
-                    name="arrow"
-                    size={14}
-                    cls="transition-transform group-hover:translate-x-0.5"
-                />
-            </a>
+            <!-- 安装指引从首页搬进了文档，入口挂在这里：下完安装包紧接着就是装 -->
+            <span class="flex flex-wrap items-center gap-x-lg gap-y-2xs">
+                <a
+                    href="{pathForLang(i18n.lang)}docs/install/"
+                    class="group inline-flex items-center gap-1.5 font-medium text-slate-600 hover:text-brand-700"
+                >
+                    {t("dl.installHelp")}
+                    <Icon
+                        name="arrow"
+                        size={14}
+                        cls="transition-transform group-hover:translate-x-0.5"
+                    />
+                </a>
+                <a
+                    href="{REPO_URL}/releases/latest"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="group inline-flex items-center gap-1.5 font-medium text-slate-600 hover:text-brand-700"
+                >
+                    {t("dl.allAssets")}
+                    <Icon
+                        name="external"
+                        size={13}
+                    />
+                </a>
+            </span>
         </div>
     </div>
 </section>

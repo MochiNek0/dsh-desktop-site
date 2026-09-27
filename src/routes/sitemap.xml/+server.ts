@@ -1,5 +1,5 @@
-import { htmlLang, LANGS, pathForLang } from '$lib/i18n.svelte';
-import { posts } from '$lib/posts';
+import { docsFor, langsOf } from '$lib/docs';
+import { htmlLang, LANGS, pathForLang, type Lang } from '$lib/i18n.svelte';
 import { RELEASE_DATE } from '$lib/releases';
 import { ORIGIN } from '$lib/site';
 
@@ -23,57 +23,46 @@ export const prerender = true;
  */
 export const trailingSlash = 'never';
 
-/** 每条 <url> 都要列出全部语言版本（含自己）+ x-default，缺一边就是无效标注。 */
-const alternates = [
-	...LANGS.map((l) => ({ hreflang: htmlLang(l), href: `${ORIGIN}${pathForLang(l)}` })),
-	{ hreflang: 'x-default', href: `${ORIGIN}/` }
-];
-
-function urlEntry(path: string): string {
-	const links = alternates
-		.map((a) => `\t\t<xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${a.href}" />`)
-		.join('\n');
-
-	// RELEASE_DATE 缺失时整行不输出，而不是输出一个空的 <lastmod>
-	const lastmod = RELEASE_DATE ? `\n\t\t<lastmod>${RELEASE_DATE}</lastmod>` : '';
-
-	return `\t<url>
-\t\t<loc>${ORIGIN}${path}</loc>
-${links}${lastmod}
-\t</url>`;
-}
-
 /**
- * 单语页面（博客）用的条目：不带 hreflang。
- *
- * 博客只有中文一份，而 hreflang 的语义是「同一内容的其它语言版本在哪」——
- * 只有一个版本时整组标注没有意义，硬写一条指向自己反而会和首页那组打架。
+ * 一条 <url>。hreflang 要列出**这一页真实存在的全部**语言版本（含自己）+ x-default，
+ * 缺一边就是无效标注；只有一个版本时整组不写 —— 单个版本的 hreflang 没有意义。
  */
-function soloEntry(path: string, lastmod?: string): string {
+function urlEntry(pathFor: (l: Lang) => string, langs: Lang[], self: Lang, lastmod?: string): string {
+	const links =
+		langs.length > 1
+			? [
+					...langs.map((l) => ({ hreflang: htmlLang(l), href: `${ORIGIN}${pathFor(l)}` })),
+					{ hreflang: 'x-default', href: `${ORIGIN}${pathFor(langs[0])}` }
+				]
+					.map((a) => `\n\t\t<xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${a.href}" />`)
+					.join('')
+			: '';
+
+	// lastmod 缺失时整行不输出，而不是输出一个空的 <lastmod>
 	const mod = lastmod ? `\n\t\t<lastmod>${lastmod}</lastmod>` : '';
 
-	return `\t<url>
-\t\t<loc>${ORIGIN}${path}</loc>${mod}
-\t</url>`;
+	return `\t<url>\n\t\t<loc>${ORIGIN}${pathFor(self)}</loc>${links}${mod}\n\t</url>`;
 }
 
 export function GET() {
 	/*
-		博客列表页的 lastmod 取最新一篇的日期 —— 列表页的内容就是这些文章，
-		最新一篇没变，列表页也就没变。posts 已按日期倒序。
+		文档页不写 lastmod：文档没有可信的修改日期（构建时间每次部署都在变，
+		拿它顶替会让搜索引擎判定这个站的日期不可信，进而忽略全部 lastmod）。
 	*/
-	const blog = [
-		soloEntry('/blog/', posts[0]?.date),
-		...posts.map((post) => soloEntry(`/blog/${post.slug}/`, post.date))
-	];
+	const pages = LANGS.flatMap((self) => [
+		urlEntry(pathForLang, LANGS, self, RELEASE_DATE),
+		urlEntry((l) => `${pathForLang(l)}docs/`, LANGS, self),
+		...docsFor(self).map((doc) =>
+			urlEntry((l) => `${pathForLang(l)}docs/${doc.slug}/`, langsOf(doc.slug), self)
+		)
+	]);
 
 	const body = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset
-\txmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-\txmlns:xhtml="http://www.w3.org/1999/xhtml"
+	xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+	xmlns:xhtml="http://www.w3.org/1999/xhtml"
 >
-${LANGS.map((l) => urlEntry(pathForLang(l))).join('\n')}
-${blog.join('\n')}
+${pages.join('\n')}
 </urlset>
 `;
 

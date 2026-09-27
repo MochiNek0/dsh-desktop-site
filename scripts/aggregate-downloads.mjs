@@ -45,7 +45,7 @@ const SITE = process.env.SITE_ORIGIN || 'https://dsh-desktop.cc.cd';
  * 把它从这个数组里删掉，总量会相应上调。
  * 'direct' 必须永远留着 —— 那本来就是直连 GitHub。
  */
-const PASS_THROUGH = ['direct', 'ghproxy', 'ghproxycom', 'ghfast', 'llkk'];
+const PASS_THROUGH = ['direct', 'ghproxy', 'ghproxycom', 'ghproxyorg', 'ghfast', 'llkk'];
 
 /** windows 只留最近这么多条，够画趋势又不会让文件无限长 */
 const KEEP_WINDOWS = 90;

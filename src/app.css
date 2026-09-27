@@ -140,7 +140,7 @@
         0 24px 40px -12px rgb(51 51 51 / 0.12);
     --edge-light: inset 0 1px 0 rgb(255 255 255 / 0.9);
 
-    /* GSAP 与 CSS 共用的缓动：出场用 expo-out 的近似 */
+    /* 全站共用的缓动：出场用 expo-out 的近似 */
     --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -236,70 +236,46 @@ button:not(:disabled),
       滚动驱动动画的进度来自滚动位置而不是时间，
       上面那条 animation-duration 对它完全无效，必须显式关掉。
     */
-    .blob-drift,
+    [data-reveal],
     [data-shot] {
         animation: none !important;
     }
 }
 
 /*
-  SplitText 行遮罩。
-  mask:'lines' 会给每行套一层 overflow:hidden 的父元素，
-  字才能从"行的下沿"升上来。这里补上 GSAP 不负责的排版细节：
+  ── 区块入场：CSS 滚动驱动，不走 JS ──────────────────────────
 
-  - 行内下降部（g/y/p 的尾巴）会被 overflow 裁掉，所以给一点下内边距，
-    再用等量负 margin 抵消掉多出来的行高，视觉位置不变。
+  原来这一层是 GSAP（SplitText 逐字拆标题、ScrollTrigger 逐卡触发、特性区 pin），
+  约 44KB gzip，初始化还要做近 1 秒的强制同步布局，只能等首屏画完再跑 ——
+  于是首屏之内的动效总是晚一拍，改了几轮都消不掉那一下「跳」。
+  现在整条换成 view() 滚动时间线：零 JS、在合成器上跑、首帧就是对的。
+
+  用法：给元素挂 data-reveal；同一行里想错开，就在行内写 --i（0, 1, 2…），
+  每级把区间整体往后推 4vh。
+
+  区间用**长度**而不是百分比：cover 的百分比按「视口高 + 元素高」折算，
+  元素一高（整块卡片列），入场就拖到它顶边已经滑出视口之后才走完，
+  上半截一直是半透明的。写成「顶边进入视口后再走 28vh」，多高的元素都一样。
+
+  ⚠ 挂 data-reveal 的元素，**祖先上不能有 overflow-hidden**：
+  overflow:hidden 本身就构成滚动容器，view() 会去量那个永远不滚的盒子，
+  进度恒定不动 —— 元素就一直停在 opacity 0。（首屏截图的 shot-flip 踩过同一个坑。）
+
+  不支持 animation-timeline 的浏览器（Firefox）：整条不生效 = 内容原样可见。
 */
-.split-line {
-    padding-bottom: 0.12em;
-    margin-bottom: -0.12em;
+@supports (animation-timeline: view()) {
+    [data-reveal] {
+        animation: reveal linear both;
+        animation-timeline: view();
+        animation-range: cover calc(var(--i, 0) * 4vh) cover
+            calc(28vh + var(--i, 0) * 4vh);
+    }
 }
 
-/*
-  ── 背景光斑视差：CSS 滚动驱动，不走 JS ──────────────────────
-
-  原来这个效果是 ScrollTrigger 的 scrub + pointermove 两条 JS 通道，
-  也就是**主线程每帧写一次 transform**。换掉的直接原因是 CLS：
-
-  Chrome 只把「合成器上跑的位移」排除在 layout shift 之外。截图那个元素
-  之所以不计分，是因为 motion.ts 给它显式设了 will-change:transform，
-  提升成了独立合成层；光斑没有，于是每帧都在主线程重绘 —— 而它宽 70rem、
-  带 130px 模糊，单个元素就吃掉了 0.106 的 CLS，占全站的 99%。
-
-  改成 animation-timeline 之后整条动画在合成器上跑：CLS 归零，主线程每帧
-  零成本，那层 130px 模糊也只需要光栅化一次而不是每帧一次。
-
-  ── 为什么时间线要挂在 section 上而不是光斑自己身上 ──────────
-  view() 取的是**最近的滚动容器**，而这些 section 都带 overflow-hidden ——
-  overflow:hidden 本身就构成滚动容器，光斑直接写 view() 会去量一个永远
-  不滚动的盒子，进度恒定不动。把时间线具名挂在 section 上，section 的
-  最近滚动容器才是文档本身；具名时间线对后代可见，光斑引用即可。
-
-  不支持 animation-timeline 的浏览器：整条 animation 不生效 = 光斑静止。
-  这正是想要的降级方向。
-*/
-@utility blob-scene {
-    view-timeline-name: --blob-scene;
-}
-
-@utility blob-drift {
-    /*
-      不写 animation-range：默认的 normal 就是 cover 0% → cover 100%，
-      即「区块前缘刚进视口 → 区块完全离开视口」，和原来 ScrollTrigger 的
-      start:'top bottom' → end:'bottom top' 是同一段区间。
-      （写成等价的 `entry 0% exit 100%` 会被 lightningcss 压成
-      `entry exit 0%` —— 那是另一个意思，别写。）
-    */
-    animation: blob-drift linear both;
-    animation-timeline: --blob-scene;
-    /* 显式提升成合成层：这一条才是 CLS 归零的关键，见上面的说明 */
-    will-change: translate;
-}
-
-@keyframes blob-drift {
-    /* 起点就是元素本来的位置，只写终点 */
-    to {
-        translate: 0 var(--drift, -30%);
+@keyframes reveal {
+    from {
+        opacity: 0;
+        translate: 0 24px;
     }
 }
 
@@ -318,25 +294,27 @@ button:not(:disabled),
 
 @keyframes mirror-pulse {
     0% {
-        box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-brand-500) 45%, transparent);
+        box-shadow: 0 0 0 0
+            color-mix(in oklab, var(--color-brand-500) 45%, transparent);
     }
     70% {
-        box-shadow: 0 0 0 6px color-mix(in oklab, var(--color-brand-500) 0%, transparent);
+        box-shadow: 0 0 0 6px
+            color-mix(in oklab, var(--color-brand-500) 0%, transparent);
     }
     100% {
-        box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-brand-500) 0%, transparent);
+        box-shadow: 0 0 0 0
+            color-mix(in oklab, var(--color-brand-500) 0%, transparent);
     }
 }
 
 /*
   ── 首屏标题入场 ────────────────────────────────────────────
 
-  首屏的标题不参与 SplitText 的逐字入场，改用这个。两个原因：
+  首屏之内的元素不能用上面的 data-reveal：它们一开始就在视口里，滚动进度
+  不从 0 起，入场会停在半截。所以首屏用**时间**驱动的这一条，按 animation-delay 错开。
 
-  1. 动效初始化被推迟到首屏绘制之后（见 +page.svelte 里的说明）。
-     那时首屏标题用户已经看了一秒，再藏起来重播一遍入场是「闪一下」。
-  2. 这条是纯 CSS：跟着首屏一起播，不依赖 JS，也不占主线程 ——
-     translate/opacity 都在合成器上，和 LCP 不抢资源。
+  纯 CSS：跟着首屏一起播，不依赖 JS，也不占主线程 ——
+  translate/opacity 都在合成器上，和 LCP 不抢资源。
 
   用 both + 只写 from：终点就是元素自身的自然状态，不用重复声明。
   reduced-motion 下上面那条 animation-duration:0.001ms 会让它
@@ -356,13 +334,13 @@ button:not(:disabled),
 /*
   ── 首屏截图 3D 透视翻转：CSS 滚动驱动，不走 JS ────────────────
 
-  和光斑一样是滚动驱动，但这里还多一条更硬的理由：**首帧就必须是倾斜的**。
+  滚动驱动还有一条更硬的理由：**首帧就必须是倾斜的**。
 
   这个效果的进度取自滚动位置，而截图在桌面和手机上都落在首屏之内 ——
-  页面刚画出来时，它就该已经倾斜到区间中段了。可 JS 给不出这一帧：GSAP 是
-  动态 import 的，初始化还被推迟到 LCP 之后（见 after-paint.ts），于是用户
-  先看到一张端正的截图，几百毫秒后它才被压成倾斜态。那一下"跳"不是 JS
-  哪里写错了，是时机上根本追不上首帧 —— 只有静态 CSS 追得上。
+  页面刚画出来时，它就该已经倾斜到区间中段了。当年用 GSAP 做时，JS 是
+  动态 import、还被推迟到 LCP 之后才初始化的，于是用户先看到一张端正的截图，
+  几百毫秒后它才被压成倾斜态。那一下"跳"是时机上根本追不上首帧 ——
+  只有静态 CSS 追得上。
 
   区间与原来的 ScrollTrigger 一一对应。cover 的起点 = 截图上沿刚贴住视口
   下沿，所以从那里再滚多少 vh，上沿就落在视口的哪个位置：
@@ -410,7 +388,7 @@ button:not(:disabled),
 
 @keyframes shot-flip {
     from {
-        transform: translateY(40px) rotateX(26deg) scale(0.9);
+        transform: translateY(24px) rotateX(14deg) scale(0.94);
     }
 }
 
@@ -480,9 +458,9 @@ button:not(:disabled),
   lg 下视口需 ≥ 1240 + 200 = 1440px 才能让内容真正跑满 1240px。
 */
 @utility section-x {
-    padding: var(--spacing-6xl) var(--spacing-lg);
+    padding: var(--spacing-5xl) var(--spacing-lg);
     @variant lg {
-        padding: var(--spacing-8xl) 100px;
+        padding: var(--spacing-6xl) 100px;
     }
 }
 
@@ -522,6 +500,35 @@ button:not(:disabled),
     gap: var(--spacing-sm);
     @variant sm {
         gap: var(--spacing-md);
+    }
+}
+
+/*
+  区块标题与导语。首页每一节都用同一对，字号层级才立得住 ——
+  原来各节各写一串 text-2xl sm:text-4xl，改一处漏一处。
+  中文在 3rem 以上会显得臃肿，所以大屏只到 2.75rem，字重也停在 600。
+*/
+@utility heading-2 {
+    font-size: 1.875rem;
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: var(--color-slate-900);
+    text-wrap: balance;
+    @variant sm {
+        font-size: 2.75rem;
+        line-height: 1.12;
+    }
+}
+
+@utility lede {
+    max-width: 40rem;
+    font-size: 1rem;
+    line-height: 1.75;
+    color: var(--color-slate-500);
+    text-wrap: pretty;
+    @variant sm {
+        font-size: 1.125rem;
     }
 }
 
@@ -567,98 +574,3 @@ button:not(:disabled),
         max-width: 1240px;
     }
 }
-
-/*
-  ── 页面底色系统 ────────────────────────────────────────────
-  第一版的教训，用数字说：paper-200 对 paper-100 只差 7/255（2.7%），
-  光斑 20% 透明度再摊进 120px 模糊，峰值不到 15/255。
-  全都压在肉眼分辨阈值上下 —— 等于把「白灰条纹」换成了「什么都没有」。
-
-  这版三个变量一起动：
-
-    1. 色带不用中性灰，直接用图标里的两个色相。
-       同样的明度差，**有色相**的一片比灰的一片好认得多，
-       而且色带本身是斜向渐变（冷 → 暖或暖 → 冷），
-       一块区域内部就有明暗走向，不是一块死板的平铺。
-
-    2. 光斑降模糊、提浓度 —— 让它真的像一片光，而不是一层雾。
-
-    3. 补一层点阵纹理。它不引入新颜色，治的是「平」：
-       大面积纯色最容易显廉价，有极细的规律纹理就立刻有"材质"。
-
-  上下缘的渐隐由**盖在上面**的一层 paper-100 渐变负责：
-  首层不透明 → 透明 → 不透明，把主体色带的两端吃掉，
-  于是区块之间不再有一条可指认的硬边，也不必再挂 border-line。
-*/
-
-/* 冷色带：偏蓝紫，用在下载区 */
-@utility section-cool {
-    background-image:
-        linear-gradient(
-            to bottom,
-            var(--color-paper-100) 0%,
-            transparent 15%,
-            transparent 85%,
-            var(--color-paper-100) 100%
-        ),
-        linear-gradient(
-            135deg,
-            var(--color-brand-100) 0%,
-            var(--color-brand-50) 55%,
-            var(--color-brand-50) 100%
-        );
-}
-
-/*
-  中性带：用在插件区。
-
-  这里原来是一整片粉 —— 但 accent 在本站的定位是「唯一的暖色，做强调与渐变收尾」，
-  拿它铺满一屏是违反配色规则本身。改用调色板里带紫的中性档 paper-300：
-  与底色差 17/255（原来的 paper-200 只有 7），够看得见，又不引入第二个色相。
-  这一屏的暖意只剩标记里那一团很小的 accent 光斑 —— 那才是「点缀」该有的量。
-*/
-@utility section-quiet {
-    background-image:
-        linear-gradient(
-            to bottom,
-            var(--color-paper-100) 0%,
-            transparent 15%,
-            transparent 85%,
-            var(--color-paper-100) 100%
-        ),
-        linear-gradient(
-            to bottom left,
-            var(--color-paper-100) 0%,
-            var(--color-paper-300) 55%,
-            var(--color-paper-300) 100%
-        );
-}
-
-/*
-  点阵纹理层。
-
-  自己带遮罩从中心往外淡出：不淡的话，点阵会在区块边缘被整齐切断，
-  露出一条比 border-line 还刺眼的马赛克边。
-
-  尺寸/颜色都刻意压到很低 —— 它应该是"看不出来但拿掉就觉得空"的那种存在，
-  能一眼看清就是过头了。
-*/
-@utility layer-dots {
-    background-image: radial-gradient(
-        circle at 1px 1px,
-        currentColor 1px,
-        transparent 0
-    );
-    background-size: 26px 26px;
-    -webkit-mask-image: radial-gradient(
-        ellipse 72% 58% at 50% 42%,
-        #000 0%,
-        transparent 76%
-    );
-    mask-image: radial-gradient(
-        ellipse 72% 58% at 50% 42%,
-        #000 0%,
-        transparent 76%
-    );
-}
-

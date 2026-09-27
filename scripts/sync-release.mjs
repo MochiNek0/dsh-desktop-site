@@ -53,9 +53,9 @@ function keepExisting(why) {
 	);
 }
 
-async function fetchReleases() {
+async function gh(path) {
 	const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
-	const res = await fetch(`https://api.github.com/repos/${REPO}/releases?per_page=100`, {
+	const res = await fetch(`https://api.github.com/repos/${REPO}${path}`, {
 		headers: {
 			accept: 'application/vnd.github+json',
 			'user-agent': 'dsh-desktop-site-build',
@@ -70,6 +70,23 @@ async function fetchReleases() {
 		throw new Error(`GitHub API 返回 ${res.status}${hint}`);
 	}
 	return res.json();
+}
+
+const fetchReleases = () => gh('/releases?per_page=100');
+
+/*
+	许可证按**正式版 tag** 取，而不是 main 分支：应用从 0.1.20 测试版起换了许可证，
+	main 上已经是新的，但访客从站上下载到的仍是正式版 —— 站上写的得和那个包一致。
+	正式版一发，这里自然跟着变。取不到就沿用上一次的，再没有就不写。
+*/
+async function fetchLicense(tag, previous) {
+	try {
+		const { license } = await gh(`/license?ref=${encodeURIComponent(tag)}`);
+		if (license?.spdx_id && license.spdx_id !== 'NOASSERTION') return { spdx: license.spdx_id, tag };
+	} catch (err) {
+		console.warn(`[sync-release] 取许可证失败：${err.message}`);
+	}
+	return previous ?? null;
 }
 
 async function main() {
@@ -129,9 +146,23 @@ async function main() {
 		}
 	}
 
+	/*
+		比正式版更新的测试版，给首屏徽标用（「vX 测试版已发布」）。
+
+		只认发布时间晚于正式版的那个：正式版一追上来，旧测试版就不再是「新东西」，
+		这里自然回到 null，徽标退回正式版的更新说明 —— 不用人记得去删。
+		API 按创建时间倒序返回，所以 find 拿到的就是最新的那个。
+	*/
+	const pre = releases.find(
+		(r) => !r.draft && r.prerelease && Date.parse(r.published_at) > Date.parse(latest.published_at)
+	);
+
 	const data = {
 		version: String(latest.tag_name).replace(/^v/, ''),
 		tag: latest.tag_name,
+		preview: pre
+			? { version: String(pre.tag_name).replace(/^v/, ''), tag: pre.tag_name, publishedAt: pre.published_at }
+			: null,
 
 		/*
 			Release 的实际发布时间（GitHub 的 published_at）。
@@ -143,6 +174,7 @@ async function main() {
 			所以 lastmod 和结构化数据的 datePublished 都取这个值。
 		*/
 		publishedAt: latest.published_at,
+		license: await fetchLicense(latest.tag_name, previous?.license),
 		totalDownloads,
 		assets,
 		fetchedAt: new Date().toISOString()

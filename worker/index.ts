@@ -37,7 +37,7 @@ interface Env {
 }
 
 /** 必须和 src/lib/releases.ts 里的 MirrorId 一致 */
-const MIRROR_IDS = new Set(['ghproxy', 'ghproxycom', 'ghfast', 'llkk', 'direct']);
+const MIRROR_IDS = new Set(['ghproxy', 'ghproxycom', 'ghproxyorg', 'ghfast', 'llkk', 'direct']);
 
 /** 资产名形如 dsh-desktop_0.1.10_x64-setup.exe */
 const FILE_RE = /^[A-Za-z0-9._-]{1,120}$/;
@@ -319,6 +319,15 @@ export default {
 		if (pathname === '/api/click') return handleClick(request, env, ctx);
 		if (pathname === '/api/visit') return handleVisit(request, env, ctx);
 		if (pathname === '/api/daily') return handleDaily(request, env);
+
+		/*
+			博客已经换成了文档。旧链接（含单篇文章）一律 301 到文档首页，
+			不留死链 —— 那两篇讲的是本站自己的实现，文档里没有一一对应的页面。
+			静态资源里已经没有 /blog 了，所以请求一定会落到 Worker 这里。
+		*/
+		if (pathname === '/blog' || pathname.startsWith('/blog/')) {
+			return Response.redirect(new URL('/docs/', request.url).toString(), 301);
+		}
 		// 其余一律交回静态资源；未命中时由 not_found_handling 出 404.html
 		return env.ASSETS.fetch(request);
 	}

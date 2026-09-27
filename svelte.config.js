@@ -3,7 +3,7 @@ import { mdsvex } from 'mdsvex';
 import { createHighlighter } from 'shiki';
 
 /*
-	博客正文里出现的语言。写死一张表而不是用 shiki 的全量包：
+	文档正文里出现的语言。写死一张表而不是用 shiki 的全量包：
 	全量包会把 200 多种语法一起拉进构建，而这里只需要这几种。
 	表外的语言不会报错，走下面的 plaintext 兜底。
 
@@ -60,7 +60,7 @@ const mdsvexOptions = {
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	// .md 也当成组件编译，博客正文就是这么进路由的
+	// .md 也当成组件编译，文档正文就是这么进路由的
 	extensions: ['.svelte', '.md'],
 	preprocess: [mdsvex(mdsvexOptions)],
 	kit: {
@@ -81,15 +81,16 @@ const config = {
 			绝大多数访客只看一个页面，跨页复用根本用不上。
 
 			阈值按**单个文件**比较，超过就静默退回外链。
-			当前共享的 0.*.css 是 41447，博客正文的路由 chunk 是 2232，
-			也就是只剩 3.5KB 余量；CSS 涨过这个数就要么调大，要么就是该瘦身了。
+			当前共享的 0.*.css 是 43633，文档正文的路由 chunk 是 2633。
+			阈值从 45000 调到 60000 留出 ~16KB 余量（内联进每页 HTML，gzip 后多几 KB，
+			换来的是少一趟阻塞渲染的往返）；再涨过这个数就该先瘦身，而不是继续调大。
 
-			博客的排版样式因此一律写在 /blog 路由自己的 <style> 里（Svelte 作用域
+			文档的排版样式因此一律写在 docs/[slug] 路由自己的 <style> 里（Svelte 作用域
 			样式会进独立的路由 chunk），不进 app.css。注意 Tailwind v4 是单文件输出，
-			在博客组件里用**新的** Tailwind 类同样会长进上面这个文件 —— 复用已有的类
+			在文档组件里用**新的** Tailwind 类同样会长进上面这个文件 —— 复用已有的类
 			不要钱，新加的要钱。
 		*/
-		inlineStyleThreshold: 45000,
+		inlineStyleThreshold: 60000,
 		adapter: adapter({
 			pages: 'build',
 			assets: 'build',
