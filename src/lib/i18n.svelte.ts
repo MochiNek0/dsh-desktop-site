@@ -41,6 +41,8 @@ const zh: Dict = {
     "启动时自动在后台拉起本地 dsh web 并嵌入原生窗口。无需开终端、无需管理端口，会话、凭证与配置与 CLI 完全共享。",
   "hero.cta": "免费下载",
   "hero.cta2": "在 GitHub 上查看",
+  "hero.alsoOfficialPrompt": "也在寻找官方版本？",
+  "hero.alsoOfficialLink": "体验 DeepSeek Harness 官方桌面端",
   "hero.version": "最新版本",
   "hero.stat.downloads": "累计下载",
   "hero.stat.visitors": "访问人数",
@@ -124,6 +126,11 @@ const zh: Dict = {
   "dl.allAssets": "查看全部安装包与更新日志",
   "dl.groupPrompt": "遇到安装或使用问题？欢迎加入用户交流群探讨",
   "dl.installHelp": "安装指引",
+  "dl.official.badge": "官方版本",
+  "dl.official.title": "你也可以体验 DeepSeek Harness 官方桌面端",
+  "dl.official.desc":
+    "DeepSeek 现已正式推出官方桌面客户端。如需原厂桌面体验，欢迎前往官网下载。",
+  "dl.official.cta": "前往官方下载",
 
   // 与 formatCount 拼成「本站总共访问人数 3,289」。
   // 口径是**人数**：按浏览器里的一个随机标识去重，
@@ -189,6 +196,8 @@ const zh: Dict = {
   "cta.heading": "现在开始",
   "cta.sub": "下载安装包，双击打开，剩下的它自己搞定。",
   "cta.button": "下载最新版",
+  "cta.alsoOfficialPrompt": "寻找官方版本？",
+  "cta.alsoOfficialLink": "体验 DeepSeek Harness 官方桌面端",
 
   // ── 文档 ──
   "docs.title": "文档",
@@ -288,6 +297,7 @@ const zh: Dict = {
   "foot.releases": "版本发布",
   "foot.issues": "反馈问题",
   "foot.upstream": "DeepSeek Harness",
+  "foot.officialDesktop": "官方桌面端",
   "foot.market": "DSH Market 插件市场",
   "foot.license": "{license} 许可证",
   "foot.readme": "GitHub README",
@@ -317,6 +327,8 @@ const en: Dict = {
     "Launches the local dsh web service in the background on startup and embeds it in a native desktop window. No terminal, no port management — sessions and config are shared with the CLI.",
   "hero.cta": "Download free",
   "hero.cta2": "View on GitHub",
+  "hero.alsoOfficialPrompt": "Looking for the official app?",
+  "hero.alsoOfficialLink": "Try DeepSeek Harness Official Desktop",
   "hero.version": "Latest version",
   "hero.preview": "{version} pre-release is out · Try it early",
   "hero.released": "v{version} is out · What’s new",
@@ -399,6 +411,11 @@ const en: Dict = {
   "dl.allAssets": "All installers and release notes",
   "dl.groupPrompt": "Need help with setup or usage? Join our user community group",
   "dl.installHelp": "Installation guide",
+  "dl.official.badge": "Official Release",
+  "dl.official.title": "Also try the official DeepSeek Harness desktop app",
+  "dl.official.desc":
+    "DeepSeek has officially launched its desktop client. If you prefer the official edition, you can download it directly from the official website.",
+  "dl.official.cta": "Get Official Desktop",
 
   "visitors.label": "visitors so far",
   "visitors.order": "count-first",
@@ -459,6 +476,8 @@ const en: Dict = {
   "cta.heading": "Get started",
   "cta.sub": "Download the installer, double-click, and it handles the rest.",
   "cta.button": "Download latest",
+  "cta.alsoOfficialPrompt": "Looking for the official release?",
+  "cta.alsoOfficialLink": "Try DeepSeek Harness Official Desktop",
 
   "docs.title": "Docs",
   "docs.desc": "Installation, phone connection, plugins, and FAQ.",
@@ -557,6 +576,7 @@ const en: Dict = {
   "foot.releases": "Releases",
   "foot.issues": "Report an issue",
   "foot.upstream": "DeepSeek Harness",
+  "foot.officialDesktop": "Official Desktop",
   "foot.market": "DSH Market",
   "foot.license": "{license} License",
   "foot.readme": "README",

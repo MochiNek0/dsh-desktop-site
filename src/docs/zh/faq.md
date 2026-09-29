@@ -6,7 +6,7 @@ order: 4
 
 ## dsh desktop 是 DeepSeek 官方产品吗？
 
-不是。本项目是基于 DeepSeek Harness 开发的第三方开源桌面客户端，与 DeepSeek 官方没有隶属或合作关系，代码在 GitHub 完全开源。
+不是。本项目是基于 DeepSeek Harness 开发的第三方开源桌面客户端，与 DeepSeek 官方没有隶属或合作关系，代码在 GitHub 完全开源。如需体验官方桌面端，可前往 [DeepSeek Harness 官网](https://www.deepseek.com/harness/) 下载。
 
 ## 需要先安装 Node.js 和 dsh 吗？
 

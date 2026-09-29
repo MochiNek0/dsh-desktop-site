@@ -1,6 +1,6 @@
 <script lang="ts">
     import { i18n, pathForLang } from "$lib/i18n.svelte";
-    import { LICENSE, LICENSE_URL, MARKET_URL, REPO_URL, UPSTREAM_URL } from "$lib/releases";
+    import { LICENSE, LICENSE_URL, MARKET_URL, OFFICIAL_DESKTOP_URL, REPO_URL, UPSTREAM_URL } from "$lib/releases";
     import Icon from "./Icon.svelte";
     import Logo from "./Logo.svelte";
     import VisitorCount from "./VisitorCount.svelte";
@@ -84,6 +84,11 @@
         {
             title: t("foot.about"),
             links: [
+                {
+                    label: t("foot.officialDesktop"),
+                    href: OFFICIAL_DESKTOP_URL,
+                    external: true,
+                },
                 {
                     label: t("foot.upstream"),
                     href: UPSTREAM_URL,

@@ -9,6 +9,7 @@
         GITHUB_DOWNLOADS,
         LATEST_VERSION,
         MIRRORS,
+        OFFICIAL_DESKTOP_URL,
         OS_GROUPS,
         REPO_URL,
         TOTAL_DOWNLOADS,
@@ -912,6 +913,43 @@
                     {/each}
                 </div>
             </div>
+        </div>
+
+        <!-- 官方桌面端推荐卡片 (Also try 官方桌面端) -->
+        <div
+            class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md rounded-2xl border border-brand-200/70 bg-linear-to-r from-brand-50/60 via-paper-100/80 to-accent-50/40 p-md sm:px-lg sm:py-4 shadow-xs"
+        >
+            <div class="flex items-start sm:items-center gap-md">
+                <span
+                    class="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-brand-600 shadow-xs ring-1 ring-brand-200/80"
+                >
+                    <Icon name="sparkle" size={20} />
+                </span>
+                <div class="stack-tight">
+                    <div class="flex flex-wrap items-center gap-2xs">
+                        <span
+                            class="inline-flex items-center rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold tracking-wide text-brand-700 ring-1 ring-brand-200/60"
+                        >
+                            {t("dl.official.badge")}
+                        </span>
+                        <h3 class="text-sm font-semibold text-slate-900 sm:text-base">
+                            {t("dl.official.title")}
+                        </h3>
+                    </div>
+                    <p class="text-xs/relaxed text-pretty text-slate-600 sm:text-sm/relaxed">
+                        {t("dl.official.desc")}
+                    </p>
+                </div>
+            </div>
+            <a
+                href={OFFICIAL_DESKTOP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex shrink-0 items-center justify-center gap-xs rounded-xl bg-ink-900 px-4 py-2.5 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-ink-800 self-stretch sm:self-auto"
+            >
+                <span>{t("dl.official.cta")}</span>
+                <Icon name="external" size={13} />
+            </a>
         </div>
 
         <!-- 用户交流群入口 -->

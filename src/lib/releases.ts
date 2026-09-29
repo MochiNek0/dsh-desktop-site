@@ -33,15 +33,25 @@ export const REPO_OWNER_URL = `https://github.com/${REPO_OWNER}`;
  */
 export const LATEST_VERSION = releaseData.version;
 
+export interface PreviewMeta {
+	version: string;
+	tag: string;
+	publishedAt: string;
+}
+
 /*
 	release-data.json 可能来自上一次成功的构建（GitHub 取不到时脚本会沿用旧的），
 	而旧数据里没有 publishedAt。声明成可选字段让缺失走类型系统，
 	而不是在运行时变成字符串 "undefined" 混进 sitemap。
 */
-const releaseMeta = releaseData as typeof releaseData & {
+const releaseMeta = releaseData as unknown as {
+	version: string;
+	tag: string;
 	publishedAt?: string;
-	preview?: { version: string; tag: string; publishedAt: string } | null;
+	preview?: PreviewMeta | null;
 	license?: { spdx: string; tag: string } | null;
+	totalDownloads: number;
+	assets: Record<string, { size: number; downloads: number }>;
 };
 
 /**
@@ -50,7 +60,7 @@ const releaseMeta = releaseData as typeof releaseData & {
  * 只给首屏徽标用，下载按钮永远指正式版 —— 测试版不走应用内更新，
  * 推给普通访客等于让他们装一个之后不会自动升级的版本。
  */
-export const PREVIEW = releaseMeta.preview ?? null;
+export const PREVIEW: PreviewMeta | null = releaseMeta.preview ?? null;
 
 /**
  * 正式版所用的许可证（SPDX 标识，如 MIT、AGPL-3.0），由同步脚本按正式版 tag 取。
@@ -108,6 +118,9 @@ export const DOWNLOADS_UPDATED_AT = downloadTotal.updatedAt;
 
 /** 上游 DeepSeek Harness 项目 */
 export const UPSTREAM_URL = 'https://github.com/deepseek-ai/deepseek-harness';
+
+/** 官方 DeepSeek Harness 桌面端 / 页面地址 */
+export const OFFICIAL_DESKTOP_URL = 'https://www.deepseek.com/harness/';
 
 /** 官方插件市场 DSH Market */
 export const MARKET_URL = 'https://dshmarket.com';

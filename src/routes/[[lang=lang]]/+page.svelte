@@ -18,6 +18,7 @@
         REPO_URL,
         TOTAL_DOWNLOADS,
         UPSTREAM_URL,
+        OFFICIAL_DESKTOP_URL,
         MARKET_URL,
     } from "$lib/releases";
     import { ORIGIN } from "$lib/site";
@@ -376,6 +377,20 @@
                 </a>
             </div>
 
+            <!-- 官方桌面端入口 -->
+            <p class="rise-in -mt-xs text-xs text-slate-500 [animation-delay:160ms] sm:-mt-sm">
+                {t("hero.alsoOfficialPrompt")}
+                <a
+                    href={OFFICIAL_DESKTOP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1 font-medium text-brand-600 transition-colors hover:text-brand-700 hover:underline"
+                >
+                    {t("hero.alsoOfficialLink")}
+                    <Icon name="external" size={11} />
+                </a>
+            </p>
+
             <!--
                 数字条。三格等宽 + 发丝线分隔，不套卡片 —— 首屏已经有一张截图做主角，
                 这里只是一行「量级」的证据，越轻越好。
@@ -619,6 +634,19 @@
                 <Icon name="external" size={15} />
             </a>
         </div>
+
+        <p class="text-xs text-slate-500">
+            {t("cta.alsoOfficialPrompt")}
+            <a
+                href={OFFICIAL_DESKTOP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1 font-medium text-brand-600 transition-colors hover:text-brand-700 hover:underline"
+            >
+                {t("cta.alsoOfficialLink")}
+                <Icon name="external" size={11} />
+            </a>
+        </p>
 
         <p class="max-w-[40rem] text-xs/relaxed text-pretty text-slate-400">
             <strong class="font-semibold text-slate-600">{t("foot.disclaimerTitle")}</strong>
