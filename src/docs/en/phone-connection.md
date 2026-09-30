@@ -4,7 +4,7 @@ description: Scan once to reach the dsh on your computer from your phone — cho
 order: 2
 ---
 
-Phone connection needs dsh desktop v0.1.20 or later; until that ships as a stable release, grab a [pre-release build](https://github.com/MochiNek0/dsh-desktop/releases).
+Phone connection needs dsh desktop v0.1.20 or later. Earlier versions do not have it — update first.
 
 Open dsh desktop on your computer and click “Phone connection” in the title bar — the card shows a QR code. Scan it with your phone, confirm on the computer, and you are in the dsh session. After that, just tap through from the [connection portal](/en/go/) — no more scanning.
 

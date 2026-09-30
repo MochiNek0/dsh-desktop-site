@@ -53,8 +53,13 @@ const zh: Dict = {
   "feat.sub": "同一个 dsh，抹平终端琐碎，带来更轻、更稳、更纯粹的原生体验。",
 
   "feat.1.title": "极致轻量",
+  // 这里的体积，以及 dl.linux.deb.note 和 FAQ 标题里的数字，都是**手填**的，
+  // 不会随发版自动走 —— 和首屏那张统计卡（取 release-data.json 的真实字节）
+  // 是两套来源。上游每次发版都要照 GitHub 的体积核对一遍再改，漏改就是
+  // 同一页两个数打架（0.1.15 的那组数字一直拖到 0.1.21 才换掉）。
+  // 按 1024 进制写，和 formatSize、和 GitHub 页面对齐。
   "feat.1.body":
-    "Tauri v2 + 系统 WebView，不打包浏览器内核。安装包 Windows 仅 2.3 MB，macOS 5.8 MB，Debian 3.8 MB，瞬时秒开极省资源。",
+    "Tauri v2 + 系统 WebView，不打包浏览器内核。安装包 Windows 仅 2.52 MB，macOS 6.31 MB，Debian 4.11 MB，瞬时秒开极省资源。",
   "feat.2.title": "开箱即用，无感共存",
   "feat.2.body":
     "自动检测 Node、按需安装 dsh、自动选用空闲回环端口，与终端手动运行实例互不干扰；全程无需管理员权限。",
@@ -163,7 +168,7 @@ const zh: Dict = {
   "dl.linux.appimage.note": ".AppImage · 推荐，内置 WebKit，支持完整自动更新",
   "dl.linux.deb": "Linux Deb 包",
   "dl.linux.deb.tab": ".deb",
-  "dl.linux.deb.note": ".deb · 轻量 3.8 MB，适用于 Debian / Ubuntu",
+  "dl.linux.deb.note": ".deb · 轻量 4.11 MB，适用于 Debian / Ubuntu",
   "dl.pickFormat": "选择安装包格式",
 
   "mirror.ghproxy": "社区加速 · 国内推荐",
@@ -342,7 +347,7 @@ const en: Dict = {
 
   "feat.1.title": "Ultra-lightweight",
   "feat.1.body":
-    "Tauri v2 on the system WebView with no bundled browser engine. Installers are 2.3 MB on Windows, 5.8 MB on macOS, and 3.8 MB on Debian.",
+    "Tauri v2 on the system WebView with no bundled browser engine. Installers are 2.52 MB on Windows, 6.31 MB on macOS, and 4.11 MB on Debian.",
   "feat.2.title": "Works out of the box",
   "feat.2.body":
     "Auto-detects Node, installs dsh on demand, and picks free loopback ports without collision. Zero admin rights required at any point.",
@@ -445,7 +450,7 @@ const en: Dict = {
     ".AppImage · Recommended, bundled WebKit, full auto-update support",
   "dl.linux.deb": "Linux Deb package",
   "dl.linux.deb.tab": ".deb",
-  "dl.linux.deb.note": ".deb · Lightweight 3.8 MB, for Debian / Ubuntu",
+  "dl.linux.deb.note": ".deb · Lightweight 4.11 MB, for Debian / Ubuntu",
   "dl.pickFormat": "Choose installer format",
 
   "mirror.ghproxy": "Community mirror · fastest in China",

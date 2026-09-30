@@ -4,7 +4,7 @@ description: 扫码把手机连上电脑里的 dsh：三条通道怎么选，以
 order: 2
 ---
 
-手机连接需要 dsh desktop v0.1.20 或更新版本；正式版发布之前，可以先装 [测试版](https://github.com/MochiNek0/dsh-desktop/releases)。
+手机连接需要 dsh desktop v0.1.20 或更新版本。更早的版本里没有这个功能，先升级即可。
 
 在电脑上打开 dsh desktop，点标题栏的「手机连接」，卡片上会出示一个二维码。用手机扫一下，电脑上弹框确认后即可进入 dsh 会话。之后从 [连接门户](/go/) 直接点进去就行，不用每次都扫。
 

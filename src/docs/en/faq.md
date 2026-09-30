@@ -12,7 +12,7 @@ No. This is a third-party, open-source desktop client built on DeepSeek Harness.
 
 No. The app detects your environment: if a suitable Node and dsh exist it uses them; otherwise the Runtime panel pops up to install Node 24 and dsh in one click, without admin rights.
 
-## Why are the installers so small (from 2.3 MB)?
+## Why are the installers so small (from 2.5 MB)?
 
 It is built on Tauri v2 and uses the operating system’s native WebView engine (WebView2 on Windows, WebKit on macOS, WebKitGTK on Linux) instead of bundling a 100+ MB Chromium runtime, which dramatically reduces memory and disk footprint.
 

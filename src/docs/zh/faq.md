@@ -12,7 +12,7 @@ order: 4
 
 不需要。应用会自动检测环境：如果机器上已有合适的 Node 和 dsh 就直接用；如果没有，应用会自动弹出「运行环境」面板，支持一键安装 Node 24 与 dsh。全程不需要管理员权限。
 
-## 为什么安装包体积这么小（仅 2.3 MB 起）？
+## 为什么安装包体积这么小（仅 2.5 MB 起）？
 
 基于 Tauri v2 构建，直接调用操作系统自带的原生 WebView 内核（Windows WebView2 / macOS WebKit / Linux WebKitGTK），不打包上百兆的 Chromium 浏览器内核，内存与磁盘占用大幅缩减。
 
