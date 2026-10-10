@@ -351,6 +351,27 @@ export function formatSize(bytes: number): string {
 	return `${mb.toFixed(mb < 10 ? 2 : 1)} MB`;
 }
 
+/**
+ * 文案里引用的各平台安装包体积，给 i18n 的 `{win}` / `{mac}` / `{deb}` 占位符用。
+ *
+ * 从前这几个数字是手填在文案里的，每次发版都要人去核对，漏改就是
+ * 同一页上两个数打架（统计卡取真实字节，特性卡还停在旧版本）。
+ * 现在和统计卡同源，都是 release-data.json 里的真实字节。
+ * 取不到的那一项不放进表里，文案会原样显示占位符 —— 比显示一个错的数字好发现。
+ */
+export const SIZE_VARS: Record<string, string> = Object.fromEntries(
+	(
+		[
+			['win', `dsh-desktop_${LATEST_VERSION}_x64-setup.exe`],
+			['mac', `dsh-desktop_${LATEST_VERSION}_universal.dmg`],
+			['deb', `dsh-desktop_${LATEST_VERSION}_amd64.deb`]
+		] as const
+	).flatMap(([key, file]) => {
+		const bytes = assetSize(file);
+		return bytes === null ? [] : [[key, formatSize(bytes)]];
+	})
+);
+
 /** 下载量：带千分位，中英文都读得通 */
 export function formatCount(n: number): string {
 	return n.toLocaleString('en-US');

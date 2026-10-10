@@ -13,6 +13,7 @@
         PHONE_STABLE,
         PREVIEW,
         RELEASE_DATE,
+        SIZE_VARS,
         REPO_OWNER,
         REPO_OWNER_URL,
         REPO_URL,
@@ -490,7 +491,7 @@
                         <div class="stack-tight">
                             <h3 class="font-semibold text-slate-900">{t(f.title)}</h3>
                             <p class="text-sm/relaxed text-pretty text-slate-500">
-                                {t(f.body)}
+                                {t(f.body, SIZE_VARS)}
                             </p>
                         </div>
                     </div>

@@ -12,6 +12,7 @@
         OFFICIAL_DESKTOP_URL,
         OS_GROUPS,
         REPO_URL,
+        SIZE_VARS,
         TOTAL_DOWNLOADS,
         type Download,
         type Mirror,
@@ -542,7 +543,7 @@
                             {/if}
                         </div>
                         <p class="text-[11px]/relaxed text-slate-500">
-                            {t(dl.noteKey)}
+                            {t(dl.noteKey, SIZE_VARS)}
                         </p>
                     </div>
 
@@ -555,7 +556,7 @@
                             >{t(dl.labelKey)}</span
                         >
                         <p class="max-w-[28rem] text-sm/relaxed text-slate-600">
-                            {t(dl.noteKey)}
+                            {t(dl.noteKey, SIZE_VARS)}
                         </p>
                     </div>
 

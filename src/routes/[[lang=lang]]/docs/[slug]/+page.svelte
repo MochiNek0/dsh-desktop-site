@@ -16,6 +16,41 @@
 	const url = $derived(`${ORIGIN}${base}${data.slug}/`);
 
 	/*
+		面包屑（首页 › 文档 › 本篇）每篇都有；FAQ 那篇再加一张 FAQPage，
+		问答由 +page.server.ts 从正文推出来，和页面上看到的一字不差。
+		`<` 转义掉：问答是正文里的文字，混进一个闭合 script 标签就会提前截断这段脚本。
+	*/
+	const jsonLd = $derived(
+		JSON.stringify({
+			'@context': 'https://schema.org',
+			'@graph': [
+				{
+					'@type': 'BreadcrumbList',
+					itemListElement: [
+						{ name: 'dsh desktop', item: `${ORIGIN}${pathForLang(i18n.lang)}` },
+						{ name: t('nav.docs'), item: `${ORIGIN}${base}` },
+						{ name: meta.title, item: url }
+					].map((e, i) => ({ '@type': 'ListItem', position: i + 1, ...e }))
+				},
+				...(data.faq
+					? [
+							{
+								'@type': 'FAQPage',
+								'@id': `${url}#faq`,
+								inLanguage: htmlLang(i18n.lang),
+								mainEntity: data.faq.map((f) => ({
+									'@type': 'Question',
+									name: f.q,
+									acceptedAnswer: { '@type': 'Answer', text: f.a }
+								}))
+							}
+						]
+					: [])
+			]
+		}).replace(/</g, '\\u003c')
+	);
+
+	/*
 		给正文里的每个代码块挂一个复制按钮。
 
 		按钮是 append 进 <pre> 里面的，不去给 <pre> 外面再包一层：
@@ -72,6 +107,7 @@
 	<meta property="og:url" content={url} />
 	<meta property="og:image" content="{ORIGIN}{i18n.lang === 'zh' ? '/og.png' : '/og-en.png'}" />
 	<meta name="twitter:card" content="summary_large_image" />
+	{@html `<script type="application/ld+json">${jsonLd}</script>`}
 </svelte:head>
 
 <article class="doc">

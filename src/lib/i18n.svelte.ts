@@ -19,9 +19,9 @@ type Dict = Record<string, string>;
 
 const zh: Dict = {
   // ── 站点/导航 ──
-  "site.title": "dsh desktop — DeepSeek Harness 跨平台桌面客户端",
+  "site.title": "dsh desktop — DeepSeek Harness 桌面客户端，手机也能远程用",
   "site.desc":
-    "dsh desktop 是 DeepSeek Harness（dsh web）的极简跨平台桌面客户端。自动拉起本地服务并内嵌原生窗口，免开终端、免管端口；超轻量体积，一切皆插件，支持 DSH Market 与安全模式，与 CLI 完全共享配置。",
+    "dsh desktop 是 DeepSeek Harness（dsh web）的第三方开源桌面客户端，安装包仅几 MB。手机扫码即可远程使用电脑上的 dsh（局域网 / Tailscale / Cloudflare）；免开终端、免管端口，与 CLI 共享会话和配置，支持插件与安全模式。",
 
   "nav.download": "下载",
   "nav.connect": "手机连接",
@@ -53,13 +53,10 @@ const zh: Dict = {
   "feat.sub": "同一个 dsh，抹平终端琐碎，带来更轻、更稳、更纯粹的原生体验。",
 
   "feat.1.title": "极致轻量",
-  // 这里的体积，以及 dl.linux.deb.note 和 FAQ 标题里的数字，都是**手填**的，
-  // 不会随发版自动走 —— 和首屏那张统计卡（取 release-data.json 的真实字节）
-  // 是两套来源。上游每次发版都要照 GitHub 的体积核对一遍再改，漏改就是
-  // 同一页两个数打架（0.1.15 的那组数字一直拖到 0.1.21 才换掉）。
-  // 按 1024 进制写，和 formatSize、和 GitHub 页面对齐。
+  // {win} / {mac} / {deb} 由 releases.ts 的 SIZE_VARS 在构建期填入真实体积，
+  // 和首屏统计卡同源，发版不用再手改。FAQ 标题里的「2.5 MB 起」仍是手填的。
   "feat.1.body":
-    "Tauri v2 + 系统 WebView，不打包浏览器内核。安装包 Windows 仅 2.52 MB，macOS 6.31 MB，Debian 4.11 MB，瞬时秒开极省资源。",
+    "Tauri v2 + 系统 WebView，不打包浏览器内核。安装包 Windows 仅 {win}，macOS {mac}，Debian {deb}，瞬时秒开极省资源。",
   "feat.2.title": "开箱即用，无感共存",
   "feat.2.body":
     "自动检测 Node、按需安装 dsh、自动选用空闲回环端口，与终端手动运行实例互不干扰；全程无需管理员权限。",
@@ -168,7 +165,7 @@ const zh: Dict = {
   "dl.linux.appimage.note": ".AppImage · 推荐，内置 WebKit，支持完整自动更新",
   "dl.linux.deb": "Linux Deb 包",
   "dl.linux.deb.tab": ".deb",
-  "dl.linux.deb.note": ".deb · 轻量 4.11 MB，适用于 Debian / Ubuntu",
+  "dl.linux.deb.note": ".deb · 轻量 {deb}，适用于 Debian / Ubuntu",
   "dl.pickFormat": "选择安装包格式",
 
   "mirror.ghproxy": "社区加速 · 国内推荐",
@@ -314,9 +311,9 @@ const zh: Dict = {
 
 const en: Dict = {
   "site.title":
-    "dsh desktop — Cross-platform desktop client for DeepSeek Harness",
+    "dsh desktop — DeepSeek Harness desktop client with phone access",
   "site.desc":
-    "dsh desktop is an ultra-lightweight, cross-platform desktop client for DeepSeek Harness (dsh web). Embeds local services into a native window with zero terminal setup, full plugin ecosystem, Safe Mode, and shared CLI config.",
+    "dsh desktop is an unofficial, open-source desktop client for DeepSeek Harness (dsh web) with a few-MB installer. Scan a QR code to use your computer's dsh from your phone over LAN, Tailscale or Cloudflare. No terminal or port setup; shares sessions and config with the CLI.",
 
   "nav.download": "Download",
   "nav.connect": "Phone connection",
@@ -347,7 +344,7 @@ const en: Dict = {
 
   "feat.1.title": "Ultra-lightweight",
   "feat.1.body":
-    "Tauri v2 on the system WebView with no bundled browser engine. Installers are 2.52 MB on Windows, 6.31 MB on macOS, and 4.11 MB on Debian.",
+    "Tauri v2 on the system WebView with no bundled browser engine. Installers are {win} on Windows, {mac} on macOS, and {deb} on Debian.",
   "feat.2.title": "Works out of the box",
   "feat.2.body":
     "Auto-detects Node, installs dsh on demand, and picks free loopback ports without collision. Zero admin rights required at any point.",
@@ -450,7 +447,7 @@ const en: Dict = {
     ".AppImage · Recommended, bundled WebKit, full auto-update support",
   "dl.linux.deb": "Linux Deb package",
   "dl.linux.deb.tab": ".deb",
-  "dl.linux.deb.note": ".deb · Lightweight 4.11 MB, for Debian / Ubuntu",
+  "dl.linux.deb.note": ".deb · Lightweight {deb}, for Debian / Ubuntu",
   "dl.pickFormat": "Choose installer format",
 
   "mirror.ghproxy": "Community mirror · fastest in China",
