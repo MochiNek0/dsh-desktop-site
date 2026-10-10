@@ -50,28 +50,28 @@ const zh: Dict = {
 
   // ── 特性 ──
   "feat.heading": "为什么用桌面版",
-  "feat.sub": "同一个 dsh，抹平终端琐碎，带来更轻、更稳、更纯粹的原生体验。",
+  "feat.sub": "还是同一个 dsh，只是不用再开终端、记端口。",
 
-  "feat.1.title": "极致轻量",
+  "feat.1.title": "安装包只有几 MB",
   // {win} / {mac} / {deb} 由 releases.ts 的 SIZE_VARS 在构建期填入真实体积，
   // 和首屏统计卡同源，发版不用再手改。FAQ 标题里的「2.5 MB 起」仍是手填的。
   "feat.1.body":
-    "Tauri v2 + 系统 WebView，不打包浏览器内核。安装包 Windows 仅 {win}，macOS {mac}，Debian {deb}，瞬时秒开极省资源。",
-  "feat.2.title": "开箱即用，无感共存",
+    "Tauri v2 + 系统 WebView，不打包浏览器内核。安装包 Windows 仅 {win}，macOS {mac}，Debian {deb}。",
+  "feat.2.title": "开箱即用，与终端共存",
   "feat.2.body":
     "自动检测 Node、按需安装 dsh、自动选用空闲回环端口，与终端手动运行实例互不干扰；全程无需管理员权限。",
   "feat.3.title": "一切皆插件",
   "feat.3.body":
-    "桌面端不改 dsh 一行源码。所有增强功能随包插件化供给，卸掉即回归纯净 dsh；首推 DSH Market 插件市场，安装卸载不碰终端。",
+    "桌面端不改 dsh 一行源码。桌面增强功能（如系统通知）以随包插件提供，卸掉即回到原版 dsh；内置插件面板，可从 DSH Market 安装，不用开终端。",
   "feat.4.title": "安全模式",
   "feat.4.body":
-    "插件故障导致应用停在加载页？独创「不加载插件启动」脱困机制：一键剥离用户插件层进入面板排查卸载，菜单一键恢复。",
-  "feat.5.title": "深度原生集成",
+    "插件崩溃导致应用停在加载页时，加载页提供「不加载插件启动」：暂时不加载你装的插件，直接打开面板卸掉出问题的那个，之后在菜单里「重新加载插件」原样装回。",
+  "feat.5.title": "托盘、通知与主题",
   "feat.5.body":
-    "主题与语言跟随 dsh 设置无感切换；支持托盘常驻守护；AI 回合结束或等待审批时发送系统通知，更可在通知卡片上直接操作。",
-  "feat.6.title": "环境与数据全共享",
+    "主题与界面语言跟随 dsh 设置，切换无需重启；支持托盘常驻和开机自启；回合结束或 dsh 等待确认时发系统通知，允许 / 拒绝可直接在通知上点。",
+  "feat.6.title": "与命令行共享数据",
   "feat.6.body":
-    "会话、凭证与配置严格统一在 $DSH_HOME（默认 ~/.dsh），与命令行完全共享；单实例守护，退出时自动回收全部子进程。",
+    "会话、凭证与配置都在 $DSH_HOME（默认 ~/.dsh），和命令行里的 dsh 是同一份；只允许运行一个实例，退出时回收全部子进程。",
 
   // ── 截图 ──
   "shot.heading": "界面预览",
@@ -179,7 +179,7 @@ const zh: Dict = {
   "plug.heading": "一切皆插件，不用碰命令行",
   "plug.sub":
     "桌面端不改 dsh 一行源码。内置可视化管理面板并首推 DSH Market 插件市场。",
-  "plug.market.badge": "官方推荐生态",
+  "plug.market.badge": "推荐生态",
   "plug.market.title": "DSH Market 插件市场",
   "plug.market.desc":
     "dsh 里的可视化插件市场，浏览、搜索并一键安装社区精选插件（dshmarket.com）。",
@@ -189,10 +189,10 @@ const zh: Dict = {
     "从预设列表或 DSH Market 直接安装，也支持手动输入 npm 包名或 GitHub 仓库地址（如 github:owner/repo）。",
   "plug.2.title": "安全模式",
   "plug.2.body":
-    "插件若引发崩溃，加载页提供「不加载插件启动」脱困启动，把用户插件暂摘出层列表，直接唤起面板卸载故障项。",
+    "插件若引发崩溃，加载页提供「不加载插件启动」：把你装的插件暂时摘出层列表，直接打开面板卸载出问题的那个。",
   "plug.3.title": "独立环境变量终端",
   "plug.3.body":
-    "菜单 → 打开终端，启动一个已配好 dsh 环境变量的独立终端，安全调试且绝不污染系统全局 PATH。",
+    "菜单 → 打开终端，启动一个已配好 dsh 环境变量的终端，不改动系统全局 PATH。",
 
   // ── CTA / 页脚 ──
   "cta.heading": "现在开始",
@@ -340,26 +340,26 @@ const en: Dict = {
 
   "feat.heading": "Why dsh desktop",
   "feat.sub":
-    "The same dsh, minus the daily friction — light, stable, and truly native.",
+    "The same dsh, without opening a terminal or keeping track of ports.",
 
-  "feat.1.title": "Ultra-lightweight",
+  "feat.1.title": "A few-MB installer",
   "feat.1.body":
     "Tauri v2 on the system WebView with no bundled browser engine. Installers are {win} on Windows, {mac} on macOS, and {deb} on Debian.",
-  "feat.2.title": "Works out of the box",
+  "feat.2.title": "Works out of the box, next to the CLI",
   "feat.2.body":
-    "Auto-detects Node, installs dsh on demand, and picks free loopback ports without collision. Zero admin rights required at any point.",
+    "Detects Node, installs dsh on demand, and picks a free loopback port, so it runs alongside a dsh you started in a terminal. No admin rights needed.",
   "feat.3.title": "Everything is a plugin",
   "feat.3.body":
-    "Not a single line of dsh source code is modified. Desktop capabilities run as plugins; features the built-in DSH Market marketplace without terminal steps.",
-  "feat.4.title": "Safe Mode recovery",
+    "dsh source is not modified. Desktop features (such as system notifications) ship as bundled plugins; remove them and you have plain dsh. A built-in plugin panel installs from DSH Market without a terminal.",
+  "feat.4.title": "Safe Mode",
   "feat.4.body":
-    "Crashing plugin blocks startup? Start without plugins temporarily bypasses faulty layers to launch cleanly, uninstall the culprit, and reload smoothly.",
-  "feat.5.title": "Native integration",
+    "If a plugin crash leaves the app on the loading page, it offers Start without plugins: your plugins are set aside, the panel opens so you can remove the broken one, and Reload plugins puts the rest back.",
+  "feat.5.title": "Tray, notifications and theme",
   "feat.5.body":
-    "Syncs theme and language without reload; tray supervision keeps tasks alive; interactive notifications take allow/refuse actions directly.",
-  "feat.6.title": "Unified environment & data",
+    "Theme and UI language follow your dsh settings without a restart. Runs in the tray and can start at login. Sends a system notification when a turn ends or dsh asks for approval; allow / deny right on the notification.",
+  "feat.6.title": "Shares data with the CLI",
   "feat.6.body":
-    "Sessions, credentials, and settings strictly live in $DSH_HOME (~/.dsh). Single-instance supervision cleanly reclaims all child processes on exit.",
+    "Sessions, credentials and settings live in $DSH_HOME (default ~/.dsh), the same ones the dsh CLI uses. Only one instance runs at a time, and all child processes are cleaned up on exit.",
 
   "shot.heading": "A look inside",
   "shot.sub": "The full dsh web experience in a native window.",
@@ -460,7 +460,7 @@ const en: Dict = {
   "plug.heading": "Plugins, without the command line",
   "plug.sub":
     "Not a single line of dsh code modified. Built-in visual panel and featured DSH Market.",
-  "plug.market.badge": "Featured Ecosystem",
+  "plug.market.badge": "Recommended",
   "plug.market.title": "DSH Market Marketplace",
   "plug.market.desc":
     "The visual plugin marketplace inside dsh — browse, search, and install community plugins in one click (dshmarket.com).",

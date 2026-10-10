@@ -6,7 +6,7 @@ order: 4
 
 ## Is dsh desktop an official DeepSeek product?
 
-No. This is a third-party, open-source desktop client built on DeepSeek Harness. It has no affiliation with DeepSeek, and its source is fully open on GitHub. If you would like to try the official desktop app, visit the [DeepSeek Harness official website](https://www.deepseek.com/harness/).
+No. This is a third-party, open-source desktop client built on DeepSeek Harness. It has no affiliation with DeepSeek, and its source is fully open on GitHub. If you would like to try the official desktop app, visit the [DeepSeek Harness official website](https://www.deepseek.com/harness/). For how the two differ, see [dsh desktop vs the official app](../vs-official/).
 
 ## Do I need Node.js and dsh installed first?
 

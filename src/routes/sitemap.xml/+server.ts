@@ -1,7 +1,32 @@
+import { execFileSync } from 'node:child_process';
 import { docsFor, langsOf } from '$lib/docs';
 import { htmlLang, LANGS, pathForLang, type Lang } from '$lib/i18n.svelte';
 import { RELEASE_DATE } from '$lib/releases';
 import { ORIGIN } from '$lib/site';
+
+function git(...args: string[]): string {
+	try {
+		return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+	} catch {
+		return '';
+	}
+}
+
+/*
+	浅克隆里 git log 只看得到最近那一个提交，每篇文档都会拿到同一个
+	「最后修改时间」 —— 也就是本次部署的时间，正是下面说的不可信日期。
+	所以浅克隆（以及根本没有 .git 的构建环境）一律不写文档的 lastmod。
+*/
+const FULL_HISTORY = git('rev-parse', '--is-shallow-repository') === 'false';
+
+/**
+ * 某个文件最后一次提交的时间（ISO 8601）。拿不到可信的值就是 undefined。
+ * 还没提交过的文件 git log 输出为空，同样落到 undefined。
+ */
+function lastCommitDate(file: string): string | undefined {
+	if (!FULL_HISTORY) return undefined;
+	return git('log', '-1', '--format=%cI', '--', file) || undefined;
+}
 
 /**
  * sitemap.xml —— 构建期生成，不再手写。
@@ -46,14 +71,21 @@ function urlEntry(pathFor: (l: Lang) => string, langs: Lang[], self: Lang, lastm
 
 export function GET() {
 	/*
-		文档页不写 lastmod：文档没有可信的修改日期（构建时间每次部署都在变，
-		拿它顶替会让搜索引擎判定这个站的日期不可信，进而忽略全部 lastmod）。
+		文档页的 lastmod 取该语言那篇 .md 最后一次提交的时间，而不是构建时间：
+		构建时间每次部署都在变，拿它顶替会让搜索引擎判定这个站的日期不可信，
+		进而忽略全部 lastmod。取不到可信的提交时间就不写（见 lastCommitDate）。
+		文档首页只是一张目录，没有自己的修改时间，不写。
 	*/
 	const pages = LANGS.flatMap((self) => [
 		urlEntry(pathForLang, LANGS, self, RELEASE_DATE),
 		urlEntry((l) => `${pathForLang(l)}docs/`, LANGS, self),
 		...docsFor(self).map((doc) =>
-			urlEntry((l) => `${pathForLang(l)}docs/${doc.slug}/`, langsOf(doc.slug), self)
+			urlEntry(
+				(l) => `${pathForLang(l)}docs/${doc.slug}/`,
+				langsOf(doc.slug),
+				self,
+				lastCommitDate(`src/docs/${self}/${doc.slug}.md`)
+			)
 		)
 	]);
 

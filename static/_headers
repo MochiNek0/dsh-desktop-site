@@ -1,0 +1,6 @@
+# Cloudflare 静态资源的响应头规则（这个文件本身不会被当成资源对外提供）。
+#
+# .txt 默认只发 Content-Type: text/plain，不带 charset，
+# 浏览器和部分抓取器就按本地编码去猜 —— llms.txt 里的中文会显示成乱码。
+/llms.txt
+  Content-Type: text/plain; charset=utf-8
