@@ -19,6 +19,11 @@ export interface DocMeta {
 	slug: string;
 	lang: Lang;
 	title: string;
+	/**
+	 * 可选，只用于 <title> 和 og:title。侧栏、h1、面包屑放不下长标题，
+	 * 但搜索结果里的标题要带上 "DeepSeek Harness" 这类别人真正会搜的词。
+	 */
+	headTitle?: string;
 	description: string;
 	/** 侧栏排序，小的在前 */
 	order: number;
@@ -47,6 +52,7 @@ const all: DocMeta[] = Object.entries(frontmatter).map(([path, meta]) => {
 		slug,
 		lang: lang as Lang,
 		title: String(meta.title),
+		...(meta.headTitle ? { headTitle: String(meta.headTitle) } : {}),
 		description: String(meta.description),
 		order: Number(meta.order)
 	};

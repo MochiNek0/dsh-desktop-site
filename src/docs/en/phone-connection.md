@@ -1,5 +1,6 @@
 ---
 title: Phone connection
+headTitle: Use DeepSeek Harness (dsh) from your phone
 description: Scan once to reach the dsh on your computer from your phone — choosing a channel, and a few things worth knowing.
 order: 2
 ---

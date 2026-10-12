@@ -1,5 +1,6 @@
 ---
 title: 安装指引
+headTitle: DeepSeek Harness 桌面客户端安装指引（Windows / macOS / Linux）
 description: 各平台的安装方式、首次启动可能遇到的拦截，以及日常使用须知。
 order: 1
 ---

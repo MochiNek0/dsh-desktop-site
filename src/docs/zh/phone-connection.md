@@ -1,5 +1,6 @@
 ---
 title: 手机连接
+headTitle: 用手机远程使用电脑上的 DeepSeek Harness（dsh）
 description: 扫码把手机连上电脑里的 dsh：三条通道怎么选，以及几件要知道的事。
 order: 2
 ---

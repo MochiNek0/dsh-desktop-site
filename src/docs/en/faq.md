@@ -1,5 +1,6 @@
 ---
 title: FAQ
+headTitle: DeepSeek Harness desktop client FAQ
 description: Where dsh desktop comes from, what it needs, why it is small, compatibility, and where to get help.
 order: 4
 ---

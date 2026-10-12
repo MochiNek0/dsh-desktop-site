@@ -1,5 +1,6 @@
 ---
 title: Plugins
+headTitle: DeepSeek Harness plugins, management and Safe Mode
 description: Installing and managing plugins, Safe Mode for when one breaks, and allowing builds for github plugins.
 order: 3
 ---

@@ -86,7 +86,7 @@
 </script>
 
 <svelte:head>
-	<title>{meta.title} · dsh desktop</title>
+	<title>{meta.headTitle ?? meta.title} · dsh desktop</title>
 	<meta name="description" content={meta.description} />
 	<link rel="canonical" href={url} />
 	<!--
@@ -102,7 +102,7 @@
 	<meta name="robots" content="index, follow" />
 	<meta property="og:type" content="article" />
 	<meta property="og:site_name" content="dsh desktop" />
-	<meta property="og:title" content={meta.title} />
+	<meta property="og:title" content={meta.headTitle ?? meta.title} />
 	<meta property="og:description" content={meta.description} />
 	<meta property="og:url" content={url} />
 	<meta property="og:image" content="{ORIGIN}{i18n.lang === 'zh' ? '/og.png' : '/og-en.png'}" />

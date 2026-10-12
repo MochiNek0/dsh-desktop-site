@@ -1,5 +1,6 @@
 ---
 title: 常见问题
+headTitle: DeepSeek Harness 桌面客户端常见问题
 description: 关于 dsh desktop 的来历、环境、体积、兼容性与反馈渠道。
 order: 4
 ---

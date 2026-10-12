@@ -1,5 +1,6 @@
 ---
 title: 插件
+headTitle: DeepSeek Harness 插件安装、管理与安全模式
 description: 安装与管理插件、插件出问题时的安全模式，以及安装 github 插件时的构建放行。
 order: 3
 ---

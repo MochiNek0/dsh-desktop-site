@@ -1,5 +1,6 @@
 ---
 title: Installation
+headTitle: Install the DeepSeek Harness desktop client (Windows, macOS, Linux)
 description: How to install on each platform, what may block the first launch, and a few everyday notes.
 order: 1
 ---
