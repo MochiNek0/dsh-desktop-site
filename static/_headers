@@ -9,13 +9,13 @@
 
 # 全站基础安全头。
 #
-# HSTS 先用 5 分钟试运行，确认全站 HTTPS 无误后再逐步调大。
+# HSTS 逐步调大：300（2026-10-13 试运行）→ 86400 → 31536000。
 # 不加 preload：站点是 cc.cd 的子域，preload 只能由主域所有者提交。
 #
 # CSP 只放 frame-ancestors：预渲染页面带内联脚本，完整 CSP 容易把页面弄坏，
 # 这里只防被别的站点嵌进 iframe（点击劫持）。X-Frame-Options 是给老浏览器的同义兜底。
 /*
-  Strict-Transport-Security: max-age=300
+  Strict-Transport-Security: max-age=86400
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Content-Security-Policy: frame-ancestors 'none'
