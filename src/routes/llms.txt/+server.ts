@@ -71,6 +71,7 @@ ${docLinks('zh')}
 ## Links
 
 - [Website / download](${ORIGIN}/)
+- [Full documentation in one file](${ORIGIN}/llms-full.txt)
 - [English website](${ORIGIN}/en/)
 - [Source code](${REPO_URL})
 - [Releases](${REPO_URL}/releases)

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from '$lib/components/Icon.svelte';
 	import { htmlLang, i18n, pathForLang } from '$lib/i18n.svelte';
+	import { REPO_OWNER, REPO_OWNER_URL } from '$lib/releases';
 	import { ORIGIN } from '$lib/site';
 
 	let { data } = $props();
@@ -14,10 +15,27 @@
 
 	const base = $derived(`${pathForLang(i18n.lang)}docs/`);
 	const url = $derived(`${ORIGIN}${base}${data.slug}/`);
+	const headTitle = $derived(meta.headTitle ?? meta.title);
+	const ogCard = $derived(`${ORIGIN}${i18n.lang === 'zh' ? '/og.png' : '/og-en.png'}`);
 
 	/*
-		面包屑（首页 › 文档 › 本篇）每篇都有；FAQ 那篇再加一张 FAQPage，
+		页面上显示的更新日期。只取 ISO 串里的年月日、按 UTC 格式化：
+		构建机和访客的时区不同，按本地时区算会让预渲染的 HTML 和水合后差一天。
+	*/
+	const updated = $derived(
+		data.modified &&
+			new Intl.DateTimeFormat(htmlLang(i18n.lang), { dateStyle: 'medium', timeZone: 'UTC' }).format(
+				new Date(`${data.modified.slice(0, 10)}T00:00:00Z`)
+			)
+	);
+
+	/*
+		面包屑（首页 › 文档 › 本篇）和 TechArticle 每篇都有；FAQ 那篇再加一张 FAQPage，
 		问答由 +page.server.ts 从正文推出来，和页面上看到的一字不差。
+
+		作者节点和首页是同一个 @id，这里再写一遍完整的 name/url：
+		抓取方不一定会跨页去解析 @id，只留引用的话这一页上的 author 就是空的。
+		dateModified 和 sitemap 的 lastmod 同源，取不到就不写 —— 理由同 sitemap。
 		`<` 转义掉：问答是正文里的文字，混进一个闭合 script 标签就会提前截断这段脚本。
 	*/
 	const jsonLd = $derived(
@@ -31,6 +49,20 @@
 						{ name: t('nav.docs'), item: `${ORIGIN}${base}` },
 						{ name: meta.title, item: url }
 					].map((e, i) => ({ '@type': 'ListItem', position: i + 1, ...e }))
+				},
+				{ '@type': 'Person', '@id': `${ORIGIN}/#author`, name: REPO_OWNER, url: REPO_OWNER_URL },
+				{
+					'@type': 'TechArticle',
+					'@id': `${url}#article`,
+					headline: headTitle,
+					description: meta.description,
+					inLanguage: htmlLang(i18n.lang),
+					url,
+					mainEntityOfPage: url,
+					image: ogCard,
+					author: { '@id': `${ORIGIN}/#author` },
+					publisher: { '@id': `${ORIGIN}/#author` },
+					...(data.modified ? { dateModified: data.modified } : {})
 				},
 				...(data.faq
 					? [
@@ -86,7 +118,7 @@
 </script>
 
 <svelte:head>
-	<title>{meta.headTitle ?? meta.title} · dsh desktop</title>
+	<title>{headTitle} · dsh desktop</title>
 	<meta name="description" content={meta.description} />
 	<link rel="canonical" href={url} />
 	<!--
@@ -102,11 +134,21 @@
 	<meta name="robots" content="index, follow" />
 	<meta property="og:type" content="article" />
 	<meta property="og:site_name" content="dsh desktop" />
-	<meta property="og:title" content={meta.headTitle ?? meta.title} />
+	<meta property="og:locale" content={i18n.lang === 'zh' ? 'zh_CN' : 'en_US'} />
+	<meta property="og:title" content={headTitle} />
 	<meta property="og:description" content={meta.description} />
 	<meta property="og:url" content={url} />
-	<meta property="og:image" content="{ORIGIN}{i18n.lang === 'zh' ? '/og.png' : '/og-en.png'}" />
+	<!-- 1200x630 与 static/og.png 一致，理由同首页 -->
+	<meta property="og:image" content={ogCard} />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	{#if data.modified}
+		<meta property="article:modified_time" content={data.modified} />
+	{/if}
 	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content={headTitle} />
+	<meta name="twitter:description" content={meta.description} />
+	<meta name="twitter:image" content={ogCard} />
 	{@html `<script type="application/ld+json">${jsonLd}</script>`}
 </svelte:head>
 
@@ -116,6 +158,11 @@
 			{meta.title}
 		</h1>
 		<p class="text-base/relaxed text-pretty text-slate-500">{meta.description}</p>
+		{#if updated}
+			<p class="text-xs text-slate-400">
+				<time datetime={data.modified}>{t('docs.updated', { date: updated })}</time>
+			</p>
+		{/if}
 	</header>
 
 	<!-- 换篇时整块重建，复制按钮才会挂到新正文上 -->

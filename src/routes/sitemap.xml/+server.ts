@@ -1,32 +1,8 @@
-import { execFileSync } from 'node:child_process';
 import { docsFor, langsOf } from '$lib/docs';
 import { htmlLang, LANGS, pathForLang, type Lang } from '$lib/i18n.svelte';
 import { RELEASE_DATE } from '$lib/releases';
+import { lastCommitDate } from '$lib/server/git';
 import { ORIGIN } from '$lib/site';
-
-function git(...args: string[]): string {
-	try {
-		return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
-	} catch {
-		return '';
-	}
-}
-
-/*
-	浅克隆里 git log 只看得到最近那一个提交，每篇文档都会拿到同一个
-	「最后修改时间」 —— 也就是本次部署的时间，正是下面说的不可信日期。
-	所以浅克隆（以及根本没有 .git 的构建环境）一律不写文档的 lastmod。
-*/
-const FULL_HISTORY = git('rev-parse', '--is-shallow-repository') === 'false';
-
-/**
- * 某个文件最后一次提交的时间（ISO 8601）。拿不到可信的值就是 undefined。
- * 还没提交过的文件 git log 输出为空，同样落到 undefined。
- */
-function lastCommitDate(file: string): string | undefined {
-	if (!FULL_HISTORY) return undefined;
-	return git('log', '-1', '--format=%cI', '--', file) || undefined;
-}
 
 /**
  * sitemap.xml —— 构建期生成，不再手写。

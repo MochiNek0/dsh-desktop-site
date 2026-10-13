@@ -209,6 +209,7 @@ const zh: Dict = {
   "docs.copyFail": "复制失败",
   "docs.prev": "上一篇",
   "docs.next": "下一篇",
+  "docs.updated": "最后更新于 {date}",
 
   // ── 连接门户 /go/ ──
   // 这一页不是给访客看的，是给已经装了 app 的人用的，所以文案一律假定
@@ -488,6 +489,7 @@ const en: Dict = {
   "docs.copyFail": "Failed",
   "docs.prev": "Previous",
   "docs.next": "Next",
+  "docs.updated": "Last updated {date}",
 
   "go.title": "Connect to my computer · dsh desktop",
   "go.desc":

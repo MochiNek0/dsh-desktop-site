@@ -1,5 +1,6 @@
 import { langsOf } from '$lib/docs';
 import { langFromParam } from '$lib/i18n.svelte';
+import { lastCommitDate } from '$lib/server/git';
 
 /*
 	正文原文，只给 FAQ 的结构化数据用。服务端 load 只在构建期跑，
@@ -41,9 +42,14 @@ function faqOf(md: string): { q: string; a: string }[] {
 /**
  * langs：这一篇有哪些语言版本，hreflang 和语言切换只能指向真实存在的页面。
  * faq：只有 faq 这一篇有，给 FAQPage 结构化数据用。
+ * modified：这一篇最后一次提交的时间，和 sitemap 的 lastmod 同源；取不到就是 undefined。
  */
 export const load = ({ params }) => {
-	const md =
-		params.slug === 'faq' ? raw[`/src/docs/${langFromParam(params.lang)}/faq.md`] : undefined;
-	return { langs: langsOf(params.slug), faq: md ? faqOf(md) : null };
+	const lang = langFromParam(params.lang);
+	const md = params.slug === 'faq' ? raw[`/src/docs/${lang}/faq.md`] : undefined;
+	return {
+		langs: langsOf(params.slug),
+		faq: md ? faqOf(md) : null,
+		modified: lastCommitDate(`src/docs/${lang}/${params.slug}.md`)
+	};
 };

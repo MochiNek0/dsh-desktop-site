@@ -1,3 +1,21 @@
+# 下面这些 AI 爬虫和 * 一样全部放行，规则上是重复的。
+# 显式列出来是为了：Cloudflare 的「AI 爬虫管理」被打开时会改写 robots.txt，
+# 留着这份清单，打开后对比一下就能看出哪些被挡掉了。
+# 注意：某个爬虫一旦命中具名分组，就不会再看 * 分组。以后给 * 加规则，这里也要同步加。
+
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: Bytespider
+Allow: /
+
 User-agent: *
 Allow: /
 

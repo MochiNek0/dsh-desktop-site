@@ -4,3 +4,5 @@
 # 浏览器和部分抓取器就按本地编码去猜 —— llms.txt 里的中文会显示成乱码。
 /llms.txt
   Content-Type: text/plain; charset=utf-8
+/llms-full.txt
+  Content-Type: text/plain; charset=utf-8
