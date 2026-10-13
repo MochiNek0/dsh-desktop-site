@@ -13,3 +13,6 @@ node_modules
 # wrangler 本地密钥（STATS_TOKEN 等），绝不入库
 .dev.vars
 .dev.vars.*
+
+# scripts/indexnow.mjs prepare 的中间结果
+.indexnow-pending.json
