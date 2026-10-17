@@ -41,5 +41,8 @@ Since v0.1.19 you can also pick the registry in the app under “Settings…” 
 ## Everyday notes
 
 - **Runtime auto-detection**: if no usable Node is found, the Runtime panel opens by itself and installs Node 24 in one click. No admin rights needed at any point.
+- **Quick Ask & shortcuts**: hit the global shortcut (`Ctrl+Alt+Space`, macOS `Ctrl+Option+Q`) anytime to summon the lightweight Quick Ask overlay; toggle main window visibility with `Ctrl+Alt+D`.
+- **Open workspaces from context menu**: right-click any folder in Windows Explorer, macOS Finder, or Linux file managers and choose “Open with dsh” to launch straight into that workspace.
+- **Keep-awake during tasks**: while a task is running, dsh desktop prevents system sleep to avoid interrupted long turns, and releases it automatically when done (toggleable in Settings).
 - **Close to tray**: closing the window parks the app in the tray so in-flight tasks keep running. Use “Quit dsh” in the menu to exit.
 - **Silent update checks**: checked quietly on launch, raised only when there is one, and downloaded only with your consent.

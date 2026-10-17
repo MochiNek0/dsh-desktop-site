@@ -1,8 +1,8 @@
 ---
 title: FAQ
 headTitle: DeepSeek Harness desktop client FAQ
-description: Where dsh desktop comes from, what it needs, why it is small, compatibility, and where to get help.
-order: 4
+description: Where dsh desktop comes from, what it needs, shortcuts, workspaces, compatibility, and where to get help.
+order: 5
 ---
 
 ## Is dsh desktop an official DeepSeek product?
@@ -16,6 +16,22 @@ No. The app detects your environment: if a suitable Node and dsh exist it uses t
 ## Why are the installers so small (from 2.5 MB)?
 
 It is built on Tauri v2 and uses the operating system’s native WebView engine (WebView2 on Windows, WebKit on macOS, WebKitGTK on Linux) instead of bundling a 100+ MB Chromium runtime, which dramatically reduces memory and disk footprint.
+
+## How do I trigger the Quick Ask box and customize global shortcuts?
+
+Press `Ctrl+Alt+Space` (macOS `Ctrl+Option+Q`) to summon the minimalist Quick Ask overlay anywhere to dispatch tasks, select workspaces, or switch models. Under Menu → **Settings…** (Shortcuts group), you can customize global shortcuts for window visibility, quick ask, and clipboard pasting (at least two modifier keys required). See [Shortcuts & Workspaces](../shortcuts/).
+
+## Why don't global shortcuts work on Linux?
+
+Global shortcuts rely on low-level OS event hooks. Under traditional X11 sessions, they work out of the box. Under Linux Wayland, the compositor restricts background applications from capturing global keystrokes for security reasons. To use global shortcuts on Linux, switch to an X11 desktop session.
+
+## Can I open a workspace from links or automated scripts?
+
+Yes. The application registers the `dsh-desktop://open?path=<path>` protocol handler. Clicking such a link in your browser, notes, or external automation scripts immediately launches the app and navigates to the specified workspace folder.
+
+## Will the computer sleep while a long task is executing?
+
+No. dsh desktop includes automatic Keep-Awake protection: whenever a turn is running, the app requests the operating system to prevent sleep mode. Normal power settings are restored automatically when the turn completes or asks for user confirmation. You can toggle this setting anytime on the Settings card.
 
 ## What if a broken plugin crashes the app on launch?
 

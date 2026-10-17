@@ -105,10 +105,10 @@
 
     const features = [
         { icon: "bolt", title: "feat.1.title", body: "feat.1.body" },
-        { icon: "sparkle", title: "feat.2.title", body: "feat.2.body" },
-        { icon: "puzzle", title: "feat.3.title", body: "feat.3.body" },
-        { icon: "lifebuoy", title: "feat.4.title", body: "feat.4.body" },
-        { icon: "bell", title: "feat.5.title", body: "feat.5.body" },
+        { icon: "chat", title: "feat.2.title", body: "feat.2.body" },
+        { icon: "external", title: "feat.3.title", body: "feat.3.body" },
+        { icon: "bell", title: "feat.4.title", body: "feat.4.body" },
+        { icon: "puzzle", title: "feat.5.title", body: "feat.5.body" },
         { icon: "layers", title: "feat.6.title", body: "feat.6.body" },
     ];
 

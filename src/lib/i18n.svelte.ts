@@ -50,28 +50,28 @@ const zh: Dict = {
 
   // ── 特性 ──
   "feat.heading": "为什么用桌面版",
-  "feat.sub": "还是同一个 dsh，只是不用再开终端、记端口。",
+  "feat.sub": "还是同一个 dsh，只是不用再开终端、记端口，还多了全局快捷键与工作区集成。",
 
   "feat.1.title": "安装包只有几 MB",
   // {win} / {mac} / {deb} 由 releases.ts 的 SIZE_VARS 在构建期填入真实体积，
   // 和首屏统计卡同源，发版不用再手改。FAQ 标题里的「2.5 MB 起」仍是手填的。
   "feat.1.body":
     "Tauri v2 + 系统 WebView，不打包浏览器内核。安装包 Windows 仅 {win}，macOS {mac}，Debian {deb}。",
-  "feat.2.title": "开箱即用，与终端共存",
+  "feat.2.title": "快速提问与全局快捷键",
   "feat.2.body":
-    "自动检测 Node、按需安装 dsh、自动选用空闲回环端口，与终端手动运行实例互不干扰；全程无需管理员权限。",
-  "feat.3.title": "一切皆插件",
+    "快捷键（默认 Ctrl+Alt+Space，macOS 为 Ctrl+Option+Q）随时呼出极简提问框，无需开窗口即可派发任务、选工作区与会话；三槽位全局快捷键支持窗口显隐与剪贴板秒填。",
+  "feat.3.title": "文件管理器与协议直达",
   "feat.3.body":
-    "桌面端不改 dsh 一行源码。桌面增强功能（如系统通知）以随包插件提供，卸掉即回到原版 dsh；内置插件面板，可从 DSH Market 安装，不用开终端。",
-  "feat.4.title": "安全模式",
+    "资源管理器、访达或 Linux 文件管理器中右键「用 dsh 打开」文件夹直达工作区；支持命令行 dsh-desktop <路径> 与 dsh-desktop://open?path= 协议唤起。",
+  "feat.4.title": "托盘会话直达与防休眠",
   "feat.4.body":
-    "插件崩溃导致应用停在加载页时，加载页提供「不加载插件启动」：暂时不加载你装的插件，直接打开面板卸掉出问题的那个，之后在菜单里「重新加载插件」原样装回。",
-  "feat.5.title": "托盘、通知与主题",
+    "托盘菜单置顶列出等待确认和运行中的会话一键切换；图标角标感知状态；任务运行期间自动阻止系统睡眠，避免长时间任务被休眠中断。",
+  "feat.5.title": "一切皆插件，支持本地开发",
   "feat.5.body":
-    "主题与界面语言跟随 dsh 设置，切换无需重启；支持托盘常驻和开机自启；回合结束或 dsh 等待确认时发系统通知，允许 / 拒绝可直接在通知上点。",
-  "feat.6.title": "与命令行共享数据",
+    "桌面端不改 dsh 一行源码。内置插件面板、DSH Market 市场，支持文件对话框挑选本地文件夹（link 实时联动）或 .tgz 安装，带更新角标提示与安全模式。",
+  "feat.6.title": "开箱即用，与终端共享数据",
   "feat.6.body":
-    "会话、凭证与配置都在 $DSH_HOME（默认 ~/.dsh），和命令行里的 dsh 是同一份；只允许运行一个实例，退出时回收全部子进程。",
+    "自动检测 Node 并按需一键配置、动态端口不冲突；会话、凭证与配置严格存放在 $DSH_HOME（默认 ~/.dsh），与命令行完全共享，退出回收全部子进程。",
 
   // ── 截图 ──
   "shot.heading": "界面预览",
@@ -184,12 +184,12 @@ const zh: Dict = {
   "plug.market.desc":
     "dsh 里的可视化插件市场，浏览、搜索并一键安装社区精选插件（dshmarket.com）。",
   "plug.market.cta": "访问 DSH Market",
-  "plug.1.title": "可视化一键管理",
+  "plug.1.title": "可视化管理与本地开发",
   "plug.1.body":
-    "从预设列表或 DSH Market 直接安装，也支持手动输入 npm 包名或 GitHub 仓库地址（如 github:owner/repo）。",
-  "plug.2.title": "安全模式",
+    "从预设列表或 DSH Market 一键安装，也支持从系统文件对话框挑选本地文件夹（link 实时联动）或 .tgz 压缩包，方便自己开发与调试插件。",
+  "plug.2.title": "安全模式与更新角标",
   "plug.2.body":
-    "插件若引发崩溃，加载页提供「不加载插件启动」：把你装的插件暂时摘出层列表，直接打开面板卸载出问题的那个。",
+    "插件若崩溃，加载页提供「不加载插件启动」安全排查；检测到已装插件有新版时，标题栏菜单和设置入口会显示更新角标提示。",
   "plug.3.title": "独立环境变量终端",
   "plug.3.body":
     "菜单 → 打开终端，启动一个已配好 dsh 环境变量的终端，不改动系统全局 PATH。",
@@ -341,26 +341,26 @@ const en: Dict = {
 
   "feat.heading": "Why dsh desktop",
   "feat.sub":
-    "The same dsh, without opening a terminal or keeping track of ports.",
+    "The same dsh, without opening a terminal or keeping track of ports, plus global shortcuts and workspace integration.",
 
   "feat.1.title": "A few-MB installer",
   "feat.1.body":
     "Tauri v2 on the system WebView with no bundled browser engine. Installers are {win} on Windows, {mac} on macOS, and {deb} on Debian.",
-  "feat.2.title": "Works out of the box, next to the CLI",
+  "feat.2.title": "Quick Ask & global shortcuts",
   "feat.2.body":
-    "Detects Node, installs dsh on demand, and picks a free loopback port, so it runs alongside a dsh you started in a terminal. No admin rights needed.",
-  "feat.3.title": "Everything is a plugin",
+    "Hit a shortcut (default Ctrl+Alt+Space, macOS Ctrl+Option+Q) anytime to summon a minimalist prompt box to dispatch tasks, pick workspaces, and switch models. Three global slots include show/hide and instant paste.",
+  "feat.3.title": "Open folders from anywhere",
   "feat.3.body":
-    "dsh source is not modified. Desktop features (such as system notifications) ship as bundled plugins; remove them and you have plain dsh. A built-in plugin panel installs from DSH Market without a terminal.",
-  "feat.4.title": "Safe Mode",
+    "Right-click any folder in Windows Explorer, macOS Finder, or Linux file managers to open it in dsh; launch from CLI via dsh-desktop <path> or web links via dsh-desktop://open?path= protocol.",
+  "feat.4.title": "Tray sessions & keep-awake",
   "feat.4.body":
-    "If a plugin crash leaves the app on the loading page, it offers Start without plugins: your plugins are set aside, the panel opens so you can remove the broken one, and Reload plugins puts the rest back.",
-  "feat.5.title": "Tray, notifications and theme",
+    "Tray menu lists running and waiting sessions for instant switching; icon badges reflect state; keeps the machine awake while tasks execute to prevent long runs from sleeping.",
+  "feat.5.title": "Everything is a plugin & local dev",
   "feat.5.body":
-    "Theme and UI language follow your dsh settings without a restart. Runs in the tray and can start at login. Sends a system notification when a turn ends or dsh asks for approval; allow / deny right on the notification.",
-  "feat.6.title": "Shares data with the CLI",
+    "dsh source is never modified. Built-in panel and DSH Market, plus system file picker to install local folders (link mode for live hacking) or .tgz archives, with update badges and Safe Mode.",
+  "feat.6.title": "Zero setup, shared CLI data",
   "feat.6.body":
-    "Sessions, credentials and settings live in $DSH_HOME (default ~/.dsh), the same ones the dsh CLI uses. Only one instance runs at a time, and all child processes are cleaned up on exit.",
+    "Detects Node and dsh on demand with no admin rights. Sessions, credentials and settings live in $DSH_HOME (default ~/.dsh), completely shared with the terminal CLI.",
 
   "shot.heading": "A look inside",
   "shot.sub": "The full dsh web experience in a native window.",
@@ -466,12 +466,12 @@ const en: Dict = {
   "plug.market.desc":
     "The visual plugin marketplace inside dsh — browse, search, and install community plugins in one click (dshmarket.com).",
   "plug.market.cta": "Visit DSH Market",
-  "plug.1.title": "One-click visual install",
+  "plug.1.title": "Visual management & local dev",
   "plug.1.body":
-    "Install directly from curated presets or DSH Market, or enter an npm package name or GitHub repo (e.g. github:owner/repo).",
-  "plug.2.title": "Safe Mode (recover from crashes)",
+    "Install directly from curated presets or DSH Market, or use the native folder / .tgz file picker to install local plugins (link mode for live development).",
+  "plug.2.title": "Safe Mode & update badges",
   "plug.2.body":
-    "If a crashing plugin blocks startup, Start without plugins temporarily unmounts user plugins so you can uninstall the culprit safely.",
+    "If a crashing plugin blocks startup, Start without plugins temporarily unmounts user plugins; update badges appear on the titlebar and settings when updates are available.",
   "plug.3.title": "Isolated env terminal",
   "plug.3.body":
     "Menu → Open Terminal launches a shell with dsh env vars already configured, leaving your global PATH untouched.",

@@ -52,13 +52,16 @@ dsh desktop 是 DeepSeek Harness（dsh web）的第三方开源桌面客户端�
 - Uses the system WebView (WebView2 / WebKit / WebKitGTK) instead of bundling Chromium.
 - Phone connection: scan a QR code on the desktop, then approve the device on the computer. Three channels: LAN (same Wi-Fi, no third-party server), Tailscale (works away from home), Cloudflare tunnel (HTTPS, closes after 30 idle minutes). No phone app needed; it runs in the phone's browser.
 - Starts \`dsh web\` in the background on a free loopback port; no terminal, no port management, no admin rights. Installs Node and dsh on demand if missing.
+- Quick Ask & shortcuts: press a global shortcut (default Ctrl+Alt+Space, macOS Ctrl+Option+Q) anytime to summon a minimalist prompt box to dispatch tasks, choose workspaces, and switch models. Multi-slot global shortcuts support window toggle (Ctrl+Alt+D) and instant clipboard pasting into the active session.
+- System workspace integration: right-click any folder in Windows Explorer, macOS Finder, or Linux file managers to open it in dsh; launch from CLI via \`dsh-desktop <path>\` or web links via \`dsh-desktop://open?path=\` protocol.
+- Tray session management & keep-awake: tray menu lists running and waiting sessions for instant switching with status dot badges; automatically keeps the machine awake while tasks execute to prevent long runs from sleeping.
 - Shares sessions, credentials and config with the dsh CLI in \`$DSH_HOME\` (default \`~/.dsh\`).
-- Does not modify dsh source. Desktop features ship as plugins; includes a plugin panel and supports the DSH Market plugin marketplace. Safe Mode starts without user plugins when a plugin breaks startup.
+- Does not modify dsh source. Desktop features ship as plugins; includes a plugin panel supporting DSH Market and native file pickers for local folder (link mode) or .tgz archives. Safe Mode starts without user plugins when a plugin breaks startup.
 - License: ${LICENSE.spdx}. Free.
 
 ## How it differs from the official DeepSeek Harness desktop app
 
-DeepSeek also ships an official desktop app (${OFFICIAL_DESKTOP_URL}). dsh desktop is a separate, community-made client. Its distinguishing points are the few-MB installer and connecting a phone to the dsh running on the computer.
+DeepSeek also ships an official desktop app (${OFFICIAL_DESKTOP_URL}). dsh desktop is a separate, community-made client. Its distinguishing points are the few-MB installer, connecting a phone to the dsh running on the computer, the Quick Ask overlay with global shortcuts, opening workspaces from file manager context menus, and sleep prevention during active runs.
 
 ## Docs (English)
 

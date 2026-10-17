@@ -1,8 +1,8 @@
 ---
 title: 和官方桌面端的区别
 headTitle: 与 DeepSeek Harness 官方桌面端的区别
-description: dsh desktop 与 DeepSeek Harness 官方桌面端在平台、体积、手机连接、许可证上的区别，以及怎么选。
-order: 5
+description: dsh desktop 与 DeepSeek Harness 官方桌面端在平台、体积、快捷键、手机连接、许可证上的区别，以及怎么选。
+order: 6
 ---
 
 DeepSeek 推出了 DeepSeek Harness 官方桌面端。dsh desktop 是社区做的第三方客户端，与 DeepSeek 官方没有隶属关系，两者可以同时装在一台电脑上。
@@ -13,14 +13,18 @@ DeepSeek 推出了 DeepSeek Harness 官方桌面端。dsh desktop 是社区做�
 
 | | dsh desktop | 官方桌面端 |
 | --- | --- | --- |
-| 开发方 | 社区（第三方） | DeepSeek |
+| 开发方 | 社区（第三方开源） | DeepSeek 官方 |
 | 状态 | 正式版 | 预览版 |
 | Windows | 支持（x64） | 支持（64 位） |
 | macOS | 支持（通用二进制，Apple Silicon 与 Intel） | 支持（Apple 芯片） |
 | Linux | 支持（.deb / .AppImage） | 官网未提及 |
 | 安装包体积 | Windows 约 2.5 MB，macOS 约 6.3 MB，Debian 约 4.1 MB | Windows 约 276 MB，macOS 约 353 MB |
-| 手机连接电脑上的 dsh | 支持：局域网、Tailscale、Cloudflare 隧道 | 官网未提及 |
-| 插件 | 支持，另有桌面端插件面板，可从 DSH Market 安装 | 支持 |
+| 手机远程连接 | 支持：局域网、Tailscale、Cloudflare 隧道 | 官网未提及 |
+| 快捷提问框与全局快捷键 | 支持（独立提问浮窗、主窗口显隐、剪贴板快速粘贴） | 官网未提及 |
+| 文件管理器与协议直达 | 支持（右键打开文件夹、命令行与 dsh-desktop:// 协议） | 官网未提及 |
+| 任务执行防休眠 | 支持（有任务运行时阻止系统睡眠，跑完自动恢复） | 官网未提及 |
+| 托盘会话直达与状态 | 托盘列出等待/运行中会话，图标状态角标指示 | 仅基础托盘 |
+| 插件管理 | 支持，内置插件面板、DSH Market、本地文件夹一键 link | 支持 |
 | 许可证 | AGPL-3.0 | MIT |
 
 ## dsh desktop 是怎么做的
@@ -32,6 +36,6 @@ dsh desktop 不改 dsh 的源码。它在后台启动本地的 `dsh web`，再�
 ## 怎么选
 
 - 想用 DeepSeek 原厂出品的客户端：选 [官方桌面端](https://www.deepseek.com/harness/)。
-- 想在手机上接着用电脑里的 dsh、用 Linux，或者在意安装包体积：选 dsh desktop。
+- 想在手机上远程连接、使用 Linux、需要全局快捷键与快速提问、需要文件管理器右键直接打开文件夹，或在意安装包体积：选 dsh desktop。
 
-两者都可以和终端里的 `dsh` 一起用。dsh desktop 的手机连接怎么用，见 [手机连接](../phone-connection/)。
+两者都可以和终端里的 `dsh` 一起用。使用指引见 [快捷操作与工作区](../shortcuts/) 与 [手机连接](../phone-connection/)。

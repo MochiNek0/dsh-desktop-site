@@ -1,15 +1,23 @@
 ---
 title: Plugins
 headTitle: DeepSeek Harness plugins, management and Safe Mode
-description: Installing and managing plugins, Safe Mode for when one breaks, and allowing builds for github plugins.
-order: 3
+description: Online marketplace, local folder install, update badges, and Safe Mode.
+order: 4
 ---
 
 The desktop app does not modify a single line of dsh. Every desktop capability ships as a plugin — remove them and you are back to plain dsh.
 
 ## Install and manage
 
-From the plugin panel you can install from curated presets or [DSH Market](https://dshmarket.com), or enter an npm package name or a GitHub repo (e.g. `github:owner/repo`). When an installed plugin has a newer version, its card shows an “Update to x.x.x” button.
+The plugin management panel supports multiple installation sources:
+
+- **Presets & Marketplace**: Install in one click from curated presets or [DSH Market](https://dshmarket.com).
+- **Local folders & archives**: Click “Choose a local folder” or “Choose a .tgz” to select local files via the system picker. Folders install as `link:` references (live edits reflect immediately, ideal for local plugin authoring and testing); `.tgz` archives install as `file:` copies.
+- **Package specifier**: Enter an npm package name or a GitHub repo directly (e.g. `github:owner/repo`).
+
+## Update notifications & badges
+
+The app checks for plugin updates in the background on launch and when visiting the plugin panel. When updates are found, an update badge appears on the titlebar menu button and in the settings entry. Each plugin card provides an “Update to x.x.x” button.
 
 ## Safe Mode
 
