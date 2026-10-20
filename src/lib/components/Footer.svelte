@@ -99,6 +99,7 @@
                     href: LICENSE_URL,
                     external: true,
                 },
+                { label: t("foot.signing"), href: `${home}docs/code-signing/`, external: false },
             ],
         },
     ]);
