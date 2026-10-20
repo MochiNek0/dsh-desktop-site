@@ -22,6 +22,19 @@ Free code signing for the Windows build is provided by [SignPath.io](https://abo
 
 Outside contributions arrive as pull requests and are reviewed by the reviewers above before they are merged.
 
+## Changes made to your system
+
+The installer changes only the current user's own settings, needs no administrator rights, and everything it adds is removed on uninstall.
+
+- **"Open with dsh" in the folder context menu**: on Windows, written to the current user's registry (`HKCU\Software\Classes\Directory\shell` and `Directory\Background\shell`); on Linux, listed under "Open With" for folders through the `.desktop` file.
+- **The `dsh-desktop://` link protocol**: the app is registered as the handler for these links, which open it on a given folder from a web page or the command line.
+
+These happen only when you ask for them:
+
+- **Start at login**: added only when you switch it on in settings, and removed when you switch it off.
+- **Node and dsh**: on first launch you choose which Node to use, and dsh is installed only after you confirm; a Node installed by the app goes under `%LOCALAPPDATA%` and PATH is not changed.
+- **Firewall**: the app never adds or changes firewall rules. Phone access only reads the existing rules, to warn you before Windows asks its own question, and whether to allow it is your answer in Windows' own dialog.
+
 ## Privacy statement
 
 Apart from the cases listed below, this program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it. The app collects no usage statistics, sends no crash reports, and has no accounts.
