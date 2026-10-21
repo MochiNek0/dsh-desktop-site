@@ -42,6 +42,15 @@
     let reduceMotion = $state(false);
     const swapMs = $derived(reduceMotion ? 0 : 260);
 
+    /*
+        暂时只给 GitHub Release 页，不给任何安装包直链（也不给镜像）。
+        安装包还没有代码签名，Google 把它标成了有害 / 不常见的下载；
+        网站上只要还链着这些文件，Search Console 的安全审核就过不了。
+        签名接入后改回 true，按钮、复制链接和下载源选择就都回来了。
+    */
+    const DIRECT_DOWNLOADS = false;
+    const RELEASES_LATEST = `${REPO_URL}/releases/latest`;
+
     // 下载源：默认第一个（国内推荐），随后尽量用自动测速选出的最优源覆盖。
     // 用户手动选过之后记住选择，且不再被自动测速静默覆盖。
     const MIRROR_KEY = "dsh-site-mirror";
@@ -165,7 +174,7 @@
 
         // 无论用户是否锁定过手动选择，都跑一次测速 ——
         // 锁定时只用于展示各源的实时状态点，不会挪动当前选中项（见 runAutoRace）。
-        void runAutoRace();
+        if (DIRECT_DOWNLOADS) void runAutoRace();
 
         // 偏好可能在会话中被改（系统设置里一开开关），所以监听而不是只读一次
         const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -353,7 +362,7 @@
                         JSON.stringify({
                             sid,
                             file,
-                            mirror: mirror.id,
+                            mirror: DIRECT_DOWNLOADS ? mirror.id : "direct",
                             src: clickSource(),
                         }),
                     ],
@@ -451,7 +460,9 @@
 {#snippet actions(dl: Download, compact: boolean)}
     <div class="mt-auto flex {compact ? 'gap-xs' : 'gap-sm'}">
         <a
-            href={downloadUrl(dl.file, mirror)}
+            href={DIRECT_DOWNLOADS ? downloadUrl(dl.file, mirror) : RELEASES_LATEST}
+            target={DIRECT_DOWNLOADS ? undefined : "_blank"}
+            rel={DIRECT_DOWNLOADS ? undefined : "noopener noreferrer"}
             onclick={() => reportClick(dl.file)}
             class="flex flex-1 items-center justify-center rounded-xl font-semibold transition-all duration-200
 			{compact
@@ -459,8 +470,9 @@
                 : 'min-h-14 gap-xs bg-brand-600 px-4 text-base text-white shadow-sm shadow-brand-600/25 hover:-translate-y-px hover:bg-brand-700'}"
         >
             <Icon name="download" size={compact ? 14 : 18} />
-            {t("dl.button")}
+            {DIRECT_DOWNLOADS ? t("dl.button") : t("dl.toGithub")}
         </a>
+        {#if DIRECT_DOWNLOADS}
         <button
             type="button"
             onclick={() => copyLink(dl.file)}
@@ -485,6 +497,7 @@
                 size={compact ? 14 : 16}
             />
         </button>
+        {/if}
     </div>
     <!--
         复制反馈看按钮对勾（同 InstallTips）。可见文字会让面板在点击时
@@ -622,6 +635,14 @@
 				顶部一条通知条负责把"自动选中了谁 / 手动切换到了谁"说出来，
 				这是让切换意图变得显眼的关键——之前唯一的反馈只有文字变粗。
 			-->
+            {#if !DIRECT_DOWNLOADS}
+            <p
+                class="flex items-center gap-xs border-b border-line bg-paper-100/70 px-md py-sm text-sm text-slate-600 sm:px-lg sm:py-md"
+            >
+                <Icon name="info" size={14} cls="shrink-0 text-brand-600" />
+                {t("dl.githubOnly")}
+            </p>
+            {:else}
             <div
                 class="flex flex-col gap-sm border-b border-line bg-paper-100/70 px-md py-sm sm:px-lg sm:py-md"
             >
@@ -794,6 +815,7 @@
                     {/if}
                 </div>
             </div>
+            {/if}
 
             <!-- 主面板 + 侧栏：minmax(0,·) 让轨道可以收窄，
                  长标签（AppImage 等）才挤不出卡片右缘 -->

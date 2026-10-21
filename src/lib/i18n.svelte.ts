@@ -117,6 +117,8 @@ const zh: Dict = {
   "dl.copied": "已复制",
   "dl.copyFail": "复制失败，请手动复制",
   "dl.button": "下载",
+  "dl.toGithub": "前往 GitHub 下载",
+  "dl.githubOnly": "安装包暂时只在 GitHub Release 页面提供，打开后在 Assets 里选择对应系统的文件。",
   "dl.size": "体积",
   // 与 formatCount 拼成「364 次 GitHub 下载」——
   // 口径写死在文案里：这是 GitHub 侧计数，不是安装量
@@ -406,6 +408,8 @@ const en: Dict = {
   "dl.copied": "Copied",
   "dl.copyFail": "Copy failed — please copy manually",
   "dl.button": "Download",
+  "dl.toGithub": "Download on GitHub",
+  "dl.githubOnly": "Installers are only available on the GitHub release page for now. Open it and pick the file for your system under Assets.",
   "dl.size": "Size",
   "dl.downloads": "downloads (all versions)",
   "dl.downloadsCadence": "updated every 24h",
