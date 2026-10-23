@@ -1,10 +1,10 @@
 {
-	"total": 13001,
+	"total": 13281,
 	"baseline": 364,
 	"baselineNote": "仪表化之前的 GitHub 累计下载量。那段时间没有镜像点击数据，无法追溯去重，所以整段冻结成起点。",
-	"githubCumulative": 13137,
-	"since": "2026-10-22T08:36:23.000Z",
-	"updatedAt": "2026-10-22T08:36:23.000Z",
+	"githubCumulative": 13418,
+	"since": "2026-10-23T08:32:23.000Z",
+	"updatedAt": "2026-10-23T08:32:23.000Z",
 	"windows": [
 		{
 			"from": "2026-09-05T11:17:09.068Z",
@@ -437,6 +437,15 @@
 			"subtracted": 24,
 			"outside": 245,
 			"total": 259
+		},
+		{
+			"from": "2026-10-22T08:36:23.000Z",
+			"to": "2026-10-23T08:32:23.000Z",
+			"site": 12,
+			"githubDelta": 281,
+			"subtracted": 13,
+			"outside": 268,
+			"total": 280
 		}
 	]
 }
