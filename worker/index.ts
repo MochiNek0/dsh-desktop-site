@@ -328,6 +328,17 @@ const GONE_DOCS = new Map<string, string>([
 	['/en/docs/code-signing', '/en/docs/']
 ]);
 
+/**
+ * 查 GONE_DOCS 用的规整：去掉结尾斜杠（`/x/` 和 `/x` 是同一个页面），
+ * 再转小写 —— 静态资源的匹配区分大小写，`/Docs/Code-Signing/` 本来会掉进 404，
+ * 但它显然是同一个页面的手抖写法，没理由不一起接住。
+ *
+ * 只对下面这张很短的清单这么做：真正存在的页面大小写照样严格，不做泛化。
+ */
+function goneKey(pathname: string): string {
+	return pathname.replace(/\/+$/, '').toLowerCase();
+}
+
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		const { pathname } = new URL(request.url);
@@ -344,8 +355,8 @@ export default {
 			return Response.redirect(new URL('/docs/', request.url).toString(), 301);
 		}
 
-		// 删掉的文档页（见 GONE_DOCS）：带不带结尾斜杠都算
-		const gone = GONE_DOCS.get(pathname.replace(/\/+$/, ''));
+		// 删掉的文档页（见 GONE_DOCS）：带不带结尾斜杠、大小写怎么打都算
+		const gone = GONE_DOCS.get(goneKey(pathname));
 		if (gone) return Response.redirect(new URL(gone, request.url).toString(), 301);
 
 		// 其余一律交回静态资源；未命中时由 not_found_handling 出 404.html
