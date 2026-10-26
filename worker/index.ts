@@ -313,6 +313,21 @@ async function handleDaily(request: Request, env: Env): Promise<Response> {
 	});
 }
 
+/**
+ * 已经删掉、但仍然有人访问的旧文档地址 → 该语言的文档首页。
+ *
+ * 代码签名那一页是申请 SignPath 时临时写的，申请没通过，页面连同页脚链接
+ * 一起撤了；但页脚链接、搜索结果和外部引用里还留着这个地址，所以旧链接
+ * 301 到文档首页，不留死链（和下面 /blog 同一个处理）。
+ *
+ * 文档清单是从 src/docs/*.md 生成的，删掉那两篇之后这个路径在静态资源里
+ * 就不存在了，请求一定会落到 Worker 这里。
+ */
+const GONE_DOCS = new Map<string, string>([
+	['/docs/code-signing', '/docs/'],
+	['/en/docs/code-signing', '/en/docs/']
+]);
+
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		const { pathname } = new URL(request.url);
@@ -328,6 +343,11 @@ export default {
 		if (pathname === '/blog' || pathname.startsWith('/blog/')) {
 			return Response.redirect(new URL('/docs/', request.url).toString(), 301);
 		}
+
+		// 删掉的文档页（见 GONE_DOCS）：带不带结尾斜杠都算
+		const gone = GONE_DOCS.get(pathname.replace(/\/+$/, ''));
+		if (gone) return Response.redirect(new URL(gone, request.url).toString(), 301);
+
 		// 其余一律交回静态资源；未命中时由 not_found_handling 出 404.html
 		return env.ASSETS.fetch(request);
 	}

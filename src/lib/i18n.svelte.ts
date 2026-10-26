@@ -117,8 +117,6 @@ const zh: Dict = {
   "dl.copied": "已复制",
   "dl.copyFail": "复制失败，请手动复制",
   "dl.button": "下载",
-  "dl.toGithub": "前往 GitHub 下载",
-  "dl.githubOnly": "安装包暂时只在 GitHub Release 页面提供，打开后在 Assets 里选择对应系统的文件。",
   "dl.size": "体积",
   // 与 formatCount 拼成「364 次 GitHub 下载」——
   // 口径写死在文案里：这是 GitHub 侧计数，不是安装量
@@ -305,7 +303,6 @@ const zh: Dict = {
   "foot.officialDesktop": "官方桌面端",
   "foot.market": "DSH Market 插件市场",
   "foot.license": "{license} 许可证",
-  "foot.signing": "代码签名政策（SignPath Foundation）",
   "foot.readme": "GitHub README",
   "foot.rights": "基于 {license} 许可证开源",
   "foot.group": "QQ 交流群",
@@ -408,8 +405,6 @@ const en: Dict = {
   "dl.copied": "Copied",
   "dl.copyFail": "Copy failed — please copy manually",
   "dl.button": "Download",
-  "dl.toGithub": "Download on GitHub",
-  "dl.githubOnly": "Installers are only available on the GitHub release page for now. Open it and pick the file for your system under Assets.",
   "dl.size": "Size",
   "dl.downloads": "downloads (all versions)",
   "dl.downloadsCadence": "updated every 24h",
@@ -588,7 +583,6 @@ const en: Dict = {
   "foot.officialDesktop": "Official Desktop",
   "foot.market": "DSH Market",
   "foot.license": "{license} License",
-  "foot.signing": "Code signing policy (SignPath Foundation)",
   "foot.readme": "README",
   "foot.rights": "Open source under the {license} License",
   "foot.group": "QQ Group",
