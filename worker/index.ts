@@ -321,7 +321,7 @@ async function handleDaily(request: Request, env: Env): Promise<Response> {
  * 301 到文档首页，不留死链（和下面 /blog 同一个处理）。
  *
  * 文档清单是从 src/docs/*.md 生成的，删掉那两篇之后这个路径在静态资源里
- * 就不存在了，请求一定会落到 Worker 这里。
+ * 就不存在了；浏览器导航请求要靠 wrangler.jsonc 的 run_worker_first 才会落到 Worker 这里。
  */
 const GONE_DOCS = new Map<string, string>([
 	['/docs/code-signing', '/docs/'],
@@ -349,7 +349,7 @@ export default {
 		/*
 			博客已经换成了文档。旧链接（含单篇文章）一律 301 到文档首页，
 			不留死链 —— 那两篇讲的是本站自己的实现，文档里没有一一对应的页面。
-			静态资源里已经没有 /blog 了，所以请求一定会落到 Worker 这里。
+			静态资源里已经没有 /blog 了；浏览器导航请求靠 wrangler.jsonc 的 run_worker_first 落到 Worker 这里。
 		*/
 		if (pathname === '/blog' || pathname.startsWith('/blog/')) {
 			return Response.redirect(new URL('/docs/', request.url).toString(), 301);
