@@ -1,6 +1,7 @@
 {
-  // 站点主体仍是 vite build 产出的静态资源；Worker 只挂了两个 /api 路由
-  // 用来收下载点击（见 worker/index.ts）。静态资源命中时 Worker 根本不会执行，
+  // 站点主体仍是 vite build 产出的静态资源；Worker 只挂了三个 /api 路由
+  // （/api/click 收下载点击、/api/visit 收访客、/api/daily 给每日汇总脚本读，
+  // 见 worker/index.ts）。静态资源命中时 Worker 根本不会执行，
   // 所以页面的响应路径和纯静态时期没有区别。
   //
   // ⚠️ "name" 必须和 Cloudflare 面板里 Worker 的名字一致，否则会部署到另一个 Worker。
@@ -32,10 +33,13 @@
     // 真正不存在的地址应该返回 404，而不是拿首页顶包。
     // adapter-static 的 fallback 就是 404.html。
     "not_found_handling": "404-page",
-    // ⚠️ 设了 not_found_handling 之后，浏览器的导航请求（Sec-Fetch-Mode: navigate）
-    // 未命中静态资源时会直接拿到 404.html，不会进 Worker；curl 之类的请求才会进。
-    // 所以 Worker 里做的旧链接 301（/blog、GONE_DOCS）必须在这里列出，让 Worker 先跑。
-    "run_worker_first": ["/blog", "/blog/*", "/docs/code-signing*", "/en/docs/code-signing*"]
+    // ⚠️ run_worker_first 写成路径清单后就是一个白名单：只有列出的路径会进 Worker，
+    // 其余未命中静态资源的请求（浏览器导航请求）直接拿 404.html。
+    // /api/* 在静态资源里本来就不存在，以前靠「未命中就进 Worker」兜底；
+    // 一旦有了这份清单就必须显式列出，否则 /api/visit、/api/click、/api/daily
+    // 全都会 404 —— 2026-10-26 加这份清单时只列了旧链接 301 的路径，
+    // 把三个 API 一起漏掉了（见 fb803f3 的教训）。
+    "run_worker_first": ["/api/*", "/blog", "/blog/*", "/docs/code-signing*", "/en/docs/code-signing*"]
   },
 
   // 下载点击流水。建库：wrangler d1 create dsh-desktop-site-stats
