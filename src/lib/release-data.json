@@ -1,44 +1,44 @@
 {
-	"version": "0.1.28",
-	"tag": "v0.1.28",
+	"version": "0.1.29",
+	"tag": "v0.1.29",
 	"preview": null,
-	"publishedAt": "2026-10-23T08:53:45Z",
+	"publishedAt": "2026-10-26T07:56:17Z",
 	"license": {
 		"spdx": "AGPL-3.0",
-		"tag": "v0.1.28"
+		"tag": "v0.1.29"
 	},
-	"totalDownloads": 13423,
+	"totalDownloads": 14126,
 	"assets": {
-		"dsh-desktop_0.1.28_amd64.AppImage": {
-			"size": 82995704,
+		"dsh-desktop_0.1.29_amd64.AppImage": {
+			"size": 83003896,
 			"downloads": 0
 		},
-		"dsh-desktop_0.1.28_amd64.AppImage.sig": {
+		"dsh-desktop_0.1.29_amd64.AppImage.sig": {
 			"size": 424,
 			"downloads": 0
 		},
-		"dsh-desktop_0.1.28_amd64.deb": {
-			"size": 4553730,
+		"dsh-desktop_0.1.29_amd64.deb": {
+			"size": 4558286,
 			"downloads": 0
 		},
-		"dsh-desktop_0.1.28_amd64.deb.sig": {
+		"dsh-desktop_0.1.29_amd64.deb.sig": {
 			"size": 420,
 			"downloads": 0
 		},
-		"dsh-desktop_0.1.28_universal.dmg": {
-			"size": 6917630,
+		"dsh-desktop_0.1.29_universal.dmg": {
+			"size": 6928970,
 			"downloads": 0
 		},
-		"dsh-desktop_0.1.28_x64-setup.exe": {
-			"size": 2769111,
+		"dsh-desktop_0.1.29_x64-setup.exe": {
+			"size": 2768956,
 			"downloads": 0
 		},
-		"dsh-desktop_0.1.28_x64-setup.exe.sig": {
+		"dsh-desktop_0.1.29_x64-setup.exe.sig": {
 			"size": 424,
 			"downloads": 0
 		},
 		"dsh-desktop_universal.app.tar.gz": {
-			"size": 7004476,
+			"size": 7013920,
 			"downloads": 0
 		},
 		"dsh-desktop_universal.app.tar.gz.sig": {
@@ -50,5 +50,5 @@
 			"downloads": 0
 		}
 	},
-	"fetchedAt": "2026-10-23T08:54:01.365Z"
+	"fetchedAt": "2026-10-26T07:56:33.403Z"
 }
