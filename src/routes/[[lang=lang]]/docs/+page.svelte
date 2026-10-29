@@ -8,7 +8,7 @@
 	const t = $derived(i18n.t);
 	const base = $derived(`${pathForLang(i18n.lang)}docs/`);
 	const url = $derived(`${ORIGIN}${base}`);
-	const title = $derived(`${t('docs.title')} · dsh desktop`);
+	const title = $derived(`dsh desktop ${t('docs.title')}`);
 </script>
 
 <svelte:head>
@@ -23,11 +23,14 @@
 	<meta name="robots" content="index, follow" />
 	<meta property="og:type" content="website" />
 	<meta property="og:site_name" content="dsh desktop" />
+	<meta property="og:locale" content={i18n.lang === 'zh' ? 'zh_CN' : 'en_US'} />
 	<meta property="og:title" content={title} />
 	<meta property="og:description" content={t('docs.desc')} />
 	<meta property="og:url" content={url} />
 	<meta property="og:image" content="{ORIGIN}{i18n.lang === 'zh' ? '/og.png' : '/og-en.png'}" />
 	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content={title} />
+	<meta name="twitter:description" content={t('docs.desc')} />
 </svelte:head>
 
 <div class="stack-section">

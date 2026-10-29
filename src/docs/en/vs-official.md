@@ -1,6 +1,6 @@
 ---
 title: dsh desktop vs the official app
-headTitle: dsh desktop vs the official DeepSeek Harness desktop app
+headTitle: dsh desktop vs the official DeepSeek Harness app
 description: How dsh desktop differs from the official DeepSeek Harness desktop app in platforms, size, shortcuts, phone access and license, and which one to pick.
 order: 6
 ---

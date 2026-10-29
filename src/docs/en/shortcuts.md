@@ -1,6 +1,6 @@
 ---
 title: Shortcuts & Workspaces
-headTitle: DeepSeek Harness Quick Ask, Shortcuts and Workspaces Guide
+headTitle: dsh Quick Ask, shortcuts & workspaces
 description: Quick Ask overlay, multi-slot global shortcuts, opening folders from file managers and custom protocols, plus tray session management and keep-awake.
 order: 3
 ---

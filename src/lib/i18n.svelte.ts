@@ -19,9 +19,9 @@ type Dict = Record<string, string>;
 
 const zh: Dict = {
   // ── 站点/导航 ──
-  "site.title": "dsh desktop — DeepSeek Harness 桌面客户端，手机也能远程用",
+  "site.title": "dsh desktop — dsh 桌面客户端（DeepSeek Harness），手机也能远程用",
   "site.desc":
-    "dsh desktop 是 DeepSeek Harness（dsh web）的第三方开源桌面客户端，安装包仅几 MB。手机扫码即可远程使用电脑上的 dsh（局域网 / Tailscale / Cloudflare）；免开终端、免管端口，与 CLI 共享会话和配置，支持插件与安全模式。",
+    "dsh desktop 是 DeepSeek Harness（dsh）的开源第三方桌面客户端，支持 Windows / macOS / Linux，安装包仅几 MB。手机扫码即可远程使用电脑上的 dsh，与 CLI 共享会话和配置。",
 
   "nav.download": "下载",
   "nav.connect": "手机连接",
@@ -128,6 +128,7 @@ const zh: Dict = {
   "dl.allAssets": "查看全部安装包与更新日志",
   "dl.groupPrompt": "遇到安装或使用问题？欢迎加入用户交流群探讨",
   "dl.installHelp": "安装指引",
+  "dl.vsOfficial": "和官方桌面端的区别",
   "dl.official.badge": "官方版本",
   "dl.official.title": "你也可以体验 DeepSeek Harness 官方桌面端",
   "dl.official.desc":
@@ -203,7 +204,7 @@ const zh: Dict = {
 
   // ── 文档 ──
   "docs.title": "文档",
-  "docs.desc": "安装、手机连接、插件与常见问题。",
+  "docs.desc": "dsh 客户端的安装指引、手机远程连接、快捷键与工作区、插件、常见问题，以及和官方桌面端的区别。",
   "docs.copy": "复制",
   "docs.copied": "已复制",
   "docs.copyFail": "复制失败",
@@ -314,7 +315,7 @@ const en: Dict = {
   "site.title":
     "dsh desktop — DeepSeek Harness desktop client with phone access",
   "site.desc":
-    "dsh desktop is an unofficial, open-source desktop client for DeepSeek Harness (dsh web) with a few-MB installer. Scan a QR code to use your computer's dsh from your phone over LAN, Tailscale or Cloudflare. No terminal or port setup; shares sessions and config with the CLI.",
+    "Open-source, unofficial DeepSeek Harness (dsh) desktop app for Windows, macOS and Linux. Few-MB installer; scan a QR code to use your computer's dsh from your phone.",
 
   "nav.download": "Download",
   "nav.connect": "Phone connection",
@@ -414,6 +415,7 @@ const en: Dict = {
   "dl.allAssets": "All installers and release notes",
   "dl.groupPrompt": "Need help with setup or usage? Join our user community group",
   "dl.installHelp": "Installation guide",
+  "dl.vsOfficial": "vs the official app",
   "dl.official.badge": "Official Release",
   "dl.official.title": "Also try the official DeepSeek Harness desktop app",
   "dl.official.desc":
@@ -483,7 +485,7 @@ const en: Dict = {
   "cta.alsoOfficialLink": "Try DeepSeek Harness Official Desktop",
 
   "docs.title": "Docs",
-  "docs.desc": "Installation, phone connection, plugins, and FAQ.",
+  "docs.desc": "Installing the dsh desktop client, phone access, shortcuts and workspaces, plugins, FAQ, and how it differs from the official app.",
   "docs.copy": "Copy",
   "docs.copied": "Copied",
   "docs.copyFail": "Failed",

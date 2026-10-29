@@ -1047,6 +1047,18 @@
                         cls="transition-transform group-hover:translate-x-0.5"
                     />
                 </a>
+                <!-- 搜「dsh desktop 官方 / 官网」的人多半在两者之间选，对比页从首页直达 -->
+                <a
+                    href="{pathForLang(i18n.lang)}docs/vs-official/"
+                    class="group inline-flex items-center gap-1.5 font-medium text-slate-600 hover:text-brand-700"
+                >
+                    {t("dl.vsOfficial")}
+                    <Icon
+                        name="arrow"
+                        size={14}
+                        cls="transition-transform group-hover:translate-x-0.5"
+                    />
+                </a>
                 <a
                     href="{REPO_URL}/releases/latest"
                     target="_blank"

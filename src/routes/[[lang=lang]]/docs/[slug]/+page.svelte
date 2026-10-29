@@ -16,6 +16,8 @@
 	const base = $derived(`${pathForLang(i18n.lang)}docs/`);
 	const url = $derived(`${ORIGIN}${base}${data.slug}/`);
 	const headTitle = $derived(meta.headTitle ?? meta.title);
+	// 标题里已经有品牌名就不再挂后缀，否则搜索结果里是「dsh desktop … · dsh desktop」
+	const pageTitle = $derived(headTitle.includes('dsh desktop') ? headTitle : `${headTitle} · dsh desktop`);
 	const ogCard = $derived(`${ORIGIN}${i18n.lang === 'zh' ? '/og.png' : '/og-en.png'}`);
 
 	/*
@@ -118,7 +120,7 @@
 </script>
 
 <svelte:head>
-	<title>{headTitle} · dsh desktop</title>
+	<title>{pageTitle}</title>
 	<meta name="description" content={meta.description} />
 	<link rel="canonical" href={url} />
 	<!--

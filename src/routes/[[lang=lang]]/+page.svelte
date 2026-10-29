@@ -156,6 +156,8 @@
                     "@id": `${pageUrl}#website`,
                     url: pageUrl,
                     name: "dsh desktop",
+                    // 仓库名就是 dsh-desktop，搜索里也有人这么搜；站点名候选只认这里
+                    alternateName: "dsh-desktop",
                     description: t("site.desc"),
                     inLanguage: htmlLang(i18n.lang),
                     publisher: { "@id": `${ORIGIN}/#author` },
@@ -164,6 +166,7 @@
                     "@type": "SoftwareApplication",
                     "@id": `${pageUrl}#app`,
                     name: "dsh desktop",
+                    alternateName: "dsh-desktop",
                     description: t("site.desc"),
                     applicationCategory: "DeveloperApplication",
                     operatingSystem: "Windows, macOS, Linux",

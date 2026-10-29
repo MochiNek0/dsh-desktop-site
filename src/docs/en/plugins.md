@@ -1,6 +1,6 @@
 ---
 title: Plugins
-headTitle: DeepSeek Harness plugins, management and Safe Mode
+headTitle: DeepSeek Harness plugins & Safe Mode
 description: Online marketplace, local folder install, update badges, and Safe Mode.
 order: 4
 ---
