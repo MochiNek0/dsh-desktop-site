@@ -33,8 +33,8 @@
 		右侧那个「下载」按钮不是导航项，是这一站的主转化入口。
 	*/
 	const links = $derived([
-		{ key: 'nav.docs', href: `${pathForLang(i18n.lang)}docs/` },
-		{ key: 'nav.connect', href: `${pathForLang(i18n.lang)}go/` }
+		{ key: 'nav.docs', href: `${pathForLang(i18n.lang)}docs/`, icon: 'layers' },
+		{ key: 'nav.connect', href: `${pathForLang(i18n.lang)}go/`, icon: 'phone' }
 	]);
 
 	const downloadHref = $derived(`${pathForLang(i18n.lang)}#download`);
@@ -166,15 +166,19 @@
 					{t('nav.download')}
 				</a>
 
+				<!-- 三条线 → X：先并拢、再旋转；收起时倒过来。见下面 style 里的 .burger -->
 				<button
 					type="button"
 					onclick={() => (open = !open)}
-					class="grid size-10 place-items-center rounded-full text-slate-800 transition-colors hover:bg-paper-200 md:hidden"
+					class="burger grid size-10 place-items-center rounded-full text-slate-800 transition-colors hover:bg-paper-200 md:hidden"
+					data-open={open ? '' : undefined}
 					aria-label={t('nav.menu')}
 					aria-expanded={open}
 					aria-controls="mobile-nav"
 				>
-					<Icon name={open ? 'close' : 'menu'} size={20} />
+					<span class="flex flex-col items-center" aria-hidden="true">
+						<span></span><span></span><span></span>
+					</span>
 				</button>
 			</div>
 		</div>
@@ -185,6 +189,7 @@
 	<!--
 		移动端全屏面板。压在顶栏下面（z-40 < z-50），顶栏在打开时退回透明的整条，
 		和面板的底色连成一片 —— 看起来是「顶栏向下展开成了一整屏」。
+		菜单项用正文字号 + 图标，不用大标题字：整屏只有三项，字一放大就显得空又突兀。
 		下载 CTA 放在底部拇指区：窄屏上顶栏里的下载按钮是隐藏的，这里是唯一入口。
 	-->
 	<div
@@ -193,34 +198,36 @@
 		transition:fade={{ duration: ms(180) }}
 	>
 		<nav
-			class="gutter-x flex flex-1 flex-col gap-3xl overflow-y-auto pt-2xl pb-[max(env(safe-area-inset-bottom),24px)]"
+			class="gutter-x flex flex-1 flex-col overflow-y-auto pt-sm pb-[max(env(safe-area-inset-bottom),24px)]"
 			aria-label="Mobile"
 		>
 			<ul class="flex flex-col">
-				{#each [...links, { key: 'nav.github', href: REPO_URL }] as link, i (link.href)}
+				{#each [...links, { key: 'nav.github', href: REPO_URL, icon: 'github' }] as link, i (link.href)}
 					{@const external = link.href === REPO_URL}
-					<li in:fly={{ y: 12, duration: ms(420), delay: ms(40 + i * 45), opacity: 0 }}>
+					<li in:fly={{ y: 8, duration: ms(320), delay: ms(40 + i * 40), opacity: 0 }}>
 						<a
 							href={link.href}
 							target={external ? '_blank' : undefined}
 							rel={external ? 'noopener noreferrer' : undefined}
 							onclick={close}
-							class="flex items-center justify-between gap-md border-b border-line py-lg text-2xl font-semibold tracking-tight text-slate-900"
+							aria-current={!external && page.url.pathname.startsWith(link.href) ? 'page' : undefined}
+							class="flex min-h-14 items-center gap-sm border-b border-line text-[15px] font-medium text-slate-700 transition-colors active:text-slate-900 aria-[current]:text-slate-900"
 						>
-							{t(link.key)}
-							<Icon name={external ? 'external' : 'arrow'} size={20} cls="text-slate-400" />
+							<Icon name={link.icon} size={18} cls="shrink-0 text-slate-400" />
+							<span class="flex-1">{t(link.key)}</span>
+							<Icon name={external ? 'external' : 'arrow'} size={15} cls="shrink-0 text-slate-300" />
 						</a>
 					</li>
 				{/each}
 			</ul>
 
-			<div class="mt-auto" in:fly={{ y: 12, duration: ms(420), delay: ms(200), opacity: 0 }}>
+			<div class="mt-auto pt-xl" in:fly={{ y: 8, duration: ms(320), delay: ms(180), opacity: 0 }}>
 				<a
 					href={downloadHref}
 					onclick={close}
-					class="flex min-h-14 items-center justify-center gap-xs rounded-full bg-ink-900 px-6 text-base font-semibold text-white transition-colors hover:bg-ink-800"
+					class="flex min-h-12 items-center justify-center gap-xs rounded-full bg-ink-900 px-6 text-[15px] font-semibold text-white transition-colors hover:bg-ink-800"
 				>
-					<Icon name="download" size={18} />
+					<Icon name="download" size={16} />
 					{t('nav.download')}
 				</a>
 			</div>
@@ -294,5 +301,66 @@
 
 	[data-pill] .end {
 		translate: calc(-1 * var(--shift)) 0;
+	}
+
+	/*
+		── 汉堡按钮：三条线 → X ──
+		每条线是外层 span（只管上下位移）+ ::before（只管旋转），拆开才能分两段走：
+		打开时先并拢到中线、再转成 X；收起时先转回水平、再散开。
+		两段靠 transition-delay 错开 —— 打开和收起的 delay 挂在相反的一边，顺序就倒过来了。
+		线高 2px、上下各 2px 内衬，相邻两条中心距 6px，所以并拢量是 ±6px。
+	*/
+	.burger > span > span {
+		display: block;
+		padding-block: 2px;
+		transition: translate 0.3s ease 0.15s;
+	}
+
+	.burger > span > span::before {
+		content: '';
+		display: block;
+		width: 18px;
+		height: 2px;
+		border-radius: 1px;
+		background-color: currentColor;
+		transition:
+			rotate 0.3s ease,
+			opacity 0.2s ease 0.15s;
+	}
+
+	.burger[data-open] > span > span {
+		transition-delay: 0s;
+	}
+
+	.burger[data-open] > span > span::before {
+		transition-delay: 0.15s, 0s;
+	}
+
+	.burger[data-open] > span > span:nth-child(1) {
+		translate: 0 6px;
+	}
+
+	.burger[data-open] > span > span:nth-child(3) {
+		translate: 0 -6px;
+	}
+
+	.burger[data-open] > span > span:nth-child(1)::before {
+		rotate: 45deg;
+	}
+
+	.burger[data-open] > span > span:nth-child(2)::before {
+		opacity: 0;
+	}
+
+	.burger[data-open] > span > span:nth-child(3)::before {
+		rotate: -45deg;
+	}
+
+	/* 全局的 reduced-motion 只把时长压成 0，delay 还在，这里一并清掉 */
+	@media (prefers-reduced-motion: reduce) {
+		.burger > span > span,
+		.burger > span > span::before {
+			transition-delay: 0s !important;
+		}
 	}
 </style>

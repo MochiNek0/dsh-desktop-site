@@ -102,7 +102,6 @@ const zh: Dict = {
   "dl.otherPlatforms": "其他平台",
   "dl.source": "下载源",
   "dl.sourceHint": "换一个源",
-  "dl.autoBadge": "自动优选",
   "dl.autoPicking": "正在为你测速，挑选最快的下载源…",
   "dl.autoPicked": "已自动选择最快的源：{name}（{ms} ms）",
   "dl.autoNone": "所有源探测都超时了，暂时用默认源，你可以手动换一个试试",
@@ -129,7 +128,6 @@ const zh: Dict = {
   "dl.groupPrompt": "遇到安装或使用问题？欢迎加入用户交流群探讨",
   "dl.installHelp": "安装指引",
   "dl.vsOfficial": "和官方桌面端的区别",
-  "dl.official.badge": "官方版本",
   "dl.official.title": "你也可以体验 DeepSeek Harness 官方桌面端",
   "dl.official.desc":
     "DeepSeek 现已正式推出官方桌面客户端。如需原厂桌面体验，欢迎前往官网下载。",
@@ -389,7 +387,6 @@ const en: Dict = {
   "dl.otherPlatforms": "Other platforms",
   "dl.source": "Source",
   "dl.sourceHint": "Change source",
-  "dl.autoBadge": "Auto-optimized",
   "dl.autoPicking": "Testing mirrors to find the fastest one for you…",
   "dl.autoPicked": "Auto-selected the fastest source: {name} ({ms} ms)",
   "dl.autoNone":
@@ -416,7 +413,6 @@ const en: Dict = {
   "dl.groupPrompt": "Need help with setup or usage? Join our user community group",
   "dl.installHelp": "Installation guide",
   "dl.vsOfficial": "vs the official app",
-  "dl.official.badge": "Official Release",
   "dl.official.title": "Also try the official DeepSeek Harness desktop app",
   "dl.official.desc":
     "DeepSeek has officially launched its desktop client. If you prefer the official edition, you can download it directly from the official website.",

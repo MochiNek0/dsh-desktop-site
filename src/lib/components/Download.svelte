@@ -449,14 +449,14 @@
     次要平台的行动点退后一层，主 CTA 才立得起来。
 -->
 {#snippet actions(dl: Download, compact: boolean)}
-    <div class="mt-auto flex {compact ? 'gap-xs' : 'gap-sm'}">
+    <div class="mt-auto flex gap-xs">
         <a
             href={downloadUrl(dl.file, mirror)}
             onclick={() => reportClick(dl.file)}
-            class="flex flex-1 items-center justify-center rounded-xl font-semibold transition-all duration-200
+            class="flex flex-1 items-center justify-center rounded-full font-semibold transition-colors
 			{compact
                 ? 'min-h-10 gap-2xs border border-line bg-white px-3 text-[13px] text-slate-800 hover:border-line-strong hover:bg-paper-100'
-                : 'min-h-14 gap-xs bg-brand-600 px-4 text-base text-white shadow-sm shadow-brand-600/25 hover:-translate-y-px hover:bg-brand-700'}"
+                : 'min-h-12 gap-xs bg-ink-900 px-5 text-[15px] text-white hover:bg-ink-800'}"
         >
             <Icon name="download" size={compact ? 14 : 18} />
             {t("dl.button")}
@@ -464,8 +464,8 @@
         <button
             type="button"
             onclick={() => copyLink(dl.file)}
-            class="grid shrink-0 place-items-center rounded-xl border transition-colors
-			{compact ? 'size-10' : 'size-14'}
+            class="grid shrink-0 place-items-center rounded-full border transition-colors
+			{compact ? 'size-10' : 'size-12'}
 			{copied === dl.file && !copyError
                 ? 'border-brand-200 bg-brand-50 text-brand-700'
                 : 'border-line bg-white text-slate-600 hover:bg-paper-200 hover:text-slate-900'}"
@@ -600,68 +600,143 @@
 
         <!--
             ── 版面结构 ────────────────────────────────────────────────
-            原来是 1240px 宽的卡片里平铺三栏，每栏只有两百来像素高：
-            宽高比接近 5:1，是全页最扁的一块 —— 这就是「臃肿」的来源。
-            问题不在容器宽（改窄会和上下区块的左缘错位），而在**整块
-            内容没有纵向体量，也没有主次**。
+            主面板（检测到的平台，约 3/5 宽）+ 侧栏（其余两个平台）+ 底部下载源条，
+            各自是一座独立的「岛」，彼此用留白而不是 hairline 隔开 ——
+            和下面官方桌面端 / 交流群那两张小卡是同一套语言。
 
-            收法：不拆容器，拆卡片内部 ——
-              · 检测到的平台进左侧大面板（约 3/5 宽）：渐变底、大图标、
-                大按钮，内容纵向铺开，成为这一屏的锚点，高度自然长出来
-              · 其余两个平台收进右侧窄列（约 2/5 宽）：紧凑排版、描边按钮，
-                视觉上退后一层
-              · 主侧之间一条竖 hairline、侧栏两行一条横 hairline，
-                层级仍由留白 + 底色 + hairline 表达，不套边框
+            2026-10 改版：原来这块堆了渐变底、渐变图标芯片、实心蓝按钮、
+            三四种徽标，配色和全站（黑白 + 一点品牌蓝）脱节，显得旧。
+            现在只靠层级说话：
+              · 主按钮和首屏 / 顶栏一样用 ink-900 实底胶囊，全站只有一种主 CTA 长相
+              · 平台图标统一用中性芯片，「为你推荐」降成一枚浅色小标
+              · 下载源从卡片顶部挪到底部：它是「出了问题才会去碰」的设置，
+                不该是用户进到这一屏读到的第一行
         -->
         <!-- 下载卡片不参与入场动画：这是下载站，下载按钮不该有任何一帧是看不见的 -->
-        <div class="card elev-2 overflow-hidden">
-            <!--
-				下载源：每个源是一颗带状态点的胶囊按钮而不是纯文字 tab ——
-				状态点（转圈/绿/黄/灰/红）让"正在测速 / 谁更快 / 谁选不了"
-				一眼可辨，选中项额外带一枚"当前使用"徽标而不只是下划线。
-				顶部一条通知条负责把"自动选中了谁 / 手动切换到了谁"说出来，
-				这是让切换意图变得显眼的关键——之前唯一的反馈只有文字变粗。
-			-->
-            <div
-                class="flex flex-col gap-sm border-b border-line bg-paper-100/70 px-md py-sm sm:px-lg sm:py-md"
-            >
-                <div
-                    class="flex flex-col gap-sm sm:flex-row sm:items-center sm:gap-md"
-                >
-                    <span
-                        class="flex shrink-0 items-center gap-xs text-sm font-semibold text-slate-900"
-                    >
+        <div class="flex flex-col gap-md">
+            <!-- 主面板 + 侧栏：minmax(0,·) 让轨道可以收窄，
+                 长标签（AppImage 等）才挤不出卡片右缘 -->
+            <div class="grid gap-md lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+                <!--
+                    主面板：ordered[0]，即检测到的平台（未检测到时是
+                    Windows）。「为你推荐」只在真的检测到系统时出现，
+                    未检测时不冒充推荐。
+                -->
+                <div class="card elev-2 flex flex-col gap-lg p-lg sm:gap-xl sm:p-xl lg:p-3xl">
+                    <div class="flex items-center gap-md sm:gap-lg">
                         <span
-                            class="grid size-7 place-items-center rounded-lg bg-linear-to-br from-brand-50 to-accent-50 text-brand-600 ring-1 ring-brand-100"
+                            class="grid size-12 shrink-0 place-items-center rounded-2xl bg-paper-200 text-slate-900 sm:size-14"
                         >
-                            <Icon name="bolt" size={14} />
+                            <!-- svg 的尺寸用 class 响应式覆盖 width/height 属性 -->
+                            <Icon
+                                name={osIcon[primary.id]}
+                                size={28}
+                                cls="size-6 sm:size-7"
+                            />
                         </span>
-                        {t("dl.source")}
-                        {#if !userLocked}
-                            <span
-                                class="hidden shrink-0 items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-bold tracking-wide text-brand-700 ring-1 ring-brand-100 sm:inline-flex"
+                        <div class="min-w-0 flex-1">
+                            <div
+                                class="flex min-w-0 flex-wrap items-center gap-x-sm gap-y-2xs"
                             >
-                                <Icon
-                                    name={raceState === "racing"
-                                        ? "loader"
-                                        : "sparkle"}
-                                    size={10}
-                                    cls={raceState === "racing"
-                                        ? "animate-spin"
-                                        : ""}
-                                />
-                                {t("dl.autoBadge")}
-                            </span>
-                        {/if}
+                                <h3
+                                    class="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl"
+                                >
+                                    {t(primary.nameKey)}
+                                </h3>
+                                {#if detected === primary.id}
+                                    <span
+                                        class="inline-flex shrink-0 items-center rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-medium text-brand-700"
+                                    >
+                                        {t("dl.recommendedForYou")}
+                                    </span>
+                                {/if}
+                            </div>
+                            <p
+                                class="truncate text-sm {primary.verified
+                                    ? 'text-slate-500'
+                                    : 'text-accent-600'}"
+                            >
+                                {t(primary.statusKey)}
+                            </p>
+                        </div>
+                    </div>
+
+                    {#if primary.downloads.length > 1}
+                        {@render tabRail(
+                            primary,
+                            currentFile(primary),
+                            false,
+                        )}
+                    {/if}
+
+                    {@render pkgZone(primary, false)}
+                </div>
+
+                <!--
+                    侧栏：其余平台，两座小岛。lg 下 grid-rows-2 平分主面板的高度。
+                -->
+                <div class="grid gap-md lg:grid-rows-2">
+                    {#each rest as group (group.id)}
+                        {@const multi = group.downloads.length > 1}
+                        <div class="card flex flex-col gap-md p-lg">
+                            <!--
+                                头部一行：小图标芯片 + 名称/状态；
+                                多包平台（Linux 未被检测到时）的 tab 靠
+                                ml-auto 推到行尾，单包平台就留白。
+                            -->
+                            <div class="flex items-center gap-sm">
+                                <span
+                                    class="grid size-9 shrink-0 place-items-center rounded-xl bg-paper-200 text-slate-800"
+                                >
+                                    <Icon
+                                        name={osIcon[group.id]}
+                                        size={18}
+                                    />
+                                </span>
+                                <div class="min-w-0 flex-1">
+                                    <h3
+                                        class="truncate text-sm font-semibold text-slate-900"
+                                    >
+                                        {t(group.nameKey)}
+                                    </h3>
+                                    <p
+                                        class="truncate text-xs {group.verified
+                                            ? 'text-slate-500'
+                                            : 'text-accent-600'}"
+                                    >
+                                        {t(group.statusKey)}
+                                    </p>
+                                </div>
+                                {#if multi}
+                                    {@render tabRail(
+                                        group,
+                                        currentFile(group),
+                                        true,
+                                    )}
+                                {/if}
+                            </div>
+
+                            {@render pkgZone(group, true)}
+                        </div>
+                    {/each}
+                </div>
+            </div>
+
+            <!--
+                下载源条。每个源是一颗带状态点的小胶囊 ——
+                状态点（转圈 / 实心 / 浅色 / 空心）让「正在测速 / 谁更快 / 谁不可用」
+                一眼可辨；下面一行通知负责把「自动选中了谁 / 手动切到了谁」说出来。
+            -->
+            <div
+                class="card flex flex-col gap-xs px-lg py-md sm:px-xl"
+            >
+                <div class="flex flex-col gap-xs sm:flex-row sm:items-center sm:gap-md">
+                    <span class="shrink-0 text-xs font-medium text-slate-500">
+                        {t("dl.source")}
                     </span>
 
-                    <span
-                        class="hidden h-5 w-px bg-line sm:block"
-                        aria-hidden="true"
-                    ></span>
-
                     <div
-                        class="flex min-w-0 flex-1 flex-wrap items-center gap-xs"
+                        class="flex min-w-0 flex-1 flex-wrap items-center gap-1"
                         role="group"
                         aria-label={t("dl.source")}
                     >
@@ -679,10 +754,10 @@
                                           ? t("dl.latencyTimeout")
                                           : t("dl.latencyFail")
                                     : t("dl.latencyTesting")}
-                                class="relative flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium whitespace-nowrap transition-all duration-200
+                                class="relative flex min-h-8 items-center gap-1.5 rounded-full px-2.5 text-xs whitespace-nowrap transition-all duration-200
 								{active
-                                    ? 'border-brand-200 bg-brand-50 text-brand-700 shadow-sm'
-                                    : 'border-line bg-white text-slate-600 hover:border-line-strong hover:bg-paper-100 hover:text-slate-900'}
+                                    ? 'bg-white font-semibold text-slate-900 shadow-xs ring-1 ring-line-strong'
+                                    : 'font-medium text-slate-500 hover:bg-paper-200 hover:text-slate-900'}
 								{pulseId === m.id ? 'mirror-pulse' : ''}"
                             >
                                 <!--
@@ -719,13 +794,6 @@
                                     {/if}
                                 </span>
                                 {m.name}
-                                {#if active}
-                                    <Icon
-                                        name="check"
-                                        size={11}
-                                        cls="text-brand-600"
-                                    />
-                                {/if}
                             </button>
                         {/each}
 
@@ -735,7 +803,7 @@
                             onclick={reAutoPick}
                             disabled={raceState === "racing"}
                             title={t("dl.reAutoTitle")}
-                            class="ml-auto flex shrink-0 items-center gap-1 rounded-full border border-line bg-white px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-line-strong hover:bg-paper-100 hover:text-slate-900 disabled:cursor-wait disabled:opacity-60"
+                            class="flex min-h-8 shrink-0 items-center gap-1 rounded-full px-2.5 text-xs font-medium text-slate-500 transition-colors hover:bg-paper-200 hover:text-slate-900 disabled:cursor-wait disabled:opacity-60 sm:ml-auto"
                         >
                             <Icon
                                 name="loader"
@@ -781,7 +849,7 @@
                     {:else}
                         {#key mirror.id}
                             <span
-                                class="col-start-1 row-start-1 min-w-0 max-w-full truncate text-xs text-slate-500"
+                                class="col-start-1 row-start-1 min-w-0 max-w-full truncate text-xs text-slate-400"
                                 in:fly={{
                                     y: 4,
                                     duration: swapMs,
@@ -794,193 +862,69 @@
                     {/if}
                 </div>
             </div>
-
-            <!-- 主面板 + 侧栏：minmax(0,·) 让轨道可以收窄，
-                 长标签（AppImage 等）才挤不出卡片右缘 -->
-            <div class="lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-                <!--
-                    主面板：ordered[0]，即检测到的平台（未检测到时是
-                    Windows）。渐变底标记的是「主面板」这个位置本身 ——
-                    大面板没有底色会像没做完；「为你推荐」徽标只在真的
-                    检测到系统时出现，未检测时不冒充推荐。
-                -->
-                <div
-                    class="flex flex-col gap-lg bg-linear-to-br from-brand-50/90 via-transparent to-accent-50/60 p-lg sm:gap-xl sm:p-xl lg:p-3xl"
-                >
-                    <div class="flex items-center gap-lg">
-                        <!--
-                            大图标：主面板要立得住，头部得有分量 ——
-                            平台徽标就是这块面板的「产品图」，lg 下给到
-                            72px，比侧栏的小芯片大出一倍，空旷感先从这里治。
-                        -->
-                        <span
-                            class="grid size-14 shrink-0 place-items-center rounded-2xl bg-white/85 text-brand-700 shadow-sm ring-1 ring-brand-200/60 sm:size-16 lg:size-18"
-                        >
-                            <!-- svg 的尺寸用 class 响应式覆盖 width/height 属性 -->
-                            <Icon
-                                name={osIcon[primary.id]}
-                                size={32}
-                                cls="size-7 sm:size-8 lg:size-9"
-                            />
-                        </span>
-                        <div class="min-w-0 flex-1">
-                            <div
-                                class="flex min-w-0 flex-wrap items-center gap-x-sm gap-y-2xs"
-                            >
-                                <h3
-                                    class="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl"
-                                >
-                                    {t(primary.nameKey)}
-                                </h3>
-                                {#if detected === primary.id}
-                                    <span
-                                        class="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-600 px-2.5 py-1 text-[11px] font-bold tracking-wide text-white shadow-sm"
-                                    >
-                                        <Icon name="sparkle" size={12} />
-                                        {t("dl.recommendedForYou")}
-                                    </span>
-                                {/if}
-                            </div>
-                            <p
-                                class="truncate text-sm {primary.verified
-                                    ? 'text-brand-600'
-                                    : 'text-accent-600'}"
-                            >
-                                {t(primary.statusKey)}
-                            </p>
-                        </div>
-                    </div>
-
-                    {#if primary.downloads.length > 1}
-                        {@render tabRail(
-                            primary,
-                            currentFile(primary),
-                            false,
-                        )}
-                    {/if}
-
-                    {@render pkgZone(primary, false)}
-                </div>
-
-                <!--
-                    侧栏：其余平台。lg 下 grid-rows-2 平分主面板的高度，
-                    两条上下排开，主侧之间的竖 hairline 由本列的 border-l 给出。
-                -->
-                <div
-                    class="divide-y divide-line border-t border-line lg:grid lg:grid-rows-2 lg:border-t-0 lg:border-l"
-                >
-                    {#each rest as group (group.id)}
-                        {@const multi = group.downloads.length > 1}
-                        <div class="flex flex-col gap-md p-lg">
-                            <!--
-                                头部一行：小图标芯片 + 名称/状态；
-                                多包平台（Linux 未被检测到时）的 tab 靠
-                                ml-auto 推到行尾，单包平台就留白。
-                            -->
-                            <div class="flex items-center gap-sm">
-                                <span
-                                    class="grid size-9 shrink-0 place-items-center rounded-lg bg-paper-200 text-brand-700"
-                                >
-                                    <Icon
-                                        name={osIcon[group.id]}
-                                        size={18}
-                                    />
-                                </span>
-                                <div class="min-w-0 flex-1">
-                                    <h3
-                                        class="truncate text-sm font-semibold text-slate-900"
-                                    >
-                                        {t(group.nameKey)}
-                                    </h3>
-                                    <p
-                                        class="truncate text-[11px] {group.verified
-                                            ? 'text-brand-600'
-                                            : 'text-accent-600'}"
-                                    >
-                                        {t(group.statusKey)}
-                                    </p>
-                                </div>
-                                {#if multi}
-                                    {@render tabRail(
-                                        group,
-                                        currentFile(group),
-                                        true,
-                                    )}
-                                {/if}
-                            </div>
-
-                            {@render pkgZone(group, true)}
-                        </div>
-                    {/each}
-                </div>
-            </div>
         </div>
 
-        <!-- 官方桌面端推荐卡片 (Also try 官方桌面端) -->
-        <div
-            class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md rounded-2xl border border-brand-200/70 bg-linear-to-r from-brand-50/60 via-paper-100/80 to-accent-50/40 p-md sm:px-lg sm:py-4 shadow-xs"
-        >
-            <div class="flex items-start sm:items-center gap-md">
-                <span
-                    class="grid size-10 shrink-0 place-items-center rounded-xl bg-white text-brand-600 shadow-xs ring-1 ring-brand-200/80"
-                >
-                    <Icon name="sparkle" size={20} />
-                </span>
-                <div class="stack-tight">
-                    <div class="flex flex-wrap items-center gap-2xs">
-                        <span
-                            class="inline-flex items-center rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold tracking-wide text-brand-700 ring-1 ring-brand-200/60"
-                        >
-                            {t("dl.official.badge")}
-                        </span>
-                        <h3 class="text-sm font-semibold text-slate-900 sm:text-base">
-                            {t("dl.official.title")}
-                        </h3>
-                    </div>
-                    <p class="text-xs/relaxed text-pretty text-slate-600 sm:text-sm/relaxed">
-                        {t("dl.official.desc")}
-                    </p>
-                </div>
-            </div>
+        <!--
+            官方桌面端 + 交流群：两张同重量的小卡并排。原来是两条通栏横幅，各带一套
+            渐变、徽标和实心按钮，跟上面的下载卡片抢主角。这里一律退成次要层级 ——
+            白底描边、文字链接，主 CTA 只留下载卡片里那一个。
+        -->
+        <div class="grid gap-md sm:grid-cols-2">
             <a
                 href={OFFICIAL_DESKTOP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-flex shrink-0 items-center justify-center gap-xs rounded-xl bg-ink-900 px-4 py-2.5 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-ink-800 self-stretch sm:self-auto"
+                class="card card-hover group flex items-start gap-md p-lg"
             >
-                <span>{t("dl.official.cta")}</span>
-                <Icon name="external" size={13} />
-            </a>
-        </div>
-
-        <!-- 用户交流群入口 -->
-        <div
-            class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md rounded-2xl border border-line bg-paper-100/70 p-md sm:px-lg sm:py-3.5"
-        >
-            <div class="flex items-center gap-sm">
                 <span
-                    class="grid size-8 shrink-0 place-items-center rounded-xl bg-white text-brand-700 shadow-xs ring-1 ring-brand-200/60"
+                    class="grid size-10 shrink-0 place-items-center rounded-xl bg-paper-200 text-slate-700"
                 >
-                    <Icon name="chat" size={16} />
+                    <Icon name="sparkle" size={18} />
                 </span>
-                <p class="text-sm font-medium text-slate-800">
-                    {t("dl.groupPrompt")}
-                </p>
+                <span class="flex min-w-0 flex-1 flex-col gap-2xs">
+                    <span class="text-sm font-semibold text-slate-900">
+                        {t("dl.official.title")}
+                    </span>
+                    <span class="text-xs/relaxed text-pretty text-slate-500">
+                        {t("dl.official.desc")}
+                    </span>
+                    <span
+                        class="mt-2xs inline-flex items-center gap-1 text-xs font-semibold text-slate-900 transition-colors group-hover:text-brand-700"
+                    >
+                        {t("dl.official.cta")}
+                        <Icon name="external" size={12} />
+                    </span>
+                </span>
+            </a>
+
+            <div class="card flex items-start gap-md p-lg">
+                <span
+                    class="grid size-10 shrink-0 place-items-center rounded-xl bg-paper-200 text-slate-700"
+                >
+                    <Icon name="chat" size={18} />
+                </span>
+                <div class="flex min-w-0 flex-1 flex-col gap-2xs">
+                    <p class="text-sm font-semibold text-slate-900">
+                        {t("foot.group")}
+                    </p>
+                    <p class="text-xs/relaxed text-pretty text-slate-500">
+                        {t("dl.groupPrompt")}
+                    </p>
+                    <button
+                        type="button"
+                        onclick={copyGroup}
+                        class="mt-2xs inline-flex w-fit items-center gap-1.5 text-xs font-semibold text-slate-900 transition-colors hover:text-brand-700"
+                        title={t("foot.clickCopy")}
+                    >
+                        <span class="font-mono">1125671315</span>
+                        {#if copiedGroup}
+                            <Icon name="check" size={12} cls="text-brand-600" />
+                        {:else}
+                            <Icon name="copy" size={12} cls="text-slate-400" />
+                        {/if}
+                    </button>
+                </div>
             </div>
-            <button
-                type="button"
-                onclick={copyGroup}
-                class="inline-flex shrink-0 items-center gap-xs rounded-xl border border-line bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-xs transition-colors hover:border-line-strong hover:bg-paper-50 hover:text-brand-700"
-                title={t("foot.clickCopy")}
-            >
-                <Icon name="users" size={14} cls="text-brand-600" />
-                <span>{t("foot.group")}: <strong class="font-mono font-bold text-slate-900">1125671315</strong></span>
-                {#if copiedGroup}
-                    <Icon name="check" size={13} cls="text-brand-600" />
-                {:else}
-                    <Icon name="copy" size={13} cls="text-slate-400" />
-                {/if}
-            </button>
         </div>
 
         <!-- 版本信息与全部资产 -->
