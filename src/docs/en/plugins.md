@@ -1,7 +1,7 @@
 ---
 title: Plugins
 headTitle: DeepSeek Harness plugins & Safe Mode
-description: Online marketplace, local folder install, update badges, and Safe Mode.
+description: How plugins work in dsh desktop, from one-click install in the online marketplace to local folders and .tgz archives, update badges, and Safe Mode for ruling out a plugin that is misbehaving.
 order: 4
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: 安装指引
 headTitle: dsh desktop 安装指引（Windows / macOS / Linux）
-description: 各平台的安装方式、首次启动可能遇到的拦截，以及日常使用须知。
+description: dsh desktop 在 Windows、macOS、Linux 三平台的安装步骤，运行环境如何自动检测，首次启动可能被系统拦截时怎么处理，以及日常使用前值得先知道的几件事。
 order: 1
 ---
 

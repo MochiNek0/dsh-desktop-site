@@ -202,7 +202,11 @@ const zh: Dict = {
 
   // ── 文档 ──
   "docs.title": "文档",
-  "docs.desc": "dsh 客户端的安装指引、手机远程连接、快捷键与工作区、插件、常见问题，以及和官方桌面端的区别。",
+  // 只给 <title> 和 og:title 用：搜索结果里要带全产品名和平台，h1/侧栏放不下这么长
+  "docs.headTitle":
+    "dsh desktop 使用文档：安装、手机远程连接、快捷键与插件（Windows / macOS / Linux）",
+  "docs.desc":
+    "dsh desktop 使用文档汇总：Windows / macOS / Linux 三平台的安装步骤、手机扫码远程连接电脑、全局快捷键与工作区、插件安装与安全模式、常见问题，以及和 DeepSeek Harness 官方桌面端的区别。",
   "docs.copy": "复制",
   "docs.copied": "已复制",
   "docs.copyFail": "复制失败",
@@ -481,7 +485,12 @@ const en: Dict = {
   "cta.alsoOfficialLink": "Try DeepSeek Harness Official Desktop",
 
   "docs.title": "Docs",
-  "docs.desc": "Installing the dsh desktop client, phone access, shortcuts and workspaces, plugins, FAQ, and how it differs from the official app.",
+  // Only for <title> and og:title: search results should carry the full product name
+  // and platforms; the h1/sidebar has no room for something this long.
+  "docs.headTitle":
+    "dsh desktop Documentation: Install, Phone Access, Shortcuts & Plugins (Windows / macOS / Linux)",
+  "docs.desc":
+    "Everything you need to use dsh desktop: step-by-step installation for Windows, macOS and Linux, connecting from your phone with one scan, global shortcuts and workspaces, plugin install and Safe Mode, FAQ, and how it differs from the official DeepSeek Harness desktop app.",
   "docs.copy": "Copy",
   "docs.copied": "Copied",
   "docs.copyFail": "Failed",

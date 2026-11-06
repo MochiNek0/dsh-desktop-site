@@ -1,7 +1,7 @@
 ---
 title: FAQ
 headTitle: DeepSeek Harness desktop client FAQ
-description: Where dsh desktop comes from, what it needs, shortcuts, workspaces, compatibility, and where to get help.
+description: Where dsh desktop comes from, how it relates to the official DeepSeek app, what runtime it needs, how shortcuts and workspaces behave, system compatibility, and where to get help when something goes wrong.
 order: 5
 ---
 

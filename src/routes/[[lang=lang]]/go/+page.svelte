@@ -206,12 +206,9 @@
 	<title>{t('go.title')}</title>
 	<meta name="description" content={t('go.desc')} />
 
-	<!--
-		不进索引：这一页没有可被搜索的内容，只有一个工具，而且它的价值完全取决于
-		读者手上有没有一台装了 app 的电脑。让它去和首页争同一批词是纯粹的稀释。
-		follow 保留，页脚那几个链接照常传递。
-	-->
-	<meta name="robots" content="noindex, follow" />
+	<!-- 可进索引：这一页是连接门户，本身也值得被搜到（「dsh 手机连接」这类词）。
+	     follow 让页脚那几个链接照常传递。 -->
+	<meta name="robots" content="index, follow" />
 
 	<!-- 主屏幕图标的落点。scope 限定在 /go/，不把整站变成一个可安装应用。 -->
 	<link rel="manifest" href={manifest} />

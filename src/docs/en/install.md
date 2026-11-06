@@ -1,7 +1,7 @@
 ---
 title: Installation
 headTitle: Install dsh desktop on Windows, macOS & Linux
-description: How to install on each platform, what may block the first launch, and a few everyday notes.
+description: How to install dsh desktop on Windows, macOS and Linux, how the runtime is detected for you, what may block the first launch and how to clear it, and a few everyday notes worth knowing before you start.
 order: 1
 ---
 

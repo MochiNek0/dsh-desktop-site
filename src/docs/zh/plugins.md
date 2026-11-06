@@ -1,7 +1,7 @@
 ---
 title: 插件
 headTitle: DeepSeek Harness 插件安装、管理与安全模式
-description: 插件在线市场、本地文件夹安装、更新检测角标与安全模式。
+description: dsh desktop 的插件体系：在线市场一键安装、本地文件夹与 .tgz 压缩包安装、更新检测角标，以及用安全模式排除某个插件导致的问题。
 order: 4
 ---
 

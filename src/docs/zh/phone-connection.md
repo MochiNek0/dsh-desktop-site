@@ -1,7 +1,7 @@
 ---
 title: 手机连接
 headTitle: 用手机远程使用电脑上的 DeepSeek Harness（dsh）
-description: 扫码把手机连上电脑里的 dsh：三条通道怎么选，以及几件要知道的事。
+description: 用手机扫码连上电脑里正在跑的 dsh：三条通道（局域网、Tailscale、公网）怎么选，iOS 独立窗口如何加到主屏幕，连接门户怎么用，连不上时又该从哪里排查。
 order: 2
 ---
 

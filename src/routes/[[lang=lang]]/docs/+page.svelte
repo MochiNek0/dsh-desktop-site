@@ -8,7 +8,9 @@
 	const t = $derived(i18n.t);
 	const base = $derived(`${pathForLang(i18n.lang)}docs/`);
 	const url = $derived(`${ORIGIN}${base}`);
-	const title = $derived(`dsh desktop ${t('docs.title')}`);
+	// 标题要长一点：搜索结果里得带全产品名和平台词，单一个「文档」/「Docs」会被判过短。
+	// h1 和侧栏仍用短标题 docs.title。
+	const title = $derived(t('docs.headTitle'));
 </script>
 
 <svelte:head>

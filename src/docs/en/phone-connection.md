@@ -1,7 +1,7 @@
 ---
 title: Phone connection
 headTitle: Use DeepSeek Harness (dsh) from your phone
-description: Scan once to reach the dsh on your computer from your phone — choosing a channel, and a few things worth knowing.
+description: Scan once to reach the dsh session on your computer from your phone. Pick between the LAN, Tailscale and public channels, add it to your iOS home screen, use the connection portal, and check the likely causes when it will not connect.
 order: 2
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: Shortcuts & Workspaces
 headTitle: dsh Quick Ask, shortcuts & workspaces
-description: Quick Ask overlay, multi-slot global shortcuts, opening folders from file managers and custom protocols, plus tray session management and keep-awake.
+description: Summon the Quick Ask box with a global shortcut, set up multi-slot global shortcuts, open workspaces straight from file managers and custom protocols, and manage tray sessions with a keep-awake toggle.
 order: 3
 ---
 

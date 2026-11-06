@@ -1,7 +1,7 @@
 ---
 title: 常见问题
 headTitle: DeepSeek Harness 桌面客户端常见问题
-description: 关于 dsh desktop 的来历、环境、快捷键、工作区、兼容性与反馈渠道。
+description: 关于 dsh desktop 的来历、与 DeepSeek 官方的关系、需要什么运行环境、快捷键与工作区、系统兼容性，以及遇到问题去哪里反馈的常见问题解答。
 order: 5
 ---
 
