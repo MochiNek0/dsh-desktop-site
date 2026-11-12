@@ -54,7 +54,7 @@ const zh: Dict = {
 
   "feat.1.title": "安装包只有几 MB",
   // {win} / {mac} / {deb} 由 releases.ts 的 SIZE_VARS 在构建期填入真实体积，
-  // 和首屏统计卡同源，发版不用再手改。FAQ 标题里的「2.5 MB 起」仍是手填的。
+  // 和首屏统计卡同源，发版不用再手改。FAQ 标题里的「2.7 MB 起」仍是手填的。
   "feat.1.body":
     "Tauri v2 + 系统 WebView，不打包浏览器内核。安装包 Windows 仅 {win}，macOS {mac}，Debian {deb}。",
   "feat.2.title": "快速提问与全局快捷键",
@@ -83,13 +83,14 @@ const zh: Dict = {
   "phone.badgeNew": "新功能",
   "phone.heading": "离开电脑，也能接着用",
   "phone.sub":
-    "扫一下桌面端卡片上的二维码，手机就进入同一个 dsh 会话。每次接入都要电脑上点头，配对活过桌面重启。",
+    "扫一下桌面端卡片上的二维码，手机就进入同一个 dsh 会话。新设备首次接入要电脑上点头，配对活过桌面重启。",
   "phone.lan": "局域网",
   "phone.lanBody": "同一个 Wi-Fi 下直连，最快。",
   "phone.ts": "Tailscale",
   "phone.tsBody": "在外面也能进，WireGuard 加密。",
   "phone.cf": "Cloudflare 隧道",
-  "phone.cfBody": "任何网络可达，带 TLS；空闲 30 分钟自动关闭。",
+  "phone.cfBody":
+    "任何网络可达，三条里唯一带 TLS；需自有域名，不会在启动时自动拉起，空闲 30 分钟自动关闭。",
   "phone.cta": "打开连接门户",
   "phone.docs": "使用说明",
 
@@ -379,7 +380,8 @@ const en: Dict = {
   "phone.ts": "Tailscale",
   "phone.tsBody": "Reach it while out, encrypted by WireGuard.",
   "phone.cf": "Cloudflare tunnel",
-  "phone.cfBody": "Any network, with TLS; closes itself after 30 idle minutes.",
+  "phone.cfBody":
+    "Any network, the only one of the three with TLS; needs your own domain, never auto-starts, and closes after 30 idle minutes.",
   "phone.cta": "Open the portal",
   "phone.docs": "How it works",
 

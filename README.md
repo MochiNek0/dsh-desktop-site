@@ -8,7 +8,7 @@
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-v2-FF3E00?logo=svelte&logoColor=white)](https://kit.svelte.dev/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers%20%26%20D1-F38020?logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 
 ---
 
