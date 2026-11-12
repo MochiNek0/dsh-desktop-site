@@ -38,6 +38,38 @@ npm config set registry https://registry.npmmirror.com
 
 Since v0.1.19 you can also pick the registry in the app under “Settings…” — keep your system `.npmrc`, or let it test mirrors and use the fastest.
 
+### Install stalls / progress bar stuck at 0: a leftover npm proxy
+
+**Symptoms**: on the command line, `npm install -g` fails with `ETIMEDOUT` or `network request to ... failed`; inside dsh desktop, the “Install dsh / Install Node” progress bar stays at 0, cycling between mirrors and never finishing. The usual cause is a leftover **global proxy** in npm: it intercepts every request, but the proxy itself (or the port it listens on) is unreachable from your network. The `IP:port` in the CLI error is usually this proxy address, not the registry you picked.
+
+**Diagnose** — check the proxy npm is actually using:
+
+```powershell
+npm config get proxy
+npm config get https-proxy
+```
+
+If either has a value, that is almost certainly the cause.
+
+**Fix** — clear the proxy:
+
+```powershell
+npm config delete proxy
+npm config delete https-proxy
+```
+
+The proxy may also come from environment variables; clear those too:
+
+```powershell
+$env:HTTP_PROXY=""
+$env:HTTPS_PROXY=""
+$env:ALL_PROXY=""
+```
+
+Then trigger the install again from dsh desktop.
+
+> Note: if the leftover proxy was not set by you, clear it before installing so npm traffic does not keep routing through an unknown node.
+
 ## Fails to start after install: blocked by antivirus
 
 If your machine had no Node, dsh desktop installs Node 24 and dsh into its own directory via the Runtime panel (about 185 MB). npm drops a batch of `.exe`, `.cmd` and script files along the way, and **Windows Security (Defender), 360, Huorong and other antiviruses sometimes scan and quarantine them moments after they are written** — once `node.exe`, `dsh.cmd` or a package file is taken away, the app reports “dsh failed to start” or stalls on the loading page.

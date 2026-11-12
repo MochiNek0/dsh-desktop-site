@@ -38,6 +38,38 @@ npm config set registry https://registry.npmmirror.com
 
 v0.1.19 起也可以在应用的「设置…」里直接选择安装源：沿用系统的 `.npmrc`，或自动测速选出最快的镜像。
 
+### 装不上 / 进度条卡在 0：残留的 npm 代理
+
+**现象**：命令行里 `npm install -g` 报 `ETIMEDOUT`、`network request to ... failed`；在 dsh desktop 里则是「安装 dsh / 安装 Node」的进度条一直停在 0，在几个源之间来回切换，始终装不完。原因多是 npm 里残留了一个**全局代理**，它把所有请求都截走，而代理本身（或它监听的端口）在你的网络下连不上。命令行报错里的 `IP:端口` 通常就是这个代理地址，而不是你指定的 registry。
+
+**排查**——看 npm 实际用的代理配置：
+
+```powershell
+npm config get proxy
+npm config get https-proxy
+```
+
+只要这两项里有一项有值，基本就是它了。
+
+**解决**——清掉代理：
+
+```powershell
+npm config delete proxy
+npm config delete https-proxy
+```
+
+代理也可能通过环境变量设的，一并清空：
+
+```powershell
+$env:HTTP_PROXY=""
+$env:HTTPS_PROXY=""
+$env:ALL_PROXY=""
+```
+
+改完后回 dsh desktop 重新触发安装即可。
+
+> 提示：如果残留的代理不是你自己设置的，建议清干净后再装，避免 npm 流量继续走不明节点。
+
 ## 安装后启动失败：被杀毒软件拦截
 
 如果你的电脑本来没有 Node，dsh desktop 会通过「运行环境」面板把 Node 24 和 dsh 装到自己目录（约 185 MB）。这一步 npm 会落下一批 `.exe`、`.cmd` 和脚本文件，**Windows 安全中心（Defender）、360、火绒等杀毒软件有时会在文件刚写好不久就把它们扫描并隔离**——`node.exe`、`dsh.cmd` 或包内文件一旦被带走，应用就会报「dsh 启动失败」或卡在加载页。
