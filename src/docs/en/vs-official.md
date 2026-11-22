@@ -26,7 +26,7 @@ The official-app column is taken from the [DeepSeek Harness website](https://www
 | Scheduled & automated tasks | Yes (built into dsh web, so both have it) | Yes |
 | Tray session management | Yes (lists active/waiting sessions, icon status badges) | Basic tray only |
 | Plugins | Yes, plus desktop panel, DSH Market, and local folder linking | Yes |
-| License | AGPL-3.0 | MIT |
+| License | MIT | MIT |
 
 ## How dsh desktop works
 

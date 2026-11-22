@@ -26,7 +26,7 @@ DeepSeek 推出了 DeepSeek Harness 官方桌面端。dsh desktop 是社区做�
 | 定时任务与自动化 | 支持（随 dsh web 自带，两边都有） | 支持 |
 | 托盘会话直达与状态 | 托盘列出等待/运行中会话，图标状态角标指示 | 仅基础托盘 |
 | 插件管理 | 支持，内置插件面板、DSH Market、本地文件夹一键 link | 支持 |
-| 许可证 | AGPL-3.0 | MIT |
+| 许可证 | MIT | MIT |
 
 ## dsh desktop 是怎么做的
 
