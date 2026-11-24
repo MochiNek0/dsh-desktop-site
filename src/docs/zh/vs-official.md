@@ -1,7 +1,7 @@
 ---
 title: 和官方桌面端的区别
 headTitle: dsh desktop 与 DeepSeek Harness 官方桌面端的区别
-description: dsh desktop 与 DeepSeek Harness 官方桌面端在支持平台、安装包体积、快捷键、手机连接、许可证上的区别，以及该按什么场景选哪一个。
+description: 详细对比 dsh desktop 与 DeepSeek Harness 官方桌面端：从 Windows、macOS、Linux 平台支持，到安装包体积、手机远程访问、Quick Ask 与全局快捷键、工作区集成、插件和许可证，了解社区开源客户端与官方应用如何工作、能否同时安装，并选择更适合自己的工具。
 order: 6
 ---
 

@@ -1,7 +1,7 @@
 ---
 title: 手机连接
 headTitle: 用手机远程使用电脑上的 DeepSeek Harness（dsh）
-description: 用手机扫码连上电脑里正在跑的 dsh：三条通道（局域网、Tailscale、公网）怎么选，iOS 独立窗口如何加到主屏幕，连接门户怎么用，连不上时又该从哪里排查。
+description: 用手机扫码连接电脑上运行的 dsh desktop：先升级到 v0.1.20 或更新版本，再根据使用场景选择局域网、Tailscale 或 Cloudflare 隧道；学习添加 iOS 主屏幕图标、通过连接门户快速进入、处理配对码与凭证，了解机器列表仅保存在当前浏览器中，并排查网络不可达等常见问题。
 order: 2
 ---
 

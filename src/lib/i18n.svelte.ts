@@ -487,12 +487,11 @@ const en: Dict = {
   "cta.alsoOfficialLink": "Try DeepSeek Harness Official Desktop",
 
   "docs.title": "Docs",
-  // Only for <title> and og:title: search results should carry the full product name
-  // and platforms; the h1/sidebar has no room for something this long.
-  "docs.headTitle":
-    "dsh desktop Documentation: Install, Phone Access, Shortcuts & Plugins (Windows / macOS / Linux)",
+  // Only for <title> and og:title: keep it descriptive while staying near the
+  // 50–60 characters typically displayed in search results.
+  "docs.headTitle": "dsh desktop Docs: Install, Phone Access & Shortcuts",
   "docs.desc":
-    "Everything you need to use dsh desktop: step-by-step installation for Windows, macOS and Linux, connecting from your phone with one scan, global shortcuts and workspaces, plugin install and Safe Mode, FAQ, and how it differs from the official DeepSeek Harness desktop app.",
+    "dsh desktop docs for Windows, macOS and Linux: installation, phone access, Quick Ask shortcuts, workspaces, plugins, Safe Mode, FAQ & official app comparisons.",
   "docs.copy": "Copy",
   "docs.copied": "Copied",
   "docs.copyFail": "Failed",

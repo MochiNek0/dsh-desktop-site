@@ -1,7 +1,7 @@
 ---
 title: Installation
 headTitle: Install dsh desktop on Windows, macOS & Linux
-description: How to install dsh desktop on Windows, macOS and Linux, how the runtime is detected for you, what may block the first launch and how to clear it, what to do when the dsh the app installs is quarantined by antivirus, and a few everyday notes worth knowing before you start.
+description: Install dsh desktop on Windows, macOS and Linux with setup guidance, automatic runtime detection, WebView2 help, and fixes for npm stalls or antivirus blocks.
 order: 1
 ---
 
