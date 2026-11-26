@@ -1,7 +1,7 @@
 ---
 title: 插件
 headTitle: DeepSeek Harness 插件安装、管理与安全模式
-description: dsh desktop 的插件体系：在线市场一键安装、本地文件夹与 .tgz 压缩包安装、更新检测角标，以及用安全模式排除某个插件导致的问题。
+description: dsh desktop 的插件安装与管理指引：从 DSH Market 插件市场一键安装，或用本地文件夹、.tgz 压缩包、npm 包名与 GitHub 仓库地址安装；了解更新检测与角标提示，插件崩溃时如何用安全模式不加载插件启动并排查，独立环境变量终端，以及 GitHub 插件被 pnpm 拦截构建脚本时如何放行。
 order: 4
 ---
 

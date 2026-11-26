@@ -7,52 +7,52 @@
 		"spdx": "MIT",
 		"tag": "v0.1.34"
 	},
-	"totalDownloads": 24294,
+	"totalDownloads": 24782,
 	"assets": {
 		"dsh-desktop_0.1.34_amd64.AppImage": {
 			"size": 83053048,
-			"downloads": 0
+			"downloads": 19
 		},
 		"dsh-desktop_0.1.34_amd64.AppImage.sig": {
 			"size": 424,
-			"downloads": 0
+			"downloads": 3
 		},
 		"dsh-desktop_0.1.34_amd64.deb": {
 			"size": 4613760,
-			"downloads": 0
+			"downloads": 13
 		},
 		"dsh-desktop_0.1.34_amd64.deb.sig": {
 			"size": 420,
-			"downloads": 0
+			"downloads": 4
 		},
 		"dsh-desktop_0.1.34_universal.dmg": {
 			"size": 7029832,
-			"downloads": 0
+			"downloads": 10
 		},
 		"dsh-desktop_0.1.34_x64-setup.exe": {
 			"size": 2812126,
-			"downloads": 0
+			"downloads": 129
 		},
 		"dsh-desktop_0.1.34_x64-setup.exe.sig": {
 			"size": 424,
-			"downloads": 0
+			"downloads": 4
 		},
 		"dsh-desktop_universal.app.tar.gz": {
 			"size": 7117615,
-			"downloads": 0
+			"downloads": 6
 		},
 		"dsh-desktop_universal.app.tar.gz.sig": {
 			"size": 412,
-			"downloads": 0
+			"downloads": 333
 		},
 		"latest.json": {
-			"size": 5404,
-			"downloads": 0
+			"size": 6388,
+			"downloads": 470
 		},
 		"SHA256SUMS.txt": {
 			"size": 492,
-			"downloads": 0
+			"downloads": 4
 		}
 	},
-	"fetchedAt": "2026-11-22T14:36:56.679Z"
+	"fetchedAt": "2026-11-26T02:25:29.539Z"
 }
